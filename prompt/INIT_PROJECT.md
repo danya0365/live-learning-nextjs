@@ -15,7 +15,7 @@ MainLayout ต้องให้ออกแบบอารมณ์เหมื
 
 ให้ใช้ tailwindcss สำหรับทำ style ที่ /Users/marosdeeuma/live-learning-nextjs/public/styles/globals.css
 
-ใช้ font https://fonts.google.com/noto/specimen/Noto+Sans+Thai?lang=th_Thai&preview.lang=lcp_Thai
+ใช้ font Noto_Sans_Thai จาก  'next/font/google'
 
 3. ออกแบบ Reuse Component ของ MainLayout
 
