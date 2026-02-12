@@ -1,31 +1,76 @@
 /**
- * Header — Responsive nav with "More" dropdown + Auth menu
- * Connected to Zustand auth store for real auth state
+ * Header — Role-based navigation
+ *
+ * Student:    🏠 หน้าหลัก, ➕ จองคลาส, 👤 โปรไฟล์
+ * Instructor: 🏠 หน้าหลัก, 📅 ตารางสอน, 👤 โปรไฟล์
+ * Guest:      🏠 หน้าหลัก, 🔑 เข้าสู่ระบบ
+ *
+ * All existing pages are kept in the "More" menu
  */
 
 'use client';
 
 import { HydrationGuard } from '@/src/presentation/components/common/HydrationGuard';
 import { ThemeToggle } from '@/src/presentation/components/common/ThemeToggle';
-import { useAuthStore } from '@/src/stores/authStore';
+import { useAuthStore, UserRole } from '@/src/stores/authStore';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-/* ── Nav structure ─────────────────────────── */
-const PRIMARY_LINKS = [
-  { href: '/', label: 'หน้าแรก', icon: '🏠' },
-  { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-  { href: '/instructors', label: 'อาจารย์', icon: '👨‍🏫' },
-  { href: '/schedule', label: 'ตารางเรียน', icon: '📅' },
-  { href: '/live', label: 'LIVE', icon: '🔴' },
-];
+/* ── Nav config per role ──────────────────── */
 
-const MORE_LINKS = [
-  { href: '/categories', label: 'หมวดหมู่', icon: '📂', desc: 'เลือกคอร์สตามหมวดหมู่' },
-  { href: '/my-bookings', label: 'การจองของฉัน', icon: '📋', desc: 'ดูสถานะการจองทั้งหมด' },
-  { href: '/profile', label: 'โปรไฟล์', icon: '🧑‍💻', desc: 'สถิติการเรียน เหรียญรางวัล' },
-];
+interface NavLink {
+  href: string;
+  label: string;
+  icon: string;
+}
+
+interface MoreLink extends NavLink {
+  desc: string;
+}
+
+const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
+  student: [
+    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
+    { href: '/book', label: 'จองคลาส', icon: '➕' },
+    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
+    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
+  ],
+  instructor: [
+    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
+    { href: '/schedule', label: 'ตารางสอน', icon: '📅' },
+    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
+    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
+  ],
+  admin: [
+    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
+    { href: '/schedule', label: 'ตาราง', icon: '📅' },
+    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
+    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
+  ],
+  guest: [
+    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
+    { href: '/schedule', label: 'ตารางเรียน', icon: '📅' },
+    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
+  ],
+};
+
+const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
+  student: [
+    { href: '/my-bookings', label: 'การจองของฉัน', icon: '📋', desc: 'ดูสถานะการจองทั้งหมด' },
+    { href: '/schedule', label: 'ตารางเรียน', icon: '📅', desc: 'ดูตารางเวลาสอนทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
+  ],
+  instructor: [
+    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
+  ],
+  admin: [
+    { href: '/my-bookings', label: 'การจอง', icon: '📋', desc: 'ดูสถานะการจอง' },
+    { href: '/schedule', label: 'ตาราง', icon: '�', desc: 'ดูตารางทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
+  ],
+  guest: [],
+};
 
 /* ── Hook: click outside to close ──────────── */
 function useClickOutside(ref: React.RefObject<HTMLElement | null>, onClose: () => void) {
@@ -69,6 +114,10 @@ export function Header() {
     setAuthMenuOpen(false);
   }, [pathname]);
 
+  const role: UserRole | 'guest' = isAuthenticated && user ? user.role : 'guest';
+  const primaryLinks = NAV_BY_ROLE[role];
+  const moreLinks = MORE_BY_ROLE[role];
+
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
@@ -92,9 +141,9 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Desktop Nav */}
+            {/* Desktop Nav — role-based primary links */}
             <nav className="hidden lg:flex items-center gap-0.5">
-              {PRIMARY_LINKS.map((link) => (
+              {primaryLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -109,74 +158,64 @@ export function Header() {
                 </Link>
               ))}
 
-              {/* More dropdown */}
-              <div ref={moreRef} className="relative">
-                <button
-                  onClick={() => setMoreOpen(!moreOpen)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:-translate-y-0.5 ${
-                    MORE_LINKS.some((l) => isActive(l.href))
-                      ? 'text-primary bg-primary/10'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface/80'
-                  }`}
-                >
-                  <span>⋯</span>
-                  <span>เพิ่มเติม</span>
-                  <svg
-                    className={`w-3.5 h-3.5 transition-transform ${moreOpen ? 'rotate-180' : ''}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              {/* More dropdown — only if there are more links */}
+              {moreLinks.length > 0 && (
+                <div ref={moreRef} className="relative">
+                  <button
+                    onClick={() => setMoreOpen(!moreOpen)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all hover:-translate-y-0.5 ${
+                      moreLinks.some((l) => isActive(l.href))
+                        ? 'text-primary bg-primary/10'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-surface/80'
+                    }`}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                    <span>⋯</span>
+                    <span>เพิ่มเติม</span>
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform ${moreOpen ? 'rotate-180' : ''}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
 
-                {/* Dropdown */}
-                <div
-                  className="absolute right-0 top-full mt-2 w-64 glass rounded-2xl border border-border/50 shadow-xl overflow-hidden transition-all origin-top-right"
-                  style={{
-                    opacity: moreOpen ? 1 : 0,
-                    transform: moreOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)',
-                    pointerEvents: moreOpen ? 'auto' : 'none',
-                    transitionDuration: '200ms',
-                  }}
-                >
-                  <div className="p-2">
-                    {MORE_LINKS.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`flex items-start gap-3 px-3 py-2.5 rounded-xl transition-colors ${
-                          isActive(link.href)
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-text-secondary hover:bg-surface/80 hover:text-text-primary'
-                        }`}
-                      >
-                        <span className="text-xl mt-0.5">{link.icon}</span>
-                        <div>
-                          <p className="text-sm font-semibold">{link.label}</p>
-                          <p className="text-xs text-text-muted">{link.desc}</p>
-                        </div>
-                      </Link>
-                    ))}
+                  {/* Dropdown */}
+                  <div
+                    className="absolute right-0 top-full mt-2 w-64 glass rounded-2xl border border-border/50 shadow-xl overflow-hidden transition-all origin-top-right"
+                    style={{
+                      opacity: moreOpen ? 1 : 0,
+                      transform: moreOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)',
+                      pointerEvents: moreOpen ? 'auto' : 'none',
+                      transitionDuration: '200ms',
+                    }}
+                  >
+                    <div className="p-2">
+                      {moreLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className={`flex items-start gap-3 px-3 py-2.5 rounded-xl transition-colors ${
+                            isActive(link.href)
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-text-secondary hover:bg-surface/80 hover:text-text-primary'
+                          }`}
+                        >
+                          <span className="text-xl mt-0.5">{link.icon}</span>
+                          <div>
+                            <p className="text-sm font-semibold">{link.label}</p>
+                            <p className="text-xs text-text-muted">{link.desc}</p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </nav>
 
             {/* Right side */}
             <div className="flex items-center gap-2">
               <ThemeToggle />
-
-              {/* Live indicator (desktop) */}
-              <Link
-                href="/live"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-error/10 border border-error/30 hover:bg-error/20 transition-colors"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-error" />
-                </span>
-                <span className="text-xs font-semibold text-error">LIVE</span>
-              </Link>
 
               {/* Auth section — wrapped in HydrationGuard to prevent SSR mismatch */}
               <HydrationGuard fallback={
@@ -224,12 +263,16 @@ export function Header() {
                     </div>
 
                     <div className="p-2">
-                      <Link href="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
-                        <span>🧑‍💻</span> โปรไฟล์ของฉัน
-                      </Link>
-                      <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
-                        <span>📋</span> การจองของฉัน
-                      </Link>
+                      {role === 'student' && (
+                        <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
+                          <span>�</span> การจองของฉัน
+                        </Link>
+                      )}
+                      {role === 'instructor' && (
+                        <Link href="/schedule" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
+                          <span>�</span> ตารางสอนของฉัน
+                        </Link>
+                      )}
                       <Link href="/settings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
                         <span>⚙️</span> ตั้งค่า
                       </Link>
@@ -289,7 +332,7 @@ export function Header() {
             <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-3 pt-1 pb-2">
               เมนูหลัก
             </p>
-            {PRIMARY_LINKS.map((link) => (
+            {primaryLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -304,26 +347,29 @@ export function Header() {
               </Link>
             ))}
 
-            <div className="h-px bg-border/30 my-2" />
-
-            {/* Section: เพิ่มเติม */}
-            <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-3 pt-1 pb-2">
-              เพิ่มเติม
-            </p>
-            {MORE_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors ${
-                  isActive(link.href)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-text-primary hover:bg-surface'
-                }`}
-              >
-                <span className="text-lg">{link.icon}</span>
-                <span className="text-sm">{link.label}</span>
-              </Link>
-            ))}
+            {/* Section: เพิ่มเติม — only if has more links */}
+            {moreLinks.length > 0 && (
+              <>
+                <div className="h-px bg-border/30 my-2" />
+                <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-3 pt-1 pb-2">
+                  เพิ่มเติม
+                </p>
+                {moreLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-colors ${
+                      isActive(link.href)
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-text-primary hover:bg-surface'
+                    }`}
+                  >
+                    <span className="text-lg">{link.icon}</span>
+                    <span className="text-sm">{link.label}</span>
+                  </Link>
+                ))}
+              </>
+            )}
 
             <HydrationGuard>
             {isAuthenticated && user ? (
@@ -342,9 +388,16 @@ export function Header() {
                     <p className="text-[10px] text-text-muted">{user.level} • <span className={roleInfo.color}>{roleInfo.label}</span></p>
                   </div>
                 </div>
-                <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface font-medium transition-colors">
-                  <span className="text-lg">🧑‍💻</span><span className="text-sm">โปรไฟล์</span>
-                </Link>
+                {role === 'student' && (
+                  <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface font-medium transition-colors">
+                    <span className="text-lg">📋</span><span className="text-sm">การจองของฉัน</span>
+                  </Link>
+                )}
+                {role === 'instructor' && (
+                  <Link href="/schedule" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface font-medium transition-colors">
+                    <span className="text-lg">�</span><span className="text-sm">ตารางสอนของฉัน</span>
+                  </Link>
+                )}
                 <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface font-medium transition-colors">
                   <span className="text-lg">⚙️</span><span className="text-sm">ตั้งค่า</span>
                 </Link>

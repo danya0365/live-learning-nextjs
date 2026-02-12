@@ -1,7 +1,8 @@
 /**
  * ScheduleView
- * Weekly schedule view showing instructor timeslots
- * Shows booked vs available, with ability to join booked courses
+ * Role-aware schedule:
+ * - Instructor: shows only THEIR OWN schedule ("ตารางสอนของฉัน")
+ * - Student: shows all instructors' schedule with filters
  * Pure CSS — no react-spring
  */
 
@@ -9,6 +10,8 @@
 
 import { ScheduleTimeSlot, ScheduleViewModel } from '@/src/presentation/presenters/schedule/SchedulePresenter';
 import { useSchedulePresenter } from '@/src/presentation/presenters/schedule/useSchedulePresenter';
+import { useAuthStore } from '@/src/stores/authStore';
+import { useRouter } from 'next/navigation';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -19,6 +22,9 @@ interface ScheduleViewProps {
 export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
   const [state, actions] = useSchedulePresenter(initialViewModel);
   const vm = state.viewModel;
+  const { user } = useAuthStore();
+  const router = useRouter();
+  const isInstructor = user?.role === 'instructor';
 
   if (state.loading && !vm) {
     return (
@@ -46,9 +52,16 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
 
   if (!vm) return null;
 
+  // For instructors: filter to show only their own slots
+  // Mock: instructor-001 maps to instructor 'inst-001' in the schedule data
+  // We match by instructor name from the auth user
+  const displaySlots = isInstructor
+    ? vm.timeSlots.filter((slot) => slot.instructorName.includes(user?.name?.replace('อ.', '').trim() || ''))
+    : vm.timeSlots;
+
   // Group timeslots by day
   const slotsByDay: Record<number, ScheduleTimeSlot[]> = {};
-  vm.timeSlots.forEach((slot) => {
+  displaySlots.forEach((slot) => {
     if (!slotsByDay[slot.dayOfWeek]) slotsByDay[slot.dayOfWeek] = [];
     slotsByDay[slot.dayOfWeek].push(slot);
   });
@@ -58,59 +71,63 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">
-          📅 ตารางเรียน
+          {isInstructor ? '📅 ตารางสอนของฉัน' : '📅 ตารางเรียน'}
         </h1>
         <p className="text-text-secondary">
-          ดูตารางเวลาสอน จองเรียนสด หรือเข้าร่วมคอร์สที่มีอยู่
+          {isInstructor
+            ? 'ดูคลาสที่ต้องสอน จำนวนนักเรียนที่จอง และเข้าสอนได้ทันที'
+            : 'ดูตารางเวลาสอน จองเรียนสด หรือเข้าร่วมคอร์สที่มีอยู่'}
         </p>
       </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="glass rounded-2xl p-4 text-center">
-          <div className="text-2xl font-extrabold text-text-primary">{vm.totalSlots}</div>
-          <div className="text-xs text-text-muted">📅 ช่วงเวลาทั้งหมด</div>
+          <div className="text-2xl font-extrabold text-text-primary">{displaySlots.length}</div>
+          <div className="text-xs text-text-muted">📅 {isInstructor ? 'คลาสทั้งหมด' : 'ช่วงเวลาทั้งหมด'}</div>
         </div>
         <div className="glass rounded-2xl p-4 text-center">
-          <div className="text-2xl font-extrabold text-success">{vm.availableSlots}</div>
+          <div className="text-2xl font-extrabold text-success">{displaySlots.filter(s => !s.isBooked).length}</div>
           <div className="text-xs text-text-muted">✅ ว่าง</div>
         </div>
         <div className="glass rounded-2xl p-4 text-center">
-          <div className="text-2xl font-extrabold text-warning">{vm.bookedSlots}</div>
-          <div className="text-xs text-text-muted">📌 ถูกจองแล้ว</div>
+          <div className="text-2xl font-extrabold text-warning">{displaySlots.filter(s => s.isBooked).length}</div>
+          <div className="text-xs text-text-muted">📌 {isInstructor ? 'มีนักเรียนจอง' : 'ถูกจองแล้ว'}</div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters — hide instructor filter for instructors (they only see their own) */}
       <div className="glass rounded-2xl p-4 sm:p-6 mb-8 flex flex-col gap-4">
-        <div className="flex flex-wrap gap-3">
-          {/* Instructor filter */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => actions.setInstructor(null)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                !vm.filters.instructorId
-                  ? 'bg-primary text-white'
-                  : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
-              }`}
-            >
-              👨‍🏫 ทุกอาจารย์
-            </button>
-            {vm.instructors.map((inst) => (
+        {!isInstructor && (
+          <div className="flex flex-wrap gap-3">
+            {/* Instructor filter — only for students */}
+            <div className="flex flex-wrap gap-2">
               <button
-                key={inst.id}
-                onClick={() => actions.setInstructor(inst.id)}
+                onClick={() => actions.setInstructor(null)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  vm.filters.instructorId === inst.id
+                  !vm.filters.instructorId
                     ? 'bg-primary text-white'
                     : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
                 }`}
               >
-                {inst.name}
+                👨‍🏫 ทุกอาจารย์
               </button>
-            ))}
+              {vm.instructors.map((inst) => (
+                <button
+                  key={inst.id}
+                  onClick={() => actions.setInstructor(inst.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    vm.filters.instructorId === inst.id
+                      ? 'bg-primary text-white'
+                      : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
+                  }`}
+                >
+                  {inst.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-wrap gap-3">
           {/* Day filter */}
@@ -160,21 +177,23 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
                 : 'bg-surface border border-border text-text-secondary hover:border-warning/50'
             }`}
           >
-            📌 ถูกจองแล้วเท่านั้น
+            📌 {isInstructor ? 'มีนักเรียนจองเท่านั้น' : 'ถูกจองแล้วเท่านั้น'}
           </button>
         </div>
       </div>
 
       {/* Results count */}
       <p className="text-sm text-text-muted mb-6">
-        แสดงผล <span className="font-bold text-text-primary">{vm.timeSlots.length}</span> ช่วงเวลา
+        แสดงผล <span className="font-bold text-text-primary">{displaySlots.length}</span> {isInstructor ? 'คลาส' : 'ช่วงเวลา'}
       </p>
 
       {/* Schedule by day */}
-      {vm.timeSlots.length === 0 ? (
+      {displaySlots.length === 0 ? (
         <div className="text-center py-20">
           <div className="text-6xl mb-4">📅</div>
-          <p className="text-text-secondary text-lg mb-2">ไม่พบช่วงเวลาที่ค้นหา</p>
+          <p className="text-text-secondary text-lg mb-2">
+            {isInstructor ? 'ยังไม่มีคลาสที่ต้องสอน' : 'ไม่พบช่วงเวลาที่ค้นหา'}
+          </p>
           <p className="text-text-muted text-sm">ลองเปลี่ยนตัวกรองใหม่</p>
         </div>
       ) : (
@@ -205,6 +224,7 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
 }
 
 function TimeSlotCard({ slot }: { slot: ScheduleTimeSlot }) {
+  const router = useRouter();
   return (
     <div
       className={`glass rounded-2xl p-5 relative hover:scale-[1.02] transition-transform border-l-4 ${
@@ -243,15 +263,21 @@ function TimeSlotCard({ slot }: { slot: ScheduleTimeSlot }) {
         <div className="mt-3 p-3 rounded-xl bg-warning/5 border border-warning/20">
           <p className="text-xs text-text-muted mb-1">กำลังสอนคอร์ส:</p>
           <p className="text-sm font-semibold text-text-primary">{slot.bookedCourseName}</p>
-          <button className="mt-2 text-xs text-primary font-medium hover:underline">
-            🎥 สมัครเข้าร่วมเรียนออนไลน์ →
+          <button
+            onClick={() => router.push(`/live/${slot.id}`)}
+            className="mt-2 text-xs text-primary font-medium hover:underline"
+          >
+            🎥 เข้าห้องเรียน →
           </button>
         </div>
       )}
 
       {/* Book button for available slots */}
       {!slot.isBooked && (
-        <button className="mt-3 w-full btn-game py-2 text-sm text-white rounded-xl font-medium hover:scale-105 transition-transform">
+        <button
+          onClick={() => router.push('/book')}
+          className="mt-3 w-full btn-game py-2 text-sm text-white rounded-xl font-medium hover:scale-105 transition-transform"
+        >
           📅 จองเวลาเรียน
         </button>
       )}

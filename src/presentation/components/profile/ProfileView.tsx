@@ -1,6 +1,8 @@
 /**
  * ProfileView
- * Student profile dashboard with learning stats, achievements, recommendations
+ * Role-aware profile dashboard:
+ * - Student: learning stats, achievements, recent bookings, course recommendations
+ * - Instructor: teaching stats, upcoming classes, quick links to schedule/live
  * Pure CSS — no react-spring
  */
 
@@ -8,7 +10,7 @@
 
 import { ProfileViewModel } from '@/src/presentation/presenters/profile/ProfilePresenter';
 import { useProfilePresenter } from '@/src/presentation/presenters/profile/useProfilePresenter';
-import type { AuthUser } from '@/src/stores/authStore';
+import { useAuthStore, type AuthUser } from '@/src/stores/authStore';
 import Link from 'next/link';
 
 interface ProfileViewProps {
@@ -27,6 +29,9 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
 export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
   const state = useProfilePresenter(initialViewModel);
   const vm = state.viewModel;
+  const { user: storeUser } = useAuthStore();
+  const currentUser = authUser || storeUser;
+  const isInstructor = currentUser?.role === 'instructor';
 
   if (state.loading && !vm) {
     return (
@@ -83,30 +88,62 @@ export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
           </div>
 
           <div className="flex gap-2">
-            <Link href="/my-bookings" className="px-4 py-2 rounded-xl glass text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-              📋 การจอง
-            </Link>
-            <Link href="/courses" className="btn-game px-4 py-2 text-white rounded-xl text-sm font-bold">
-              📚 เรียนต่อ
-            </Link>
+            {isInstructor ? (
+              <>
+                <Link href="/schedule" className="px-4 py-2 rounded-xl glass text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                  📅 ตารางสอน
+                </Link>
+                <Link href="/live" className="btn-game px-4 py-2 text-white rounded-xl text-sm font-bold">
+                  🔴 เข้าสอน
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/my-bookings" className="px-4 py-2 rounded-xl glass text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+                  📋 การจอง
+                </Link>
+                <Link href="/courses" className="btn-game px-4 py-2 text-white rounded-xl text-sm font-bold">
+                  📚 เรียนต่อ
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Stats grid */}
+      {/* Stats grid — role-aware */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {[
-          { icon: '⏱️', value: `${learningStats.totalHours} ชม.`, label: 'เวลาเรียนรวม', color: 'text-primary' },
-          { icon: '🎓', value: learningStats.coursesCompleted, label: 'เรียนจบแล้ว', color: 'text-success' },
-          { icon: '📖', value: learningStats.coursesInProgress, label: 'กำลังเรียน', color: 'text-warning' },
-          { icon: '🏅', value: learningStats.achievements.length, label: 'เหรียญรางวัล', color: 'text-secondary' },
-        ].map((stat) => (
-          <div key={stat.label} className="glass rounded-xl p-4 text-center hover:scale-[1.02] transition-transform">
-            <div className="text-2xl mb-1">{stat.icon}</div>
-            <div className={`text-2xl font-extrabold ${stat.color}`}>{stat.value}</div>
-            <div className="text-xs text-text-muted">{stat.label}</div>
-          </div>
-        ))}
+        {isInstructor ? (
+          <>
+            {[
+              { icon: '🏫', value: '12 คลาส', label: 'สอนสัปดาห์นี้', color: 'text-primary' },
+              { icon: '👥', value: '48 คน', label: 'นักเรียนทั้งหมด', color: 'text-success' },
+              { icon: '⏱️', value: '156 ชม.', label: 'ชั่วโมงสอนรวม', color: 'text-warning' },
+              { icon: '⭐', value: '4.8', label: 'คะแนนเฉลี่ย', color: 'text-secondary' },
+            ].map((stat) => (
+              <div key={stat.label} className="glass rounded-xl p-4 text-center hover:scale-[1.02] transition-transform">
+                <div className="text-2xl mb-1">{stat.icon}</div>
+                <div className={`text-2xl font-extrabold ${stat.color}`}>{stat.value}</div>
+                <div className="text-xs text-text-muted">{stat.label}</div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            {[
+              { icon: '⏱️', value: `${learningStats.totalHours} ชม.`, label: 'เวลาเรียนรวม', color: 'text-primary' },
+              { icon: '🎓', value: learningStats.coursesCompleted, label: 'เรียนจบแล้ว', color: 'text-success' },
+              { icon: '📖', value: learningStats.coursesInProgress, label: 'กำลังเรียน', color: 'text-warning' },
+              { icon: '🏅', value: learningStats.achievements.length, label: 'เหรียญรางวัล', color: 'text-secondary' },
+            ].map((stat) => (
+              <div key={stat.label} className="glass rounded-xl p-4 text-center hover:scale-[1.02] transition-transform">
+                <div className="text-2xl mb-1">{stat.icon}</div>
+                <div className={`text-2xl font-extrabold ${stat.color}`}>{stat.value}</div>
+                <div className="text-xs text-text-muted">{stat.label}</div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -161,53 +198,63 @@ export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
           </div>
         </div>
 
-        {/* Right column: Recommendations */}
+        {/* Right column: Recommendations / Quick links */}
         <div className="space-y-6">
-          <div className="glass rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-              ✨ คอร์สแนะนำ
-            </h2>
-            {recommendedCourses.length === 0 ? (
-              <p className="text-text-muted text-sm text-center py-8">ไม่มีคอร์สแนะนำ</p>
-            ) : (
-              <div className="space-y-3">
-                {recommendedCourses.map((course) => (
-                  <Link
-                    key={course.id}
-                    href={`/courses/${course.id}`}
-                    className="block glass rounded-xl p-4 hover:scale-[1.02] transition-transform"
-                  >
-                    <h3 className="text-sm font-bold text-text-primary mb-1 line-clamp-2">{course.title}</h3>
-                    <div className="flex items-center gap-2 text-xs text-text-muted mb-2">
-                      <span>⭐ {course.rating}</span>
-                      <span>•</span>
-                      <span>👥 {course.totalStudents.toLocaleString()}</span>
-                    </div>
-                    <div className="flex gap-1">
-                      {course.tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 rounded-full bg-surface text-[10px] text-text-muted">{tag}</span>
-                      ))}
-                    </div>
-                    <div className="mt-2 text-sm font-bold text-primary">
-                      ฿{course.price.toLocaleString()}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          {!isInstructor && (
+            <div className="glass rounded-2xl p-6">
+              <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+                ✨ คอร์สแนะนำ
+              </h2>
+              {recommendedCourses.length === 0 ? (
+                <p className="text-text-muted text-sm text-center py-8">ไม่มีคอร์สแนะนำ</p>
+              ) : (
+                <div className="space-y-3">
+                  {recommendedCourses.map((course) => (
+                    <Link
+                      key={course.id}
+                      href={`/courses/${course.id}`}
+                      className="block glass rounded-xl p-4 hover:scale-[1.02] transition-transform"
+                    >
+                      <h3 className="text-sm font-bold text-text-primary mb-1 line-clamp-2">{course.title}</h3>
+                      <div className="flex items-center gap-2 text-xs text-text-muted mb-2">
+                        <span>⭐ {course.rating}</span>
+                        <span>•</span>
+                        <span>👥 {course.totalStudents.toLocaleString()}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {course.tags.slice(0, 2).map((tag) => (
+                          <span key={tag} className="px-2 py-0.5 rounded-full bg-surface text-[10px] text-text-muted">{tag}</span>
+                        ))}
+                      </div>
+                      <div className="mt-2 text-sm font-bold text-primary">
+                        ฿{course.price.toLocaleString()}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Quick links */}
+          {/* Quick links — role-aware */}
           <div className="glass rounded-2xl p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">🔗 ลิงก์ด่วน</h2>
             <div className="space-y-2">
-              {[
-                { href: '/courses', icon: '📚', label: 'คอร์สทั้งหมด' },
-                { href: '/categories', icon: '📂', label: 'หมวดหมู่' },
-                { href: '/instructors', icon: '👨‍🏫', label: 'อาจารย์ทั้งหมด' },
-                { href: '/schedule', icon: '📅', label: 'ตารางเรียน' },
-                { href: '/live', icon: '🔴', label: 'ห้องเรียนสด' },
-              ].map((link) => (
+              {(isInstructor
+                ? [
+                    { href: '/schedule', icon: '📅', label: 'ตารางสอนของฉัน' },
+                    { href: '/live', icon: '🔴', label: 'ห้องเรียนสด' },
+                    { href: '/courses', icon: '📚', label: 'คอร์สทั้งหมด' },
+                    { href: '/settings', icon: '⚙️', label: 'ตั้งค่า' },
+                  ]
+                : [
+                    { href: '/book', icon: '➕', label: 'จองคลาสใหม่' },
+                    { href: '/my-bookings', icon: '📋', label: 'การจองของฉัน' },
+                    { href: '/courses', icon: '📚', label: 'คอร์สทั้งหมด' },
+                    { href: '/live', icon: '🔴', label: 'ห้องเรียนสด' },
+                    { href: '/settings', icon: '⚙️', label: 'ตั้งค่า' },
+                  ]
+              ).map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

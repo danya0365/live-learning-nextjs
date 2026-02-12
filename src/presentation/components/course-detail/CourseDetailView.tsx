@@ -9,6 +9,7 @@
 import { CourseDetailViewModel } from '@/src/presentation/presenters/course-detail/CourseDetailPresenter';
 import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/useCourseDetailPresenter';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -18,6 +19,7 @@ interface CourseDetailViewProps {
 }
 
 export function CourseDetailView({ courseId, initialViewModel }: CourseDetailViewProps) {
+  const router = useRouter();
   const state = useCourseDetailPresenter(courseId, initialViewModel);
   const vm = state.viewModel;
 
@@ -142,7 +144,10 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                       <p className="text-xs text-text-muted mt-1">กำลังสอน: {slot.bookedCourseName}</p>
                     )}
                     {!slot.isBooked && (
-                      <button className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium">
+                      <button
+                        onClick={() => router.push('/book')}
+                        className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
+                      >
                         จองเวลานี้
                       </button>
                     )}
@@ -180,11 +185,17 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
               <div className="text-3xl font-extrabold text-primary mb-1">฿{course.price.toLocaleString()}</div>
               <p className="text-xs text-text-muted">ราคาต่อคอร์ส</p>
             </div>
-            <button className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform">
+            <button
+              onClick={() => router.push('/book')}
+              className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
+            >
               🎓 ลงทะเบียนเรียน
             </button>
             {course.isLive && (
-              <button className="w-full py-3 rounded-xl border-2 border-error text-error font-bold hover:bg-error/10 transition-colors">
+              <button
+                onClick={() => router.push(`/live/${course.id}`)}
+                className="w-full py-3 rounded-xl border-2 border-error text-error font-bold hover:bg-error/10 transition-colors"
+              >
                 🔴 เข้าห้องเรียนสด
               </button>
             )}
