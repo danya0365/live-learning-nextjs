@@ -1,11 +1,13 @@
 /**
  * MainLayout
  * Wraps pages with Header + Footer + decorative floating elements
+ * Auth pages (/auth/*) render without Header/Footer
  * Game-inspired aesthetic with vibrant colors
  */
 
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { type ReactNode } from 'react';
 import { Footer } from './Footer';
 import { Header } from './Header';
@@ -15,6 +17,11 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const pathname = usePathname();
+  const isAuthPage = pathname.startsWith('/auth');
+  const isLiveRoom = /^\/live\/[^/]+$/.test(pathname);
+  const isFullscreenPage = isAuthPage || isLiveRoom;
+
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-hidden">
       {/* Decorative background orbs */}
@@ -40,13 +47,13 @@ export function MainLayout({ children }: MainLayoutProps) {
         />
       </div>
 
-      <Header />
+      {!isFullscreenPage && <Header />}
 
       <main className="flex-1">
         {children}
       </main>
 
-      <Footer />
+      {!isFullscreenPage && <Footer />}
     </div>
   );
 }
