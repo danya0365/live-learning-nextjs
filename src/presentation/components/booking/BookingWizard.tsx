@@ -218,73 +218,94 @@ export function BookingWizard() {
   const currentIdx = steps.indexOf(step);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
-      {/* Progress bar */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          {steps.map((s, i) => {
-            const meta = STEP_META[s];
-            const isActive = i === currentIdx;
-            const isDone = i < currentIdx || bookingDone;
-            return (
-              <div key={s} className="flex items-center gap-1.5 flex-1">
-                <div className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold transition-all duration-300 flex-shrink-0 ${
-                  isDone ? 'bg-success text-white' : isActive ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/30' : 'bg-surface text-text-muted border border-border'
-                }`}>
-                  {isDone ? '✓' : meta.number}
-                </div>
-                <span className={`text-xs font-medium hidden sm:block transition-colors ${
-                  isActive ? 'text-primary' : isDone ? 'text-success' : 'text-text-muted'
-                }`}>
-                  {meta.label}
-                </span>
-                {i < steps.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 rounded transition-colors ${
-                    isDone ? 'bg-success' : 'bg-border/50'
-                  }`} />
-                )}
-              </div>
-            );
-          })}
+    <div className="min-h-screen flex flex-col">
+      {/* ── Top bar ── */}
+      <div className="sticky top-0 z-30 glass border-b border-border/50 backdrop-blur-xl">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors group"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            <span className="font-medium">กลับหน้าหลัก</span>
+          </button>
+          <div className="flex items-center gap-2 text-sm">
+            <span>{STEP_META[step].icon}</span>
+            <span className="font-bold text-text-primary">{STEP_META[step].label}</span>
+            <span className="text-text-muted">({currentIdx + 1}/{steps.length})</span>
+          </div>
         </div>
       </div>
 
-      {/* Step content */}
-      <div className="animate-fadeIn">
-        {step === 'course' && (
-          <StepCourse onSelect={handleCourseSelect} />
-        )}
-        {step === 'instructor' && selectedCourse && (
-          <StepInstructor
-            course={selectedCourse}
-            instructors={availableInstructors}
-            onSelect={handleInstructorSelect}
-            onBack={goBack}
-          />
-        )}
-        {step === 'calendar' && selectedCourse && selectedInstructor && (
-          <StepCalendar
-            course={selectedCourse}
-            instructor={selectedInstructor}
-            slots={calendarSlots}
-            onSelect={handleSlotSelect}
-            onBack={goBack}
-          />
-        )}
-        {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
-          <StepConfirm
-            course={selectedCourse}
-            instructor={selectedInstructor}
-            slot={selectedSlot}
-            action={bookingAction}
-            isBooking={isBooking}
-            bookingDone={bookingDone}
-            onConfirm={handleConfirm}
-            onBack={goBack}
-            onFinish={handleFinish}
-            onNewBooking={handleNewBooking}
-          />
-        )}
+      {/* ── Main content ── */}
+      <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 sm:py-10">
+        {/* Progress bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((s, i) => {
+              const meta = STEP_META[s];
+              const isActive = i === currentIdx;
+              const isDone = i < currentIdx || bookingDone;
+              return (
+                <div key={s} className="flex items-center gap-1.5 flex-1">
+                  <div className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold transition-all duration-300 flex-shrink-0 ${
+                    isDone ? 'bg-success text-white' : isActive ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/30' : 'bg-surface text-text-muted border border-border'
+                  }`}>
+                    {isDone ? '✓' : meta.number}
+                  </div>
+                  <span className={`text-xs font-medium hidden sm:block transition-colors ${
+                    isActive ? 'text-primary' : isDone ? 'text-success' : 'text-text-muted'
+                  }`}>
+                    {meta.label}
+                  </span>
+                  {i < steps.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-2 rounded transition-colors ${
+                      isDone ? 'bg-success' : 'bg-border/50'
+                    }`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Step content */}
+        <div className="animate-fadeIn">
+          {step === 'course' && (
+            <StepCourse onSelect={handleCourseSelect} />
+          )}
+          {step === 'instructor' && selectedCourse && (
+            <StepInstructor
+              course={selectedCourse}
+              instructors={availableInstructors}
+              onSelect={handleInstructorSelect}
+              onBack={goBack}
+            />
+          )}
+          {step === 'calendar' && selectedCourse && selectedInstructor && (
+            <StepCalendar
+              course={selectedCourse}
+              instructor={selectedInstructor}
+              slots={calendarSlots}
+              onSelect={handleSlotSelect}
+              onBack={goBack}
+            />
+          )}
+          {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
+            <StepConfirm
+              course={selectedCourse}
+              instructor={selectedInstructor}
+              slot={selectedSlot}
+              action={bookingAction}
+              isBooking={isBooking}
+              bookingDone={bookingDone}
+              onConfirm={handleConfirm}
+              onBack={goBack}
+              onFinish={handleFinish}
+              onNewBooking={handleNewBooking}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

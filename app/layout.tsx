@@ -1,10 +1,8 @@
 import '@/public/styles/index.css';
-import { MainLayout } from '@/src/presentation/components/layout/MainLayout';
 import { ThemeProvider } from '@/src/presentation/providers/ThemeProvider';
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from 'next/font/google';
 
-// ✅ Next.js best practice: ใช้ next/font/google สำหรับ font optimization
 const notoSansThai = Noto_Sans_Thai({
   subsets: ['thai', 'latin'],
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
@@ -27,9 +25,7 @@ export default function RootLayout({
     <html lang="th" className={notoSansThai.variable} suppressHydrationWarning>
       <body className={`${notoSansThai.className} antialiased`}>
         <ThemeProvider>
-          <MainLayout>
-            {children}
-          </MainLayout>
+          {children}
         </ThemeProvider>
       </body>
     </html>
