@@ -1,232 +1,270 @@
--- Shop Queue Seed Data - Users
--- Created: 2025-06-19
+-- Live Learning Seed Data — Init Users + Profiles
+-- Created: 2026-02-12
 -- Author: Marosdee Uma
--- Description: Sample user data for testing Shop Queue application
+-- Description: Core auth users, profiles, and role assignments for Live Learning
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Set app password for testing
-set session my.app_password = '12345678';
+SET session my.app_password = '12345678';
 
--- เพิ่มผู้ใช้ทดสอบใน auth.users
--- ใช้ฟังก์ชัน crypt และ gen_salt เพื่อเข้ารหัสรหัสผ่าน
-INSERT INTO
-    auth.users (
-        instance_id,
-        id,
-        aud,
-        role,
-        email,
-        encrypted_password,
-        email_confirmed_at,
-        recovery_sent_at,
-        last_sign_in_at,
-        raw_app_meta_data,
-        raw_user_meta_data,
-        created_at,
-        updated_at,
-        confirmation_token,
-        email_change,
-        email_change_token_new,
-        recovery_token
-    ) VALUES 
-    -- Admin user
-    (
-        '00000000-0000-0000-0000-000000000000',
-        '00000000-0000-0000-0000-000000000001',
-        'authenticated',
-        'authenticated',
-        'admin@racing.com',
-        crypt (current_setting('my.app_password'), gen_salt ('bf')),
-        NOW() - INTERVAL '30 days',
-        NULL,
-        NOW() - INTERVAL '1 day',
-        '{"provider":"email","providers":["email"]}',
-        '{
-          "username": "admin",
-          "full_name": "Admin User",
-          "role": "admin",
-          "is_active": true
-        }',
-        NOW() - INTERVAL '30 days',
-        NOW() - INTERVAL '30 days',
-        '',
-        '',
-        '',
-        ''
-    ),
-    -- Regular user 1
-    (
-        '00000000-0000-0000-0000-000000000000',
-        '00000000-0000-0000-0000-000000000003',
-        'authenticated',
-        'authenticated',
-        'user1@racinggamestation.com',
-        crypt (current_setting('my.app_password'), gen_salt ('bf')),
-        NOW() - INTERVAL '20 days',
-        NULL,
-        NOW() - INTERVAL '3 days',
-        '{"provider":"email","providers":["email"]}',
-        '{
-          "username": "user1",
-          "full_name": "Regular User 1",
-          "role": "user",
-          "is_active": true
-        }',
-        NOW() - INTERVAL '20 days',
-        NOW() - INTERVAL '20 days',
-        '',
-        '',
-        '',
-        ''
-    ),
-    -- Regular user 2
-    (
-        '00000000-0000-0000-0000-000000000000',
-        '00000000-0000-0000-0000-000000000004',
-        'authenticated',
-        'authenticated',
-        'user2@racinggamestation.com',
-        crypt (current_setting('my.app_password'), gen_salt ('bf')),
-        NOW() - INTERVAL '15 days',
-        NULL,
-        NOW() - INTERVAL '4 days',
-        '{"provider":"email","providers":["email"]}',
-        '{
-          "username": "user2",
-          "full_name": "Regular User 2",
-          "role": "user",
-          "is_active": true
-        }',
-        NOW() - INTERVAL '15 days',
-        NOW() - INTERVAL '15 days',
-        '',
-        '',
-        '',
-        ''
-    );
+-- ============================================================================
+-- AUTH USERS
+-- ============================================================================
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, last_sign_in_at,
+  raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at,
+  confirmation_token, email_change, email_change_token_new, recovery_token
+) VALUES
+  -- Admin
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000001',
+    'authenticated', 'authenticated',
+    'admin@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '90 days', NOW() - INTERVAL '1 day',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"admin","full_name":"Admin","role":"admin","is_active":true}',
+    NOW() - INTERVAL '90 days', NOW() - INTERVAL '90 days',
+    '', '', '', ''
+  ),
+  -- Instructor 1: อ.สมชาย
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000010',
+    'authenticated', 'authenticated',
+    'somchai@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '60 days', NOW() - INTERVAL '2 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"somchai","full_name":"อ.สมชาย พัฒนาเว็บ","role":"instructor","is_active":true}',
+    NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days',
+    '', '', '', ''
+  ),
+  -- Instructor 2: ดร.นภา
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000011',
+    'authenticated', 'authenticated',
+    'napa@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '50 days', NOW() - INTERVAL '3 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"napa","full_name":"ดร.นภา AI วิจัย","role":"instructor","is_active":true}',
+    NOW() - INTERVAL '50 days', NOW() - INTERVAL '50 days',
+    '', '', '', ''
+  ),
+  -- Instructor 3: อ.พิมพ์ลดา
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000012',
+    'authenticated', 'authenticated',
+    'pimlada@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '45 days', NOW() - INTERVAL '1 day',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"pimlada","full_name":"อ.พิมพ์ลดา ดีไซน์","role":"instructor","is_active":true}',
+    NOW() - INTERVAL '45 days', NOW() - INTERVAL '45 days',
+    '', '', '', ''
+  ),
+  -- Instructor 4: อ.ธนกร
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000013',
+    'authenticated', 'authenticated',
+    'thanakorn@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '40 days', NOW() - INTERVAL '4 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"thanakorn","full_name":"อ.ธนกร โมบาย","role":"instructor","is_active":true}',
+    NOW() - INTERVAL '40 days', NOW() - INTERVAL '40 days',
+    '', '', '', ''
+  ),
+  -- Instructor 5: อ.วีรภัทร
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000014',
+    'authenticated', 'authenticated',
+    'weerapat@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '35 days', NOW() - INTERVAL '5 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"weerapat","full_name":"อ.วีรภัทร ไซเบอร์","role":"instructor","is_active":true}',
+    NOW() - INTERVAL '35 days', NOW() - INTERVAL '35 days',
+    '', '', '', ''
+  ),
+  -- Student 1: น้องมิน
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000020',
+    'authenticated', 'authenticated',
+    'min@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '30 days', NOW() - INTERVAL '1 day',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"min","full_name":"น้องมิน","role":"student","is_active":true}',
+    NOW() - INTERVAL '30 days', NOW() - INTERVAL '30 days',
+    '', '', '', ''
+  ),
+  -- Student 2: น้องเบล
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000021',
+    'authenticated', 'authenticated',
+    'bel@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '25 days', NOW() - INTERVAL '2 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"bel","full_name":"น้องเบล","role":"student","is_active":true}',
+    NOW() - INTERVAL '25 days', NOW() - INTERVAL '25 days',
+    '', '', '', ''
+  ),
+  -- Student 3: น้องบอส
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000022',
+    'authenticated', 'authenticated',
+    'boss@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '20 days', NOW() - INTERVAL '3 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"boss","full_name":"น้องบอส","role":"student","is_active":true}',
+    NOW() - INTERVAL '20 days', NOW() - INTERVAL '20 days',
+    '', '', '', ''
+  ),
+  -- Student 4: น้องฟ้า
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000023',
+    'authenticated', 'authenticated',
+    'fa@livelearning.com',
+    crypt(current_setting('my.app_password'), gen_salt('bf')),
+    NOW() - INTERVAL '15 days', NOW() - INTERVAL '4 days',
+    '{"provider":"email","providers":["email"]}',
+    '{"username":"fa","full_name":"น้องฟ้า","role":"student","is_active":true}',
+    NOW() - INTERVAL '15 days', NOW() - INTERVAL '15 days',
+    '', '', '', ''
+  );
 
--- Create identities for each user using subquery from auth.users
-INSERT INTO
-    auth.identities (
-        id,
-        user_id,
-        provider_id,
-        identity_data,
-        provider,
-        last_sign_in_at,
-        created_at,
-        updated_at
-    )
+-- ============================================================================
+-- AUTH IDENTITIES (required for Supabase Auth to work)
+-- ============================================================================
+INSERT INTO auth.identities (
+  id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+)
 SELECT
-    extensions.uuid_generate_v4(),
-    id,
-    id,
-    format('{"sub":"%s","email":"%s"}', id::text, email)::jsonb,
-    'email',
-    last_sign_in_at,
-    created_at,
-    updated_at
-FROM
-    auth.users
+  extensions.uuid_generate_v4(),
+  id, id,
+  format('{"sub":"%s","email":"%s"}', id::text, email)::jsonb,
+  'email',
+  last_sign_in_at, created_at, updated_at
+FROM auth.users
 ON CONFLICT (provider_id, provider) DO NOTHING;
 
---  Racing Game Station Seed Data - Profiles
--- Created: 2025-06-19
--- Author: Marosdee Uma
--- Description: Sample profile data for testing Racing Game Station application with multiple profiles per user
+-- ============================================================================
+-- PROFILES (auto-created by trigger, but we override with specific IDs)
+-- Note: The on_auth_user_created trigger already created profiles,
+--       so we UPDATE them with our desired data instead
+-- ============================================================================
+-- First, update the auto-created profiles with our desired profile IDs and data
+-- Admin
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000001',
+  username = 'admin',
+  full_name = 'Admin',
+  avatar_url = '🛡️'
+WHERE auth_id = '00000000-0000-0000-0000-000000000001';
 
--- Insert profiles for admin user (2 profiles)
-INSERT INTO public.profiles (
-  id,
-  auth_id,
-  username,
-  full_name,
-  avatar_url,
-  is_active,
-  created_at,
-  updated_at
-)
-VALUES
-  (
-    '10000000-1000-0000-0000-000000000002',
-    '00000000-0000-0000-0000-000000000001',
-    'admin_personal',
-    'Admin Personal Account',
-    '',
-    FALSE,
-    NOW() - INTERVAL '15 days',
-    NOW() - INTERVAL '15 days'
-  ),
-  
-  -- Insert profiles for regular user 1 (3 profiles)
-  (
-    '10000000-1000-0000-0000-000000000006',
-    '00000000-0000-0000-0000-000000000003',
-    'user1_gaming',
-    'User1 Gaming Channel',
-    '',
-    FALSE,
-    NOW() - INTERVAL '18 days',
-    NOW() - INTERVAL '18 days'
-  ),
-  (
-    '10000000-1000-0000-0000-000000000007',
-    '00000000-0000-0000-0000-000000000003',
-    'user1_movies',
-    'User1 Movie Reviews',
-    '',
-    FALSE,
-    NOW() - INTERVAL '15 days',
-    NOW() - INTERVAL '15 days'
-  ),
-  
-  -- Insert profiles for regular user 2 (2 profiles)
-  (
-    '10000000-1000-0000-0000-000000000009',
-    '00000000-0000-0000-0000-000000000004',
-    'user2_tech',
-    'User2 Tech Channel',
-    '',
-    FALSE,
-    NOW() - INTERVAL '10 days',
-    NOW() - INTERVAL '10 days'
-  )
-ON CONFLICT (id) DO NOTHING;
+-- อ.สมชาย
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000010',
+  username = 'somchai',
+  full_name = 'อ.สมชาย พัฒนาเว็บ',
+  avatar_url = '👨‍🏫'
+WHERE auth_id = '00000000-0000-0000-0000-000000000010';
 
--- Created at: 2025-06-21T10:15:00+07:00
--- Author: Marosdee Uma
--- Description: Seed initial profile_roles data for Racing Game Station application
+-- ดร.นภา
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000011',
+  username = 'napa',
+  full_name = 'ดร.นภา AI วิจัย',
+  avatar_url = '👩‍🔬'
+WHERE auth_id = '00000000-0000-0000-0000-000000000011';
 
--- Insert initial admin role for the first user's active profile
--- This assumes the first user in auth.users is the system admin
-INSERT INTO public.profile_roles (profile_id, role, granted_by)
-SELECT 
-  p.id, 
-  'admin'::public.profile_role, 
-  p.auth_id
-FROM 
-  public.profiles p
-  JOIN auth.users u ON p.auth_id = u.id
-WHERE
-  p.is_active = true
-ORDER BY u.created_at
-LIMIT 1
-ON CONFLICT (profile_id) DO UPDATE
-SET role = 'admin'::public.profile_role;
+-- อ.พิมพ์ลดา
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000012',
+  username = 'pimlada',
+  full_name = 'อ.พิมพ์ลดา ดีไซน์',
+  avatar_url = '👩‍🎨'
+WHERE auth_id = '00000000-0000-0000-0000-000000000012';
 
--- Execute the migration function
-SELECT public.migrate_profile_roles();
+-- อ.ธนกร
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000013',
+  username = 'thanakorn',
+  full_name = 'อ.ธนกร โมบาย',
+  avatar_url = '👨‍💻'
+WHERE auth_id = '00000000-0000-0000-0000-000000000013';
+
+-- อ.วีรภัทร
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000014',
+  username = 'weerapat',
+  full_name = 'อ.วีรภัทร ไซเบอร์',
+  avatar_url = '🕵️'
+WHERE auth_id = '00000000-0000-0000-0000-000000000014';
+
+-- น้องมิน
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000020',
+  username = 'min',
+  full_name = 'น้องมิน',
+  avatar_url = '🧑‍💻'
+WHERE auth_id = '00000000-0000-0000-0000-000000000020';
+
+-- น้องเบล
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000021',
+  username = 'bel',
+  full_name = 'น้องเบล',
+  avatar_url = '👩‍🎓'
+WHERE auth_id = '00000000-0000-0000-0000-000000000021';
+
+-- น้องบอส
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000022',
+  username = 'boss',
+  full_name = 'น้องบอส',
+  avatar_url = '🧑‍🎓'
+WHERE auth_id = '00000000-0000-0000-0000-000000000022';
+
+-- น้องฟ้า
+UPDATE public.profiles SET
+  id = '10000000-0000-0000-0000-000000000023',
+  username = 'fa',
+  full_name = 'น้องฟ้า',
+  avatar_url = '👧'
+WHERE auth_id = '00000000-0000-0000-0000-000000000023';
 
 -- ============================================================================
--- RACING GAME STATION: Seed Machines
+-- ASSIGN ROLES (override auto-created 'student' roles)
 -- ============================================================================
-INSERT INTO public.machines (id, name, description, position, status, is_active)
-VALUES
-  ('00000000-0000-0000-0000-000000000101', 'Game Station 1', 'เครื่อง Formula Racing Game Station พร้อมพวงมาลัย Fanatec GT DD Pro', 1, 'available', TRUE),
-  ('00000000-0000-0000-0000-000000000102', 'Game Station 2', 'เครื่อง GT Racing Game Station พร้อมพวงมาลัย Thrustmaster T300RS', 2, 'available', TRUE),
-  ('00000000-0000-0000-0000-000000000103', 'Game Station 3', 'เครื่อง Rally Racing Game Station พร้อมพวงมาลัย Logitech G923', 3, 'available', TRUE),
-  ('00000000-0000-0000-0000-000000000104', 'Game Station 4', 'เครื่อง Drift Game Station พร้อมจอโค้ง Ultrawide 49 นิ้ว', 4, 'available', TRUE),
-  ('00000000-0000-0000-0000-000000000105', 'Game Station 5', 'เครื่อง F1 Game Station VIP พร้อมระบบ Motion Platform', 5, 'available', TRUE),
-  ('00000000-0000-0000-0000-000000000106', 'Game Station 6', 'เครื่อง Endurance Game Station ระดับ Pro สำหรับ E-Sports', 6, 'maintenance', FALSE)
-ON CONFLICT (id) DO NOTHING;
+-- Admin role
+UPDATE public.profile_roles SET role = 'admin'::public.profile_role
+WHERE profile_id = '10000000-0000-0000-0000-000000000001';
+
+-- Instructor roles
+UPDATE public.profile_roles SET role = 'instructor'::public.profile_role
+WHERE profile_id IN (
+  '10000000-0000-0000-0000-000000000010',
+  '10000000-0000-0000-0000-000000000011',
+  '10000000-0000-0000-0000-000000000012',
+  '10000000-0000-0000-0000-000000000013',
+  '10000000-0000-0000-0000-000000000014'
+);
+
+-- Students keep default 'student' role — no update needed

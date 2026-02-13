@@ -1,7 +1,7 @@
--- FilmNest Storage Configuration
+-- Live Learning Storage Configuration
 -- Created: 2025-06-18
 -- Author: Marosdee Uma
--- Description: Supabase Storage configuration for FilmNest application
+-- Description: Supabase Storage configuration for Live Learning application
 
 -- Create storage buckets
 INSERT INTO storage.buckets (id, name, public, avif_autodetection)
