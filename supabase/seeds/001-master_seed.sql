@@ -13,5 +13,8 @@ VALUES
   ('20000000-0000-0000-0000-000000000004', 'Mobile Development', 'mobile-development', '📱', 'iOS, Android & Flutter', 'hsl(150, 70%, 50%)', 4, TRUE),
   ('20000000-0000-0000-0000-000000000005', 'Cybersecurity', 'cybersecurity', '🛡️', 'Ethical Hacking', 'hsl(0, 70%, 55%)', 5, TRUE),
   ('20000000-0000-0000-0000-000000000006', 'DevOps & Cloud', 'devops-cloud', '☁️', 'Docker & Kubernetes', 'hsl(45, 90%, 55%)', 6, TRUE),
-  ('20000000-0000-0000-0000-000000000007', 'Game Development', 'game-development', '🎮', 'Unity, Unreal, Godot & WebGL', 'hsl(260, 80%, 65%)', 7, TRUE)
+  ('20000000-0000-0000-0000-000000000007', 'Game Development', 'game-development', '🎮', 'Unity, Unreal, Godot & WebGL', 'hsl(260, 80%, 65%)', 7, TRUE),
+  ('20000000-0000-0000-0000-000000000008', 'Tools & Productivity', 'tools-productivity', '⚡', 'VS Code, Git, Docker, & Productivity', 'hsl(30, 90%, 60%)', 8, TRUE),
+  ('20000000-0000-0000-0000-000000000009', 'Career & Business', 'career-business', '💼', 'Freelancing, SaaS, & Soft Skills', 'hsl(200, 30%, 40%)', 9, TRUE),
+  ('20000000-0000-0000-0000-000000000010', 'No-Code & Automation', 'no-code-automation', '⚡', 'Bubble, Zapier, Webflow', 'hsl(280, 80%, 70%)', 10, TRUE)
 ON CONFLICT (id) DO NOTHING;
