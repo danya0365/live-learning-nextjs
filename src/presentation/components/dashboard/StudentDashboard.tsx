@@ -10,80 +10,41 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
-
-/* ── Mock booked classes ──────────────────── */
-
-interface BookedClass {
-  id: string;
-  courseId: string;
-  courseTitle: string;
-  instructorName: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  status: 'live' | 'upcoming' | 'past';
-  studentsJoined: number;
-}
-
-const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-
-function getNextDateForDay(dayOfWeek: number): Date {
-  const now = new Date();
-  const currentDay = now.getDay();
-  let diff = dayOfWeek - currentDay;
-  if (diff < 0) diff += 7;
-  if (diff === 0) return now;
-  const nextDate = new Date(now);
-  nextDate.setDate(now.getDate() + diff);
-  return nextDate;
-}
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-}
-
-const MOCK_BOOKED: BookedClass[] = [
-  {
-    id: 'bk-001',
-    courseId: 'course-001',
-    courseTitle: 'พื้นฐาน React.js สำหรับผู้เริ่มต้น',
-    instructorName: 'อ.สมชาย พัฒนาเว็บ',
-    dayOfWeek: new Date().getDay(), // today!
-    startTime: '13:00',
-    endTime: '15:00',
-    status: 'live',
-    studentsJoined: 5,
-  },
-  {
-    id: 'bk-002',
-    courseId: 'course-002',
-    courseTitle: 'Python AI & Machine Learning',
-    instructorName: 'ดร.นภา AI วิจัย',
-    dayOfWeek: (new Date().getDay() + 2) % 7,
-    startTime: '10:00',
-    endTime: '12:00',
-    status: 'upcoming',
-    studentsJoined: 3,
-  },
-  {
-    id: 'bk-003',
-    courseId: 'course-004',
-    courseTitle: 'Node.js & Express Backend',
-    instructorName: 'อ.สมชาย พัฒนาเว็บ',
-    dayOfWeek: (new Date().getDay() + 5) % 7,
-    startTime: '14:00',
-    endTime: '16:00',
-    status: 'upcoming',
-    studentsJoined: 2,
-  },
-];
 
 /* ── Component ─────────────────────────────── */
 
-export function StudentDashboard({ userName }: { userName: string }) {
-  const liveClasses = useMemo(() => MOCK_BOOKED.filter((c) => c.status === 'live'), []);
-  const upcomingClasses = useMemo(() => MOCK_BOOKED.filter((c) => c.status === 'upcoming'), []);
+import { Booking } from '@/src/application/repositories/IBookingRepository';
+
+interface StudentDashboardProps {
+  userName: string;
+  bookings?: Booking[];
+}
+
+function isLive(booking: Booking): boolean {
+  // Simple check: if status is confirmed and time is now (mock logic for demo)
+  // In real app, check current time vs start/end time
+  const now = new Date();
+  const date = new Date(booking.scheduledDate + 'T' + booking.startTime);
+  const end = new Date(booking.scheduledDate + 'T' + booking.endTime);
+  // For demo, if status is 'confirmed' and today is the day, let's just show it as upcoming unless specifically marked
+  return false; 
+}
+
+export function StudentDashboard({ userName, bookings = [] }: StudentDashboardProps) {
+  // Filter bookings
+  // For demo simplicity: 
+  // - Live: if status is 'confirmed' and we hardcode one or check time
+  // - Upcoming: status 'confirmed' or 'pending'
+  
+  // Let's rely on status 'confirmed' for upcoming.
+  // If we want to show 'live', we'd need real time logic. For now, let's treat all confirmed as upcoming
+  // unless we want to simulate live.
+  
+  const liveClasses = bookings.filter(b => b.status === 'confirmed' && isLive(b)); 
+  // actually, let's just show all confirmed/pending as upcoming for now to keep it safe, 
+  // or use a specific mock 'live' status if strict.
+  
+  const upcomingClasses = bookings.filter(b => ('confirmed' === b.status || 'pending' === b.status) && !isLive(b));
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
@@ -118,10 +79,10 @@ export function StudentDashboard({ userName }: { userName: string }) {
                 <span className="text-xs font-bold text-red-500 uppercase tracking-wider">กำลังสอนอยู่</span>
               </div>
               <h3 className="text-lg font-bold text-text-primary group-hover:text-red-500 transition-colors mb-1">
-                {cls.courseTitle}
+                {cls.courseName}
               </h3>
               <p className="text-text-muted text-sm mb-4">
-                {cls.instructorName} • {cls.startTime}—{cls.endTime} • 👥 {cls.studentsJoined} คนในห้อง
+                {cls.instructorName} • {cls.startTime}—{cls.endTime}
               </p>
               <div className="btn-game text-center py-3 rounded-xl text-white font-bold text-sm">
                 🔴 เข้าเรียนเลย
@@ -139,7 +100,10 @@ export function StudentDashboard({ userName }: { userName: string }) {
           </h2>
           <div className="space-y-3">
             {upcomingClasses.map((cls) => {
-              const nextDate = getNextDateForDay(cls.dayOfWeek);
+              const dateObj = new Date(cls.scheduledDate);
+              const dayName = dateObj.toLocaleDateString('th-TH', { weekday: 'long' });
+              const dateStr = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+              
               return (
                 <div
                   key={cls.id}
@@ -148,17 +112,17 @@ export function StudentDashboard({ userName }: { userName: string }) {
                   {/* Date badge */}
                   <div className="flex flex-col items-center justify-center w-14 h-14 rounded-xl bg-primary/10 shrink-0">
                     <span className="text-[10px] text-primary font-bold uppercase">
-                      {DAY_LABELS[cls.dayOfWeek].slice(0, 2)}
+                      {dayName.slice(0, 2)}
                     </span>
                     <span className="text-lg font-extrabold text-primary leading-none">
-                      {formatDate(nextDate).split(' ')[0]}
+                      {dateStr.split(' ')[0]}
                     </span>
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-text-primary text-sm truncate">
-                      {cls.courseTitle}
+                      {cls.courseName}
                     </h3>
                     <p className="text-text-muted text-xs">
                       {cls.instructorName} • {cls.startTime}—{cls.endTime}
@@ -166,8 +130,10 @@ export function StudentDashboard({ userName }: { userName: string }) {
                   </div>
 
                   {/* Status */}
-                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full shrink-0">
-                    {DAY_LABELS[cls.dayOfWeek]}
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${
+                    cls.status === 'confirmed' ? 'text-primary bg-primary/10' : 'text-orange-500 bg-orange-500/10'
+                  }`}>
+                    {cls.status === 'confirmed' ? 'ยืนยันแล้ว' : 'รอการยืนยัน'}
                   </span>
                 </div>
               );

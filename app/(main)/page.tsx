@@ -1,46 +1,38 @@
+import { HomeView } from "@/src/presentation/components/home/HomeView";
+import { createServerHomePresenter } from "@/src/presentation/presenters/home/HomePresenterServerFactory";
+import type { Metadata } from "next";
+
+// Tell Next.js this is a dynamic page
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const presenter = createServerHomePresenter();
+  return presenter.generateMetadata();
+}
+
 /**
- * Home Page — Role-based routing
- *
- * Not logged in → LandingView (popular courses + CTA)
- * Student       → StudentDashboard (book + join live)
- * Instructor    → InstructorDashboard (teach live + manage schedule)
+ * Home Page - Server Component
+ * Handled by HomePresenter + HomeView following Clean Architecture
  */
+export default async function HomePage() {
+  const presenter = createServerHomePresenter();
 
-'use client';
-
-import { InstructorDashboard } from '@/src/presentation/components/dashboard/InstructorDashboard';
-import { LandingView } from '@/src/presentation/components/dashboard/LandingView';
-import { StudentDashboard } from '@/src/presentation/components/dashboard/StudentDashboard';
-import { useAuthStore } from '@/src/stores/authStore';
-import { useEffect, useState } from 'react';
-
-export default function HomePage() {
-  const { isAuthenticated, user } = useAuthStore();
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  // Prevent flash during hydration
-  if (!hydrated) {
+  try {
+    const viewModel = await presenter.getViewModel();
+    return <HomeView initialViewModel={viewModel} />;
+  } catch (error) {
+    console.error("Error fetching home data:", error);
+    // Fallback UI
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-pulse text-text-muted text-sm">กำลังโหลด...</div>
-      </div>
+       <div className="min-h-screen bg-background flex items-center justify-center">
+         <div className="text-center">
+           <h1 className="text-2xl font-bold text-foreground mb-2">
+             เกิดข้อผิดพลาด
+           </h1>
+           <p className="text-muted mb-4">ไม่สามารถโหลดข้อมูลหน้าแรกได้</p>
+         </div>
+       </div>
     );
   }
-
-  // Not logged in → Landing
-  if (!isAuthenticated || !user) {
-    return <LandingView />;
-  }
-
-  // Instructor
-  if (user.role === 'instructor') {
-    return <InstructorDashboard userName={user.name} />;
-  }
-
-  // Student (default)
-  return <StudentDashboard userName={user.name} />;
 }

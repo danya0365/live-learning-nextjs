@@ -4,6 +4,7 @@
  * Aggregates data from multiple repositories
  */
 
+import { Booking, IBookingRepository } from '@/src/application/repositories/IBookingRepository';
 import { Category, ICategoryRepository } from '@/src/application/repositories/ICategoryRepository';
 import { Course, ICourseRepository } from '@/src/application/repositories/ICourseRepository';
 import { IInstructorRepository, Instructor } from '@/src/application/repositories/IInstructorRepository';
@@ -27,6 +28,7 @@ export class HomePresenter {
     private readonly courseRepository: ICourseRepository,
     private readonly instructorRepository: IInstructorRepository,
     private readonly categoryRepository: ICategoryRepository,
+    private readonly bookingRepository: IBookingRepository,
   ) {}
 
   async getViewModel(): Promise<HomeViewModel> {
@@ -55,6 +57,26 @@ export class HomePresenter {
     } catch (error) {
       console.error('Error getting home view model:', error);
       throw error;
+    }
+  }
+
+  async getStudentDashboardData(studentId: string): Promise<{ bookings: Booking[] }> {
+    try {
+      const bookings = await this.bookingRepository.getByStudentId(studentId);
+      return { bookings };
+    } catch (error) {
+      console.error('Error getting student dashboard data:', error);
+      return { bookings: [] };
+    }
+  }
+
+  async getInstructorDashboardData(instructorId: string): Promise<{ schedule: Booking[] }> {
+    try {
+      const schedule = await this.bookingRepository.getByInstructorId(instructorId);
+      return { schedule };
+    } catch (error) {
+      console.error('Error getting instructor dashboard data:', error);
+      return { schedule: [] };
     }
   }
 

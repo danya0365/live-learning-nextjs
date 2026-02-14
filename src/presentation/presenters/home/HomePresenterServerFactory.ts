@@ -4,6 +4,7 @@
  * ✅ Injects Mock repositories for development
  */
 
+import { MockBookingRepository } from '@/src/infrastructure/repositories/mock/MockBookingRepository';
 import { MockCategoryRepository } from '@/src/infrastructure/repositories/mock/MockCategoryRepository';
 import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
 import { MockInstructorRepository } from '@/src/infrastructure/repositories/mock/MockInstructorRepository';
@@ -14,8 +15,9 @@ export class HomePresenterServerFactory {
     const courseRepository = new MockCourseRepository();
     const instructorRepository = new MockInstructorRepository();
     const categoryRepository = new MockCategoryRepository();
+    const bookingRepository = new MockBookingRepository();
 
-    return new HomePresenter(courseRepository, instructorRepository, categoryRepository);
+    return new HomePresenter(courseRepository, instructorRepository, categoryRepository, bookingRepository);
   }
 }
 
