@@ -1,114 +1,11 @@
-/**
- * BookingWizard — Focus Mode Step-by-Step Booking
- *
- * Flow: เลือกคอร์ส → เลือกอาจารย์ → ดูปฏิทิน → ยืนยัน
- *
- * Calendar slots:
- *   🟢 Green  = ว่าง → จองใหม่
- *   🟡 Yellow = มีคนจองแล้ว → เข้าร่วมห้อง
- *   ⬜ Gray   = ไม่มี slot
- */
-
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { WizardCourse, WizardInstructor, WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
+import { useBookingWizardPresenter } from '@/src/presentation/presenters/booking/useBookingWizardPresenter';
+import { useMemo, useState } from 'react';
+import BookingSkeleton from './BookingSkeleton';
 
-/* ── Types ─────────────────────────────────── */
-
-type Step = 'course' | 'instructor' | 'calendar' | 'confirm';
-
-interface CourseOption {
-  id: string;
-  title: string;
-  level: string;
-  rating: number;
-  totalStudents: number;
-  price: number;
-  tags: string[];
-  instructorId: string;
-  instructorName: string;
-  durationMinutes: number;
-  categoryName: string;
-}
-
-interface InstructorOption {
-  id: string;
-  name: string;
-  specializations: string[];
-  rating: number;
-  totalStudents: number;
-  hourlyRate: number;
-  isOnline: boolean;
-  coursesForSelected: string[];
-}
-
-interface CalendarSlot {
-  id: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  status: 'available' | 'booked' | 'none';
-  bookedCourseName?: string;
-  bookedCourseId?: string;
-}
-
-interface BookingSummary {
-  course: CourseOption;
-  instructor: InstructorOption;
-  slot: CalendarSlot;
-  date: string;
-  action: 'new' | 'join';
-}
-
-/* ── Mock Data (inline for focus) ──────────── */
-
-const ALL_COURSES: CourseOption[] = [
-  { id: 'course-001', title: 'พื้นฐาน React.js สำหรับผู้เริ่มต้น', level: 'beginner', rating: 4.8, totalStudents: 2450, price: 1990, tags: ['React', 'JavaScript', 'Frontend'], instructorId: 'inst-001', instructorName: 'อ.สมชาย พัฒนาเว็บ', durationMinutes: 120, categoryName: 'Web Development' },
-  { id: 'course-002', title: 'Python AI & Machine Learning', level: 'intermediate', rating: 4.9, totalStudents: 1890, price: 3490, tags: ['Python', 'AI', 'Machine Learning'], instructorId: 'inst-002', instructorName: 'ดร.นภา AI วิจัย', durationMinutes: 120, categoryName: 'Data Science & AI' },
-  { id: 'course-003', title: 'UX/UI Design Masterclass', level: 'beginner', rating: 4.7, totalStudents: 1560, price: 2490, tags: ['UX', 'UI', 'Figma', 'Design'], instructorId: 'inst-003', instructorName: 'อ.พิมพ์ลดา ดีไซน์', durationMinutes: 120, categoryName: 'Design' },
-  { id: 'course-004', title: 'Node.js & Express Backend', level: 'intermediate', rating: 4.6, totalStudents: 980, price: 2990, tags: ['Node.js', 'Express', 'MongoDB'], instructorId: 'inst-001', instructorName: 'อ.สมชาย พัฒนาเว็บ', durationMinutes: 120, categoryName: 'Web Development' },
-  { id: 'course-005', title: 'Flutter Mobile App Development', level: 'intermediate', rating: 4.5, totalStudents: 720, price: 2790, tags: ['Flutter', 'Dart', 'Mobile'], instructorId: 'inst-004', instructorName: 'อ.ธนกร โมบาย', durationMinutes: 120, categoryName: 'Mobile Development' },
-  { id: 'course-006', title: 'Cybersecurity Fundamentals', level: 'advanced', rating: 4.9, totalStudents: 350, price: 4990, tags: ['Cybersecurity', 'Hacking', 'Security'], instructorId: 'inst-005', instructorName: 'อ.วีรภัทร ไซเบอร์', durationMinutes: 180, categoryName: 'Cybersecurity' },
-];
-
-const ALL_INSTRUCTORS: InstructorOption[] = [
-  { id: 'inst-001', name: 'อ.สมชาย พัฒนาเว็บ', specializations: ['React', 'Node.js', 'TypeScript'], rating: 4.8, totalStudents: 3430, hourlyRate: 800, isOnline: true, coursesForSelected: ['course-001', 'course-004'] },
-  { id: 'inst-002', name: 'ดร.นภา AI วิจัย', specializations: ['Python', 'Machine Learning', 'Deep Learning'], rating: 4.9, totalStudents: 1890, hourlyRate: 1200, isOnline: false, coursesForSelected: ['course-002'] },
-  { id: 'inst-003', name: 'อ.พิมพ์ลดา ดีไซน์', specializations: ['UX Design', 'UI Design', 'Figma'], rating: 4.7, totalStudents: 1560, hourlyRate: 700, isOnline: true, coursesForSelected: ['course-003'] },
-  { id: 'inst-004', name: 'อ.ธนกร โมบาย', specializations: ['Flutter', 'React Native', 'Dart'], rating: 4.5, totalStudents: 720, hourlyRate: 650, isOnline: true, coursesForSelected: ['course-005'] },
-  { id: 'inst-005', name: 'อ.วีรภัทร ไซเบอร์', specializations: ['Cybersecurity', 'Ethical Hacking'], rating: 4.9, totalStudents: 350, hourlyRate: 1500, isOnline: false, coursesForSelected: ['course-006'] },
-];
-
-const ALL_SLOTS: Record<string, CalendarSlot[]> = {
-  'inst-001': [
-    { id: 'ts-001', dayOfWeek: 1, startTime: '09:00', endTime: '11:00', status: 'available' },
-    { id: 'ts-002', dayOfWeek: 1, startTime: '13:00', endTime: '15:00', status: 'booked', bookedCourseId: 'course-001', bookedCourseName: 'พื้นฐาน React.js' },
-    { id: 'ts-003', dayOfWeek: 3, startTime: '09:00', endTime: '11:00', status: 'available' },
-    { id: 'ts-004', dayOfWeek: 3, startTime: '14:00', endTime: '16:00', status: 'available' },
-    { id: 'ts-005', dayOfWeek: 5, startTime: '14:00', endTime: '16:00', status: 'booked', bookedCourseId: 'course-004', bookedCourseName: 'Node.js & Express' },
-    { id: 'ts-006', dayOfWeek: 5, startTime: '09:00', endTime: '11:00', status: 'available' },
-  ],
-  'inst-002': [
-    { id: 'ts-007', dayOfWeek: 2, startTime: '10:00', endTime: '12:00', status: 'booked', bookedCourseId: 'course-002', bookedCourseName: 'Python AI & ML' },
-    { id: 'ts-008', dayOfWeek: 4, startTime: '10:00', endTime: '12:00', status: 'available' },
-    { id: 'ts-009', dayOfWeek: 4, startTime: '14:00', endTime: '16:00', status: 'available' },
-  ],
-  'inst-003': [
-    { id: 'ts-010', dayOfWeek: 1, startTime: '10:00', endTime: '12:00', status: 'booked', bookedCourseId: 'course-003', bookedCourseName: 'UX/UI Masterclass' },
-    { id: 'ts-011', dayOfWeek: 3, startTime: '13:00', endTime: '15:00', status: 'available' },
-    { id: 'ts-012', dayOfWeek: 6, startTime: '09:00', endTime: '12:00', status: 'available' },
-  ],
-  'inst-004': [
-    { id: 'ts-013', dayOfWeek: 2, startTime: '18:00', endTime: '20:00', status: 'booked', bookedCourseId: 'course-005', bookedCourseName: 'Flutter Mobile' },
-    { id: 'ts-014', dayOfWeek: 4, startTime: '18:00', endTime: '20:00', status: 'available' },
-    { id: 'ts-015', dayOfWeek: 6, startTime: '10:00', endTime: '12:00', status: 'available' },
-  ],
-  'inst-005': [
-    { id: 'ts-016', dayOfWeek: 6, startTime: '09:00', endTime: '12:00', status: 'booked', bookedCourseId: 'course-006', bookedCourseName: 'Cybersecurity' },
-    { id: 'ts-017', dayOfWeek: 0, startTime: '13:00', endTime: '16:00', status: 'available' },
-  ],
-};
+/* ── UI Constants ──────────────────────────── */
 
 const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const DAY_SHORT = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
@@ -117,6 +14,8 @@ const LEVEL_MAP: Record<string, { label: string; color: string }> = {
   intermediate: { label: 'กลาง', color: 'bg-primary/10 text-primary border-primary/30' },
   advanced: { label: 'สูง', color: 'bg-warning/10 text-warning border-warning/30' },
 };
+
+type Step = 'course' | 'instructor' | 'calendar' | 'confirm';
 
 const STEP_META: Record<Step, { number: number; label: string; icon: string }> = {
   course: { number: 1, label: 'เลือกคอร์ส', icon: '📚' },
@@ -138,84 +37,28 @@ function getNextDateForDay(dayOfWeek: number): string {
 
 /* ── Component ─────────────────────────────── */
 export function BookingWizard() {
-  const router = useRouter();
-  const [step, setStep] = useState<Step>('course');
-  const [selectedCourse, setSelectedCourse] = useState<CourseOption | null>(null);
-  const [selectedInstructor, setSelectedInstructor] = useState<InstructorOption | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
-  const [bookingAction, setBookingAction] = useState<'new' | 'join'>('new');
-  const [isBooking, setIsBooking] = useState(false);
-  const [bookingDone, setBookingDone] = useState(false);
-
-  // Filter instructors for selected course
-  const availableInstructors = useMemo(() => {
-    if (!selectedCourse) return [];
-    return ALL_INSTRUCTORS.filter((inst) =>
-      inst.coursesForSelected.includes(selectedCourse.id),
-    );
-  }, [selectedCourse]);
-
-  // Get slots for selected instructor
-  const calendarSlots = useMemo(() => {
-    if (!selectedInstructor) return [];
-    return ALL_SLOTS[selectedInstructor.id] || [];
-  }, [selectedInstructor]);
-
-  // Auto-select instructor if only one available
-  useEffect(() => {
-    if (availableInstructors.length === 1 && step === 'instructor') {
-      setSelectedInstructor(availableInstructors[0]);
-      setStep('calendar');
-    }
-  }, [availableInstructors, step]);
-
-  const goBack = useCallback(() => {
-    if (step === 'instructor') { setStep('course'); setSelectedInstructor(null); }
-    else if (step === 'calendar') { setStep('instructor'); setSelectedSlot(null); }
-    else if (step === 'confirm') { setStep('calendar'); setSelectedSlot(null); }
-  }, [step]);
-
-  const handleCourseSelect = useCallback((course: CourseOption) => {
-    setSelectedCourse(course);
-    setSelectedInstructor(null);
-    setSelectedSlot(null);
-    setStep('instructor');
-  }, []);
-
-  const handleInstructorSelect = useCallback((instructor: InstructorOption) => {
-    setSelectedInstructor(instructor);
-    setSelectedSlot(null);
-    setStep('calendar');
-  }, []);
-
-  const handleSlotSelect = useCallback((slot: CalendarSlot) => {
-    setSelectedSlot(slot);
-    setBookingAction(slot.status === 'booked' ? 'join' : 'new');
-    setStep('confirm');
-  }, []);
-
-  const handleConfirm = useCallback(async () => {
-    setIsBooking(true);
-    // Simulate API call
-    await new Promise((res) => setTimeout(res, 1500));
-    setIsBooking(false);
-    setBookingDone(true);
-  }, []);
-
-  const handleFinish = useCallback(() => {
-    router.push('/my-bookings');
-  }, [router]);
-
-  const handleNewBooking = useCallback(() => {
-    setStep('course');
-    setSelectedCourse(null);
-    setSelectedInstructor(null);
-    setSelectedSlot(null);
-    setBookingDone(false);
-  }, []);
+  const { state, actions } = useBookingWizardPresenter();
+  
+  const {
+    step,
+    courses,
+    availableInstructors,
+    calendarSlots,
+    selectedCourse,
+    selectedInstructor,
+    selectedSlot,
+    bookingAction,
+    isBooking,
+    bookingDone,
+    loading
+  } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
   const currentIdx = steps.indexOf(step);
+
+  if (loading) {
+    return <BookingSkeleton />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -223,7 +66,7 @@ export function BookingWizard() {
       <div className="sticky top-0 z-30 glass border-b border-border/50 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => window.location.href = '/'} 
             className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
@@ -272,14 +115,14 @@ export function BookingWizard() {
         {/* Step content */}
         <div className="animate-fadeIn">
           {step === 'course' && (
-            <StepCourse onSelect={handleCourseSelect} />
+            <StepCourse courses={courses} onSelect={actions.handleCourseSelect} />
           )}
           {step === 'instructor' && selectedCourse && (
             <StepInstructor
               course={selectedCourse}
               instructors={availableInstructors}
-              onSelect={handleInstructorSelect}
-              onBack={goBack}
+              onSelect={actions.handleInstructorSelect}
+              onBack={actions.goBack}
             />
           )}
           {step === 'calendar' && selectedCourse && selectedInstructor && (
@@ -287,8 +130,8 @@ export function BookingWizard() {
               course={selectedCourse}
               instructor={selectedInstructor}
               slots={calendarSlots}
-              onSelect={handleSlotSelect}
-              onBack={goBack}
+              onSelect={actions.handleSlotSelect}
+              onBack={actions.goBack}
             />
           )}
           {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
@@ -299,10 +142,10 @@ export function BookingWizard() {
               action={bookingAction}
               isBooking={isBooking}
               bookingDone={bookingDone}
-              onConfirm={handleConfirm}
-              onBack={goBack}
-              onFinish={handleFinish}
-              onNewBooking={handleNewBooking}
+              onConfirm={actions.handleConfirm}
+              onBack={actions.goBack}
+              onFinish={actions.handleFinish}
+              onNewBooking={actions.handleNewBooking}
             />
           )}
         </div>
@@ -314,19 +157,19 @@ export function BookingWizard() {
 /* ════════════════════════════════════════════
    Step 1: เลือกคอร์ส
    ════════════════════════════════════════════ */
-function StepCourse({ onSelect }: { onSelect: (c: CourseOption) => void }) {
+function StepCourse({ courses, onSelect }: { courses: WizardCourse[]; onSelect: (c: WizardCourse) => void }) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    if (!search) return ALL_COURSES;
+    if (!search) return courses;
     const q = search.toLowerCase();
-    return ALL_COURSES.filter(
+    return courses.filter(
       (c) =>
         c.title.toLowerCase().includes(q) ||
         c.tags.some((t) => t.toLowerCase().includes(q)) ||
         c.categoryName.toLowerCase().includes(q),
     );
-  }, [search]);
+  }, [search, courses]);
 
   return (
     <div>
@@ -416,9 +259,9 @@ function StepInstructor({
   onSelect,
   onBack,
 }: {
-  course: CourseOption;
-  instructors: InstructorOption[];
-  onSelect: (i: InstructorOption) => void;
+  course: WizardCourse;
+  instructors: WizardInstructor[];
+  onSelect: (i: WizardInstructor) => void;
   onBack: () => void;
 }) {
   return (
@@ -498,7 +341,7 @@ function StepInstructor({
 
       {instructors.length === 0 && (
         <div className="text-center py-12 glass rounded-2xl">
-          <div className="text-4xl mb-3">😕</div>
+          <div className="text-4xl mb-3">👨‍🏫</div>
           <p className="text-text-muted">ไม่พบอาจารย์สำหรับคอร์สนี้</p>
         </div>
       )}
@@ -516,15 +359,15 @@ function StepCalendar({
   onSelect,
   onBack,
 }: {
-  course: CourseOption;
-  instructor: InstructorOption;
-  slots: CalendarSlot[];
-  onSelect: (slot: CalendarSlot) => void;
+  course: WizardCourse;
+  instructor: WizardInstructor;
+  slots: WizardSlot[];
+  onSelect: (slot: WizardSlot) => void;
   onBack: () => void;
 }) {
   // Group slots by day of week
   const slotsByDay = useMemo(() => {
-    const grouped: Record<number, CalendarSlot[]> = {};
+    const grouped: Record<number, WizardSlot[]> = {};
     for (const slot of slots) {
       if (!grouped[slot.dayOfWeek]) grouped[slot.dayOfWeek] = [];
       grouped[slot.dayOfWeek].push(slot);
@@ -674,9 +517,9 @@ function StepConfirm({
   onFinish,
   onNewBooking,
 }: {
-  course: CourseOption;
-  instructor: InstructorOption;
-  slot: CalendarSlot;
+  course: WizardCourse;
+  instructor: WizardInstructor;
+  slot: WizardSlot;
   action: 'new' | 'join';
   isBooking: boolean;
   bookingDone: boolean;
