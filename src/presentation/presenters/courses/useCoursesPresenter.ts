@@ -32,15 +32,16 @@ export function useCoursesPresenter(
   const loadData = useCallback(async (f?: Partial<CoursesFilters>) => {
     setLoading(true);
     setError(null);
+    const filtersToUse = f || filters;
     try {
-      const vm = await presenter.getViewModel(f);
+      const vm = await presenter.getViewModel(filtersToUse);
       if (isMountedRef.current) setViewModel(vm);
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [presenter]);
+  }, [presenter, filters]);
 
   const setCategory = useCallback((categoryId: string | null) => {
     const next = { ...filters, categoryId };

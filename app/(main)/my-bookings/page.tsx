@@ -7,20 +7,13 @@
 
 import { AuthGuard } from '@/src/presentation/components/auth/AuthGuard';
 import { MyBookingsView } from '@/src/presentation/components/my-bookings/MyBookingsView';
-import { useMyBookingsPresenter } from '@/src/presentation/presenters/my-bookings/useMyBookingsPresenter';
 
 import MyBookingsSkeleton from '@/src/presentation/components/my-bookings/MyBookingsSkeleton';
 
 export default function MyBookingsPage() {
   return (
     <AuthGuard fallback={<MyBookingsSkeleton />}>
-      <MyBookingsContent />
+      <MyBookingsView />
     </AuthGuard>
   );
-}
-
-function MyBookingsContent() {
-  const [state] = useMyBookingsPresenter();
-
-  return <MyBookingsView initialViewModel={state.viewModel ?? undefined} />;
 }
