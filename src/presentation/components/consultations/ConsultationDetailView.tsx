@@ -10,6 +10,7 @@ import { ConsultationOffer, ConsultationRequest } from '@/src/application/reposi
 import { createClientConsultationsPresenter } from '@/src/presentation/presenters/consultations/ConsultationsPresenterClientFactory';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import ConsultationDetailSkeleton from './ConsultationDetailSkeleton';
 
 const STATUS_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string }> = {
   open: { label: 'เปิดรับข้อเสนอ', icon: '🟢', color: 'text-success', bg: 'bg-success/10 border-success/30' },
@@ -89,14 +90,7 @@ export function ConsultationDetailView({ requestId }: ConsultationDetailViewProp
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">💬</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดรายละเอียด...</p>
-        </div>
-      </div>
-    );
+    return <ConsultationDetailSkeleton />;
   }
 
   if (!request) {

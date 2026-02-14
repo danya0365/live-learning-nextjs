@@ -8,6 +8,7 @@
 
 import { useConsultationBoardPresenter } from '@/src/presentation/presenters/consultation-board/useConsultationBoardPresenter';
 import Link from 'next/link';
+import ConsultationsSkeleton from '../consultations/ConsultationsSkeleton';
 
 const LEVEL_CONFIG: Record<string, { label: string; color: string }> = {
   beginner: { label: 'เริ่มต้น', color: 'text-success' },
@@ -30,14 +31,7 @@ export function ConsultationBoardView() {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📋</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดคำขอปรึกษา...</p>
-        </div>
-      </div>
-    );
+    return <ConsultationsSkeleton />;
   }
 
   if (state.error && !vm) {

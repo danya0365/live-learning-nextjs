@@ -9,6 +9,7 @@
 import { CourseSortOption, CoursesViewModel } from '@/src/presentation/presenters/courses/CoursesPresenter';
 import { useCoursesPresenter } from '@/src/presentation/presenters/courses/useCoursesPresenter';
 import Link from 'next/link';
+import CoursesSkeleton from './CoursesSkeleton';
 
 interface CoursesViewProps {
   initialViewModel?: CoursesViewModel;
@@ -19,14 +20,7 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📚</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดคอร์สเรียน...</p>
-        </div>
-      </div>
-    );
+    return <CoursesSkeleton />;
   }
 
   if (state.error && !vm) {

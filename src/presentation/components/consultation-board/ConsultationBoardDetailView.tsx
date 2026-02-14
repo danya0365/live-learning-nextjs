@@ -9,6 +9,7 @@ import { ConsultationOffer, ConsultationRequest } from '@/src/application/reposi
 import { createClientConsultationBoardPresenter } from '@/src/presentation/presenters/consultation-board/ConsultationBoardPresenterClientFactory';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import ConsultationDetailSkeleton from '../consultations/ConsultationDetailSkeleton';
 
 const LEVEL_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
   beginner: { label: 'เริ่มต้น', color: 'text-success', icon: '🌱' },
@@ -99,14 +100,7 @@ export function ConsultationBoardDetailView({ requestId }: ConsultationBoardDeta
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📋</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดรายละเอียด...</p>
-        </div>
-      </div>
-    );
+    return <ConsultationDetailSkeleton />;
   }
 
   if (!request) {

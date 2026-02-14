@@ -9,6 +9,7 @@
 import { CategoriesViewModel } from '@/src/presentation/presenters/categories/CategoriesPresenter';
 import { useCategoriesPresenter } from '@/src/presentation/presenters/categories/useCategoriesPresenter';
 import Link from 'next/link';
+import CategoriesSkeleton from './CategoriesSkeleton';
 
 interface CategoriesViewProps {
   initialViewModel?: CategoriesViewModel;
@@ -19,14 +20,7 @@ export function CategoriesView({ initialViewModel }: CategoriesViewProps) {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📂</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดหมวดหมู่...</p>
-        </div>
-      </div>
-    );
+    return <CategoriesSkeleton />;
   }
 
   if (state.error && !vm) {

@@ -9,6 +9,7 @@
 import { InstructorDetailViewModel } from '@/src/presentation/presenters/instructor-detail/InstructorDetailPresenter';
 import { useInstructorDetailPresenter } from '@/src/presentation/presenters/instructor-detail/useInstructorDetailPresenter';
 import Link from 'next/link';
+import InstructorDetailSkeleton from './InstructorDetailSkeleton';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -22,14 +23,7 @@ export function InstructorDetailView({ instructorId, initialViewModel }: Instruc
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">👨‍🏫</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดข้อมูลอาจารย์...</p>
-        </div>
-      </div>
-    );
+    return <InstructorDetailSkeleton />;
   }
 
   if (state.error || !vm) {

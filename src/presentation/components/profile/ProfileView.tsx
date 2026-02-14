@@ -12,6 +12,7 @@ import { ProfileViewModel } from '@/src/presentation/presenters/profile/ProfileP
 import { useProfilePresenter } from '@/src/presentation/presenters/profile/useProfilePresenter';
 import { useAuthStore, type AuthUser } from '@/src/stores/authStore';
 import Link from 'next/link';
+import ProfileSkeleton from './ProfileSkeleton';
 
 interface ProfileViewProps {
   initialViewModel?: ProfileViewModel;
@@ -34,14 +35,7 @@ export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
   const isInstructor = currentUser?.role === 'instructor';
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">🧑‍💻</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดโปรไฟล์...</p>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (state.error && !vm) {

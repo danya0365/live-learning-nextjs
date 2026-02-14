@@ -9,6 +9,8 @@ import { AuthGuard } from '@/src/presentation/components/auth/AuthGuard';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useState } from 'react';
 
+import SettingsSkeleton from '@/src/presentation/components/settings/SettingsSkeleton';
+
 /* ── Types ─────────────────────────────────── */
 type Tab = 'profile' | 'security' | 'preferences' | 'notifications';
 
@@ -22,7 +24,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
 /* ── Component ─────────────────────────────── */
 export default function SettingsPage() {
   return (
-    <AuthGuard>
+    <AuthGuard fallback={<SettingsSkeleton />}>
       <SettingsContent />
     </AuthGuard>
   );

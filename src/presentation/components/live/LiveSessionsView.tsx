@@ -9,6 +9,7 @@
 import { LiveSessionsViewModel } from '@/src/presentation/presenters/live/LiveSessionsPresenter';
 import { useLiveSessionsPresenter } from '@/src/presentation/presenters/live/useLiveSessionsPresenter';
 import Link from 'next/link';
+import LiveSessionsSkeleton from './LiveSessionsSkeleton';
 
 interface LiveSessionsViewProps {
   initialViewModel?: LiveSessionsViewModel;
@@ -19,14 +20,7 @@ export function LiveSessionsView({ initialViewModel }: LiveSessionsViewProps) {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">🔴</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดห้องเรียนสด...</p>
-        </div>
-      </div>
-    );
+    return <LiveSessionsSkeleton />;
   }
 
   if (state.error && !vm) {

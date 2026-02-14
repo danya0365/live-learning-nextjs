@@ -10,6 +10,7 @@ import { CourseDetailViewModel } from '@/src/presentation/presenters/course-deta
 import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/useCourseDetailPresenter';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import CourseDetailSkeleton from './CourseDetailSkeleton';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -24,14 +25,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📖</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดข้อมูลคอร์ส...</p>
-        </div>
-      </div>
-    );
+    return <CourseDetailSkeleton />;
   }
 
   if (state.error || !vm) {

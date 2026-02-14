@@ -9,6 +9,7 @@
 import { ConsultationFilter } from '@/src/presentation/presenters/consultations/ConsultationsPresenter';
 import { useConsultationsPresenter } from '@/src/presentation/presenters/consultations/useConsultationsPresenter';
 import Link from 'next/link';
+import ConsultationsSkeleton from './ConsultationsSkeleton';
 
 const STATUS_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string }> = {
   open: { label: 'เปิดรับข้อเสนอ', icon: '🟢', color: 'text-success', bg: 'bg-success/10 border-success/30' },
@@ -36,14 +37,7 @@ export function ConsultationsView() {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">💬</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดคำขอปรึกษา...</p>
-        </div>
-      </div>
-    );
+    return <ConsultationsSkeleton />;
   }
 
   if (state.error && !vm) {

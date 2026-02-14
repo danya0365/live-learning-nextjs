@@ -10,9 +10,11 @@ import { ProfileView } from '@/src/presentation/components/profile/ProfileView';
 import { useProfilePresenter } from '@/src/presentation/presenters/profile/useProfilePresenter';
 import { useAuthStore } from '@/src/stores/authStore';
 
+import ProfileSkeleton from '@/src/presentation/components/profile/ProfileSkeleton';
+
 export default function ProfilePage() {
   return (
-    <AuthGuard>
+    <AuthGuard fallback={<ProfileSkeleton />}>
       <ProfileContent />
     </AuthGuard>
   );
