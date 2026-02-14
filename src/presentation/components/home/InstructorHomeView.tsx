@@ -1,6 +1,7 @@
 'use client';
 
 import { InstructorDashboard } from '@/src/presentation/components/dashboard/InstructorDashboard';
+import InstructorDashboardSkeleton from '@/src/presentation/components/dashboard/InstructorDashboardSkeleton';
 import { useInstructorHomePresenter } from '@/src/presentation/presenters/home/useHomePresenter';
 import { useAuthStore } from '@/src/stores/authStore';
 
@@ -11,11 +12,7 @@ export function InstructorHomeView() {
   if (!user) return null;
 
   if (loading && schedule.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
+    return <InstructorDashboardSkeleton />;
   }
 
   if (error) {

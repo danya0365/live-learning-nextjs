@@ -1,6 +1,7 @@
 'use client';
 
 import { StudentDashboard } from '@/src/presentation/components/dashboard/StudentDashboard';
+import StudentDashboardSkeleton from '@/src/presentation/components/dashboard/StudentDashboardSkeleton';
 import { useStudentHomePresenter } from '@/src/presentation/presenters/home/useHomePresenter';
 import { useAuthStore } from '@/src/stores/authStore';
 
@@ -11,11 +12,7 @@ export function StudentHomeView() {
   if (!user) return null;
 
   if (loading && bookings.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
+    return <StudentDashboardSkeleton />;
   }
 
   if (error) {

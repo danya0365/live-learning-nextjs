@@ -5,14 +5,14 @@
  */
 
 import {
-    IBookingRepository
+  IBookingRepository
 } from '@/src/application/repositories/IBookingRepository';
 import {
-    ICourseRepository
+  ICourseRepository
 } from '@/src/application/repositories/ICourseRepository';
 import {
-    IInstructorRepository,
-    TimeSlot
+  IInstructorRepository,
+  TimeSlot
 } from '@/src/application/repositories/IInstructorRepository';
 import { type Metadata } from 'next';
 
@@ -59,17 +59,18 @@ export class SchedulePresenter {
     const allInstructors = await this.instructorRepository.getAll();
 
     // Gather all timeslots for all instructors
-    const allTimeSlotsRaw: ScheduleTimeSlot[] = [];
-    for (const inst of allInstructors) {
+    // Gather all timeslots for all instructors concurrently
+    const timeSlotsPromises = allInstructors.map(async (inst) => {
       const slots = await this.instructorRepository.getTimeSlots(inst.id);
-      for (const slot of slots) {
-        allTimeSlotsRaw.push({
-          ...slot,
-          instructorName: inst.name,
-          dayName: DAY_NAMES[slot.dayOfWeek],
-        });
-      }
-    }
+      return slots.map((slot) => ({
+        ...slot,
+        instructorName: inst.name,
+        dayName: DAY_NAMES[slot.dayOfWeek],
+      }));
+    });
+
+    const allSlotsGroups = await Promise.all(timeSlotsPromises);
+    const allTimeSlotsRaw = allSlotsGroups.flat();
 
     const activeFilters: ScheduleFilters = {
       instructorId: filters?.instructorId ?? null,

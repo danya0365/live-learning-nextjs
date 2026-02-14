@@ -25,7 +25,6 @@ export function HomeView({ initialViewModel }: HomeViewProps) {
   }, []);
 
   // 1. Client Side & Authenticated: Show Dashboard
-  // We only check auth after hydration to ensure server/client HTML match initially
   if (isHydrated && isAuthenticated && user) {
     switch (user.role) {
       case 'student':
@@ -36,6 +35,5 @@ export function HomeView({ initialViewModel }: HomeViewProps) {
   }
 
   // 2. Server Side (SEO) & Guest: Show Landing Page immediately
-  // This ensures Google Bots see the content derived from initialViewModel
   return <HomeLandingView viewModel={viewModel || initialViewModel} />;
 }
