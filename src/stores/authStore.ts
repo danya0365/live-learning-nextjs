@@ -18,6 +18,7 @@ export interface AuthUser {
   role: UserRole;
   level: string;
   joinDate: string;
+  bio?: string;
 }
 
 export interface AuthState {
@@ -30,6 +31,7 @@ export interface AuthState {
   loginAsDemo: (accountKey: DemoAccountKey) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
+  updateUser: (user: AuthUser) => void;
 }
 
 /* ── Demo accounts ─────────────────────────── */
@@ -150,6 +152,10 @@ export const useAuthStore = create<AuthState>()(
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
+      },
+
+      updateUser: (user: AuthUser) => {
+        set({ user });
       },
     }),
     {
