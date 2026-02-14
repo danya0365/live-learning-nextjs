@@ -6,11 +6,9 @@
 
 'use client';
 
-import { ConsultationLevel, PreferredTime } from '@/src/application/repositories/IConsultationRepository';
-import { createClientConsultationsPresenter } from '@/src/presentation/presenters/consultations/ConsultationsPresenterClientFactory';
+import { ConsultationLevel } from '@/src/application/repositories/IConsultationRepository';
+import { useNewConsultationPresenter } from '@/src/presentation/presenters/consultations/useNewConsultationPresenter';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 const CATEGORIES = [
   { id: 'cat-001', label: 'Web Development', icon: '🌐' },
@@ -28,61 +26,12 @@ const LEVELS: { value: ConsultationLevel; label: string; icon: string; desc: str
 ];
 
 export function NewConsultationView() {
-  const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
-  const [step, setStep] = useState(1); // 1: topic, 2: schedule, 3: confirm
-
-  // Form state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [level, setLevel] = useState<ConsultationLevel>('beginner');
-  const [budgetMin, setBudgetMin] = useState('');
-  const [budgetMax, setBudgetMax] = useState('');
-  const [preferredDates, setPreferredDates] = useState<string[]>(['']);
-  const [preferredTimes, setPreferredTimes] = useState<PreferredTime[]>([{ start: '09:00', end: '12:00' }]);
-
-  const addDate = () => setPreferredDates([...preferredDates, '']);
-  const removeDate = (i: number) => setPreferredDates(preferredDates.filter((_, idx) => idx !== i));
-  const updateDate = (i: number, val: string) => {
-    const updated = [...preferredDates];
-    updated[i] = val;
-    setPreferredDates(updated);
-  };
-
-  const addTimeSlot = () => setPreferredTimes([...preferredTimes, { start: '13:00', end: '16:00' }]);
-  const removeTimeSlot = (i: number) => setPreferredTimes(preferredTimes.filter((_, idx) => idx !== i));
-  const updateTime = (i: number, field: 'start' | 'end', val: string) => {
-    const updated = [...preferredTimes];
-    updated[i] = { ...updated[i], [field]: val };
-    setPreferredTimes(updated);
-  };
-
-  const canGoStep2 = title.trim() && categoryId && description.trim();
-  const canGoStep3 = preferredDates.some((d) => d) && preferredTimes.length > 0 && budgetMin && budgetMax;
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const presenter = createClientConsultationsPresenter();
-      await presenter.createRequest({
-        studentId: 'student-001',
-        categoryId,
-        title: title.trim(),
-        description: description.trim(),
-        level,
-        budgetMin: parseInt(budgetMin) || 0,
-        budgetMax: parseInt(budgetMax) || 0,
-        preferredDates: preferredDates.filter((d) => d),
-        preferredTimes,
-      });
-      router.push('/consultations');
-    } catch {
-      // handle error
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const { state, actions } = useNewConsultationPresenter();
+  // Destructure for easy access
+  const {
+    step, submitting, title, description, categoryId, level, budgetMin, budgetMax,
+    preferredDates, preferredTimes, canGoStep2, canGoStep3
+  } = state;
 
   const selectedCategory = CATEGORIES.find((c) => c.id === categoryId);
 
@@ -138,7 +87,7 @@ export function NewConsultationView() {
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setCategoryId(cat.id)}
+                  onClick={() => actions.setCategoryId(cat.id)}
                   className={`p-4 rounded-xl text-left transition-all ${
                     categoryId === cat.id
                       ? 'bg-primary/10 border-2 border-primary shadow-lg shadow-primary/10'
@@ -158,7 +107,7 @@ export function NewConsultationView() {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => actions.setTitle(e.target.value)}
               placeholder="เช่น สอน Next.js App Router + Server Components"
               className="w-full px-4 py-3 rounded-xl glass border-0 text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 outline-none text-lg"
             />
@@ -169,7 +118,7 @@ export function NewConsultationView() {
             <label className="block text-sm font-bold text-text-primary mb-1.5">📋 รายละเอียดเพิ่มเติม *</label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => actions.setDescription(e.target.value)}
               placeholder="อธิบายว่าคุณอยากเรียนอะไร มีพื้นฐานแค่ไหน คาดหวังอะไรจากอาจารย์..."
               rows={4}
               className="w-full px-4 py-3 rounded-xl glass border-0 text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 outline-none resize-none"
@@ -183,7 +132,7 @@ export function NewConsultationView() {
               {LEVELS.map((lv) => (
                 <button
                   key={lv.value}
-                  onClick={() => setLevel(lv.value)}
+                  onClick={() => actions.setLevel(lv.value)}
                   className={`p-4 rounded-xl text-left transition-all ${
                     level === lv.value
                       ? 'bg-primary/10 border-2 border-primary shadow-lg shadow-primary/10'
@@ -201,7 +150,7 @@ export function NewConsultationView() {
           </div>
 
           <button
-            onClick={() => setStep(2)}
+            onClick={() => actions.setStep(2)}
             disabled={!canGoStep2}
             className="w-full py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -222,12 +171,12 @@ export function NewConsultationView() {
                   <input
                     type="date"
                     value={date}
-                    onChange={(e) => updateDate(i, e.target.value)}
+                    onChange={(e) => actions.updateDate(i, e.target.value)}
                     className="flex-1 px-4 py-2.5 rounded-xl glass border-0 text-text-primary focus:ring-2 focus:ring-primary/50 outline-none"
                   />
                   {preferredDates.length > 1 && (
                     <button
-                      onClick={() => removeDate(i)}
+                      onClick={() => actions.removeDate(i)}
                       className="w-10 h-10 rounded-xl glass text-error hover:bg-error/10 flex items-center justify-center transition-colors"
                     >
                       ✕
@@ -237,7 +186,7 @@ export function NewConsultationView() {
               ))}
             </div>
             <button
-              onClick={addDate}
+              onClick={actions.addDate}
               className="mt-2 text-sm text-primary hover:text-primary/80 font-medium"
             >
               + เพิ่มวันที่
@@ -253,19 +202,19 @@ export function NewConsultationView() {
                   <input
                     type="time"
                     value={time.start}
-                    onChange={(e) => updateTime(i, 'start', e.target.value)}
+                    onChange={(e) => actions.updateTime(i, 'start', e.target.value)}
                     className="flex-1 px-4 py-2.5 rounded-xl glass border-0 text-text-primary focus:ring-2 focus:ring-primary/50 outline-none"
                   />
                   <span className="text-text-muted">ถึง</span>
                   <input
                     type="time"
                     value={time.end}
-                    onChange={(e) => updateTime(i, 'end', e.target.value)}
+                    onChange={(e) => actions.updateTime(i, 'end', e.target.value)}
                     className="flex-1 px-4 py-2.5 rounded-xl glass border-0 text-text-primary focus:ring-2 focus:ring-primary/50 outline-none"
                   />
                   {preferredTimes.length > 1 && (
                     <button
-                      onClick={() => removeTimeSlot(i)}
+                      onClick={() => actions.removeTimeSlot(i)}
                       className="w-10 h-10 rounded-xl glass text-error hover:bg-error/10 flex items-center justify-center transition-colors"
                     >
                       ✕
@@ -275,7 +224,7 @@ export function NewConsultationView() {
               ))}
             </div>
             <button
-              onClick={addTimeSlot}
+              onClick={actions.addTimeSlot}
               className="mt-2 text-sm text-primary hover:text-primary/80 font-medium"
             >
               + เพิ่มช่วงเวลา
@@ -291,7 +240,7 @@ export function NewConsultationView() {
                 <input
                   type="number"
                   value={budgetMin}
-                  onChange={(e) => setBudgetMin(e.target.value)}
+                  onChange={(e) => actions.setBudgetMin(e.target.value)}
                   placeholder="500"
                   className="w-full px-4 py-2.5 rounded-xl glass border-0 text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 outline-none"
                 />
@@ -302,7 +251,7 @@ export function NewConsultationView() {
                 <input
                   type="number"
                   value={budgetMax}
-                  onChange={(e) => setBudgetMax(e.target.value)}
+                  onChange={(e) => actions.setBudgetMax(e.target.value)}
                   placeholder="2000"
                   className="w-full px-4 py-2.5 rounded-xl glass border-0 text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 outline-none"
                 />
@@ -312,13 +261,13 @@ export function NewConsultationView() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => setStep(1)}
+              onClick={() => actions.setStep(1)}
               className="flex-1 py-3 rounded-xl glass text-text-secondary font-medium hover:text-text-primary transition-colors"
             >
               ← ย้อนกลับ
             </button>
             <button
-              onClick={() => setStep(3)}
+              onClick={() => actions.setStep(3)}
               disabled={!canGoStep3}
               className="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -394,13 +343,13 @@ export function NewConsultationView() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => setStep(2)}
+              onClick={() => actions.setStep(2)}
               className="flex-1 py-3 rounded-xl glass text-text-secondary font-medium hover:text-text-primary transition-colors"
             >
               ← ย้อนกลับ
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={actions.handleSubmit}
               disabled={submitting}
               className="flex-1 py-3 rounded-xl bg-success text-white font-bold hover:bg-success/90 transition-colors shadow-lg shadow-success/25 disabled:opacity-50"
             >

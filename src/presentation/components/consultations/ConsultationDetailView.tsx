@@ -6,10 +6,8 @@
 
 'use client';
 
-import { ConsultationOffer, ConsultationRequest } from '@/src/application/repositories/IConsultationRepository';
-import { createClientConsultationsPresenter } from '@/src/presentation/presenters/consultations/ConsultationsPresenterClientFactory';
+import { useConsultationDetailPresenter } from '@/src/presentation/presenters/consultations/useConsultationDetailPresenter';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
 import ConsultationDetailSkeleton from './ConsultationDetailSkeleton';
 
 const STATUS_CONFIG: Record<string, { label: string; icon: string; color: string; bg: string }> = {
@@ -37,57 +35,8 @@ interface ConsultationDetailViewProps {
 }
 
 export function ConsultationDetailView({ requestId }: ConsultationDetailViewProps) {
-  const presenter = useMemo(() => createClientConsultationsPresenter(), []);
-  const [request, setRequest] = useState<ConsultationRequest | null>(null);
-  const [offers, setOffers] = useState<ConsultationOffer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const detail = await presenter.getRequestDetail(requestId);
-      setRequest(detail.request);
-      setOffers(detail.offers);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [requestId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleAccept = async (offerId: string) => {
-    setActionLoading(offerId);
-    try {
-      await presenter.acceptOffer(offerId);
-      await loadData();
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleReject = async (offerId: string) => {
-    setActionLoading(offerId);
-    try {
-      await presenter.rejectOffer(offerId);
-      await loadData();
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!request) return;
-    setActionLoading('cancel');
-    try {
-      await presenter.cancelRequest(request.id);
-      await loadData();
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  const { state, actions } = useConsultationDetailPresenter(requestId);
+  const { request, offers, loading, actionLoading } = state;
 
   if (loading) {
     return <ConsultationDetailSkeleton />;
@@ -174,7 +123,7 @@ export function ConsultationDetailView({ requestId }: ConsultationDetailViewProp
         {/* Cancel button */}
         {request.status === 'open' && (
           <button
-            onClick={handleCancel}
+            onClick={actions.cancelRequest}
             disabled={actionLoading === 'cancel'}
             className="px-4 py-2 rounded-xl bg-error/10 border border-error/30 text-error text-sm font-bold hover:bg-error/20 transition-colors disabled:opacity-50"
           >
@@ -276,14 +225,14 @@ export function ConsultationDetailView({ requestId }: ConsultationDetailViewProp
                     {offer.status === 'pending' && request.status === 'open' && (
                       <div className="flex gap-3">
                         <button
-                          onClick={() => handleAccept(offer.id)}
+                          onClick={() => actions.acceptOffer(offer.id)}
                           disabled={isActing}
                           className="px-6 py-2 rounded-xl bg-success text-white text-sm font-bold hover:bg-success/90 transition-colors shadow-lg shadow-success/25 disabled:opacity-50"
                         >
                           {isActing ? '⏳' : '✅ ตอบรับข้อเสนอ'}
                         </button>
                         <button
-                          onClick={() => handleReject(offer.id)}
+                          onClick={() => actions.rejectOffer(offer.id)}
                           disabled={isActing}
                           className="px-6 py-2 rounded-xl bg-error/10 border border-error/30 text-error text-sm font-bold hover:bg-error/20 transition-colors disabled:opacity-50"
                         >
