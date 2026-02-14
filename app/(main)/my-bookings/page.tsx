@@ -9,9 +9,11 @@ import { AuthGuard } from '@/src/presentation/components/auth/AuthGuard';
 import { MyBookingsView } from '@/src/presentation/components/my-bookings/MyBookingsView';
 import { useMyBookingsPresenter } from '@/src/presentation/presenters/my-bookings/useMyBookingsPresenter';
 
+import MyBookingsSkeleton from '@/src/presentation/components/my-bookings/MyBookingsSkeleton';
+
 export default function MyBookingsPage() {
   return (
-    <AuthGuard>
+    <AuthGuard fallback={<MyBookingsSkeleton />}>
       <MyBookingsContent />
     </AuthGuard>
   );
