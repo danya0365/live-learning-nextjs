@@ -1,8 +1,8 @@
-'use client';
-
 import { WizardCourse, WizardInstructor, WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
+import { Level } from '@/src/application/repositories/IConfigRepository';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createClientConfigPresenter } from '../config/ConfigPresenterClientFactory';
 import { createClientBookingWizardPresenter } from './BookingWizardPresenterClientFactory';
 
 export type BookingWizardStep = 'course' | 'instructor' | 'calendar' | 'confirm';
@@ -19,6 +19,7 @@ export interface BookingWizardState {
   isBooking: boolean;
   bookingDone: boolean;
   loading: boolean;
+  levels: Level[];
 }
 
 export interface BookingWizardActions {
@@ -49,14 +50,28 @@ export function useBookingWizardPresenter() {
   const [isBooking, setIsBooking] = useState(false);
   const [bookingDone, setBookingDone] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  const [levels, setLevels] = useState<Level[]>([]);
 
   // Initial Load
   useEffect(() => {
-    setLoading(true);
-    presenter.getCourses().then((data) => {
-      setCourses(data);
-      setLoading(false);
-    });
+    async function loadInitialData() {
+      setLoading(true);
+      try {
+        const configPresenter = createClientConfigPresenter();
+        const [c, l] = await Promise.all([
+            presenter.getCourses(),
+            configPresenter.getLevels()
+        ]);
+        setCourses(c);
+        setLevels(l);
+      } catch (error) {
+        console.error("Failed to load data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadInitialData();
   }, [presenter]);
 
   // Actions
@@ -95,11 +110,12 @@ export function useBookingWizardPresenter() {
     if (!selectedCourse || !selectedInstructor || !selectedSlot) return;
     
     setIsBooking(true);
-    const booking = await presenter.createBooking({
+    // Mock booking call
+    const booking = await presenter.createBooking({ // Using mock createBooking
         courseId: selectedCourse.id,
         instructorId: selectedInstructor.id,
         slotId: selectedSlot.id,
-        date: new Date().toISOString(), // Mock date
+        date: new Date().toISOString(),
         action: bookingAction
     });
     
@@ -141,7 +157,8 @@ export function useBookingWizardPresenter() {
       bookingAction,
       isBooking,
       bookingDone,
-      loading
+      loading,
+      levels
     },
     actions: {
       handleCourseSelect,

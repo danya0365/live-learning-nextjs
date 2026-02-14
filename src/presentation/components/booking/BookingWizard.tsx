@@ -1,6 +1,7 @@
 'use client';
 
 import { WizardCourse, WizardInstructor, WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
+import { Level } from '@/src/application/repositories/IConfigRepository';
 import { useBookingWizardPresenter } from '@/src/presentation/presenters/booking/useBookingWizardPresenter';
 import { useMemo, useState } from 'react';
 import BookingSkeleton from './BookingSkeleton';
@@ -9,11 +10,16 @@ import BookingSkeleton from './BookingSkeleton';
 
 const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const DAY_SHORT = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-const LEVEL_MAP: Record<string, { label: string; color: string }> = {
-  beginner: { label: 'เริ่มต้น', color: 'bg-success/10 text-success border-success/30' },
-  intermediate: { label: 'กลาง', color: 'bg-primary/10 text-primary border-primary/30' },
-  advanced: { label: 'สูง', color: 'bg-warning/10 text-warning border-warning/30' },
-};
+
+function getLevelBadgeClass(levelValue: string, levels: { value: string; color?: string }[]) {
+  const level = levels.find((l) => l.value === levelValue);
+  const colorClass = level?.color || 'text-primary';
+  
+  if (colorClass.includes('success')) return 'bg-success/10 text-success border-success/30';
+  if (colorClass.includes('warning')) return 'bg-warning/10 text-warning border-warning/30';
+  if (colorClass.includes('error')) return 'bg-error/10 text-error border-error/30';
+  return 'bg-primary/10 text-primary border-primary/30';
+}
 
 type Step = 'course' | 'instructor' | 'calendar' | 'confirm';
 
@@ -50,7 +56,8 @@ export function BookingWizard() {
     bookingAction,
     isBooking,
     bookingDone,
-    loading
+    loading,
+    levels
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -115,7 +122,7 @@ export function BookingWizard() {
         {/* Step content */}
         <div className="animate-fadeIn">
           {step === 'course' && (
-            <StepCourse courses={courses} onSelect={actions.handleCourseSelect} />
+            <StepCourse courses={courses} levels={levels} onSelect={actions.handleCourseSelect} />
           )}
           {step === 'instructor' && selectedCourse && (
             <StepInstructor
@@ -142,6 +149,7 @@ export function BookingWizard() {
               action={bookingAction}
               isBooking={isBooking}
               bookingDone={bookingDone}
+              levels={levels}
               onConfirm={actions.handleConfirm}
               onBack={actions.goBack}
               onFinish={actions.handleFinish}
@@ -157,7 +165,7 @@ export function BookingWizard() {
 /* ════════════════════════════════════════════
    Step 1: เลือกคอร์ส
    ════════════════════════════════════════════ */
-function StepCourse({ courses, onSelect }: { courses: WizardCourse[]; onSelect: (c: WizardCourse) => void }) {
+function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; levels: Level[]; onSelect: (c: WizardCourse) => void }) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -195,7 +203,8 @@ function StepCourse({ courses, onSelect }: { courses: WizardCourse[]; onSelect: 
       {/* Course list */}
       <div className="space-y-3">
         {filtered.map((course) => {
-          const lv = LEVEL_MAP[course.level];
+          const lv = levels.find((l) => l.value === course.level) || levels[0];
+          const badgeClass = getLevelBadgeClass(course.level, levels);
           return (
             <button
               key={course.id}
@@ -211,7 +220,7 @@ function StepCourse({ courses, onSelect }: { courses: WizardCourse[]; onSelect: 
                     {course.instructorName} • {course.categoryName}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${lv.color}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass}`}>
                       {lv.label}
                     </span>
                     {course.tags.slice(0, 3).map((tag) => (
@@ -516,6 +525,7 @@ function StepConfirm({
   onBack,
   onFinish,
   onNewBooking,
+  levels,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -527,6 +537,7 @@ function StepConfirm({
   onBack: () => void;
   onFinish: () => void;
   onNewBooking: () => void;
+  levels: Level[];
 }) {
   if (bookingDone) {
     return (
@@ -626,7 +637,7 @@ function StepConfirm({
             <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium">คอร์ส</p>
             <p className="font-bold text-text-primary">{course.title}</p>
             <p className="text-xs text-text-muted mt-0.5">
-              {LEVEL_MAP[course.level].label} • {course.categoryName}
+              {(levels.find(l => l.value === course.level) || levels[0])?.label} • {course.categoryName}
             </p>
           </div>
         </div>

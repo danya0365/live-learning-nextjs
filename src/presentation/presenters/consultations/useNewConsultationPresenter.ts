@@ -1,12 +1,17 @@
-'use client';
-
+import { Category, Level } from '@/src/application/repositories/IConfigRepository';
 import { ConsultationLevel, PreferredTime } from '@/src/application/repositories/IConsultationRepository';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { createClientConfigPresenter } from '../config/ConfigPresenterClientFactory';
 import { createClientConsultationsPresenter } from './ConsultationsPresenterClientFactory';
 
 export function useNewConsultationPresenter() {
   const router = useRouter();
+
+  // Config State
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [configLoading, setConfigLoading] = useState(true);
 
   // Navigation State
   const [submitting, setSubmitting] = useState(false);
@@ -21,6 +26,26 @@ export function useNewConsultationPresenter() {
   const [budgetMax, setBudgetMax] = useState('');
   const [preferredDates, setPreferredDates] = useState<string[]>(['']);
   const [preferredTimes, setPreferredTimes] = useState<PreferredTime[]>([{ start: '09:00', end: '12:00' }]);
+
+  // Load Config
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const presenter = createClientConfigPresenter();
+        const [cats, lvs] = await Promise.all([
+          presenter.getCategories(),
+          presenter.getLevels(),
+        ]);
+        setCategories(cats);
+        setLevels(lvs);
+      } catch (err) {
+        console.error('Failed to load config:', err);
+      } finally {
+        setConfigLoading(false);
+      }
+    }
+    loadConfig();
+  }, []);
 
   // Handlers
   const addDate = useCallback(() => setPreferredDates((prev) => [...prev, '']), []);
@@ -74,6 +99,9 @@ export function useNewConsultationPresenter() {
     state: {
       step,
       submitting,
+      configLoading,
+      categories,
+      levels,
       title,
       description,
       categoryId,

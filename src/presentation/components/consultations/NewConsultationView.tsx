@@ -10,30 +10,22 @@ import { ConsultationLevel } from '@/src/application/repositories/IConsultationR
 import { useNewConsultationPresenter } from '@/src/presentation/presenters/consultations/useNewConsultationPresenter';
 import Link from 'next/link';
 
-const CATEGORIES = [
-  { id: 'cat-001', label: 'Web Development', icon: '🌐' },
-  { id: 'cat-002', label: 'Data Science & AI', icon: '🤖' },
-  { id: 'cat-003', label: 'Design', icon: '🎨' },
-  { id: 'cat-004', label: 'Mobile Development', icon: '📱' },
-  { id: 'cat-005', label: 'Cybersecurity', icon: '🛡️' },
-  { id: 'cat-006', label: 'DevOps & Cloud', icon: '☁️' },
-];
 
-const LEVELS: { value: ConsultationLevel; label: string; icon: string; desc: string }[] = [
-  { value: 'beginner', label: 'เริ่มต้น', icon: '🌱', desc: 'ยังไม่มีพื้นฐาน อยากเรียนจาก 0' },
-  { value: 'intermediate', label: 'ปานกลาง', icon: '📈', desc: 'มีพื้นฐานแล้ว อยากเรียนเชิงลึก' },
-  { value: 'advanced', label: 'ขั้นสูง', icon: '🚀', desc: 'มีประสบการณ์ ต้องการระดับ Expert' },
-];
 
 export function NewConsultationView() {
   const { state, actions } = useNewConsultationPresenter();
   // Destructure for easy access
   const {
     step, submitting, title, description, categoryId, level, budgetMin, budgetMax,
-    preferredDates, preferredTimes, canGoStep2, canGoStep3
+    preferredDates, preferredTimes, canGoStep2, canGoStep3,
+    categories, levels, configLoading
   } = state;
 
-  const selectedCategory = CATEGORIES.find((c) => c.id === categoryId);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+
+  if (configLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -84,7 +76,7 @@ export function NewConsultationView() {
           <div>
             <label className="block text-sm font-bold text-text-primary mb-3">📂 เลือกหมวดหมู่ *</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => actions.setCategoryId(cat.id)}
@@ -129,10 +121,10 @@ export function NewConsultationView() {
           <div>
             <label className="block text-sm font-bold text-text-primary mb-3">📊 ระดับความรู้ปัจจุบัน</label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {LEVELS.map((lv) => (
+              {levels.map((lv) => (
                 <button
                   key={lv.value}
-                  onClick={() => actions.setLevel(lv.value)}
+                  onClick={() => actions.setLevel(lv.value as ConsultationLevel)}
                   className={`p-4 rounded-xl text-left transition-all ${
                     level === lv.value
                       ? 'bg-primary/10 border-2 border-primary shadow-lg shadow-primary/10'
@@ -306,7 +298,7 @@ export function NewConsultationView() {
                 <div className="glass rounded-lg p-3">
                   <div className="text-xs text-text-muted mb-1">📊 ระดับ</div>
                   <div className="text-sm font-bold text-text-primary">
-                    {LEVELS.find((l) => l.value === level)?.icon} {LEVELS.find((l) => l.value === level)?.label}
+                    {levels.find((l) => l.value === level)?.icon} {levels.find((l) => l.value === level)?.label}
                   </div>
                 </div>
                 <div className="glass rounded-lg p-3">

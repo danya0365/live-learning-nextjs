@@ -1,7 +1,7 @@
-'use client';
-
+import { Category, Level } from '@/src/application/repositories/IConfigRepository';
 import { ConsultationOffer, ConsultationRequest, CreateConsultationOfferData } from '@/src/application/repositories/IConsultationRepository';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createClientConfigPresenter } from '../config/ConfigPresenterClientFactory';
 import { ConsultationBoardViewModel } from './ConsultationBoardPresenter';
 import { createClientConsultationBoardPresenter } from './ConsultationBoardPresenterClientFactory';
 
@@ -10,6 +10,9 @@ export interface ConsultationBoardState {
   loading: boolean;
   error: string | null;
   detailLoading: boolean;
+  categories: Category[];
+  levels: Level[];
+  configLoading: boolean;
 }
 
 export interface ConsultationBoardActions {
@@ -32,6 +35,10 @@ export function useConsultationBoardPresenter(
   const [loading, setLoading] = useState(!initialViewModel);
   const [error, setError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(initialViewModel?.selectedCategoryId || null);
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]); // Add levels state
+  const [configLoading, setConfigLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -46,6 +53,24 @@ export function useConsultationBoardPresenter(
       if (isMountedRef.current) setLoading(false);
     }
   }, [presenter, categoryId]);
+
+  const loadConfig = useCallback(async () => {
+    try {
+      const configPresenter = createClientConfigPresenter();
+      const [cats, lvs] = await Promise.all([
+        configPresenter.getCategories(),
+        configPresenter.getLevels(),
+      ]);
+      if (isMountedRef.current) {
+        setCategories(cats);
+        setLevels(lvs);
+      }
+    } catch (err) {
+      console.error('Failed to load config', err);
+    } finally {
+      if (isMountedRef.current) setConfigLoading(false);
+    }
+  }, []);
 
   const setCategoryFilter = useCallback((id: string | null) => {
     setCategoryId(id);
@@ -75,12 +100,13 @@ export function useConsultationBoardPresenter(
   }, [categoryId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    loadConfig();
     isMountedRef.current = true;
     return () => { isMountedRef.current = false; };
-  }, []);
+  }, [loadConfig]);
 
   return [
-    { viewModel, loading, error, detailLoading },
+    { viewModel, loading, error, detailLoading, categories, levels, configLoading },
     { setCategoryFilter, loadData, loadRequestDetail, submitOffer, withdrawOffer },
   ];
 }

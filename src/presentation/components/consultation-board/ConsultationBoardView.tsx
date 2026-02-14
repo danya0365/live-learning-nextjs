@@ -10,21 +10,9 @@ import { useConsultationBoardPresenter } from '@/src/presentation/presenters/con
 import Link from 'next/link';
 import ConsultationsSkeleton from '../consultations/ConsultationsSkeleton';
 
-const LEVEL_CONFIG: Record<string, { label: string; color: string }> = {
-  beginner: { label: 'เริ่มต้น', color: 'text-success' },
-  intermediate: { label: 'ปานกลาง', color: 'text-warning' },
-  advanced: { label: 'ขั้นสูง', color: 'text-error' },
-};
 
-const CATEGORY_FILTERS = [
-  { id: null, label: 'ทั้งหมด', icon: '📋' },
-  { id: 'cat-001', label: 'Web Dev', icon: '🌐' },
-  { id: 'cat-002', label: 'AI', icon: '🤖' },
-  { id: 'cat-003', label: 'Design', icon: '🎨' },
-  { id: 'cat-004', label: 'Mobile', icon: '📱' },
-  { id: 'cat-005', label: 'Security', icon: '🛡️' },
-  { id: 'cat-006', label: 'DevOps', icon: '☁️' },
-];
+
+
 
 export function ConsultationBoardView() {
   const [state, actions] = useConsultationBoardPresenter();
@@ -51,6 +39,11 @@ export function ConsultationBoardView() {
 
   // Check which requests I've already offered on
   const myOfferRequestIds = new Set(vm.myOffers.map((o) => o.requestId));
+
+  const categories = [
+    { id: null, label: 'ทั้งหมด', icon: '📋' },
+    ...state.categories.map(c => ({ id: c.id, label: c.label, icon: c.icon }))
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -85,7 +78,7 @@ export function ConsultationBoardView() {
 
       {/* Category filter */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {CATEGORY_FILTERS.map((cat) => (
+        {categories.map((cat) => (
           <button
             key={cat.id || 'all'}
             onClick={() => actions.setCategoryFilter(cat.id)}
@@ -110,7 +103,7 @@ export function ConsultationBoardView() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {vm.openRequests.map((req) => {
-            const levelCfg = LEVEL_CONFIG[req.level] || LEVEL_CONFIG.beginner;
+            const levelObj = state.levels.find(l => l.value === req.level) || state.levels[0];
             const alreadyOffered = myOfferRequestIds.has(req.id);
 
             return (
@@ -127,9 +120,11 @@ export function ConsultationBoardView() {
                       </div>
                     </div>
                   </div>
-                  <span className={`text-xs font-bold ${levelCfg.color}`}>
-                    {levelCfg.label}
-                  </span>
+                  {levelObj && (
+                    <span className={`text-xs font-bold ${levelObj.color || 'text-text-primary'}`}>
+                      {levelObj.label}
+                    </span>
+                  )}
                 </div>
 
                 {/* Title + description */}
