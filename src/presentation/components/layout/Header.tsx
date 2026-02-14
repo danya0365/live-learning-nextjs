@@ -60,6 +60,7 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
 const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
   student: [
     { href: '/my-bookings', label: 'การจองของฉัน', icon: '📋', desc: 'ดูสถานะการจองทั้งหมด' },
+    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
     { href: '/schedule', label: 'ตารางเรียน', icon: '📅', desc: 'ดูตารางเวลาสอนทั้งหมด' },
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
     { href: '/consultations/board', label: 'บอร์ดปรึกษา', icon: '📋', desc: 'ดูคำขอจากนักเรียน' },
@@ -67,13 +68,18 @@ const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
   instructor: [
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
     { href: '/consultations', label: 'คำขอของนักเรียน', icon: '💬', desc: 'ดูคำขอปรึกษาทั้งหมด' },
+    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
   ],
   admin: [
-    { href: '/my-bookings', label: 'การจอง', icon: '📋', desc: 'ดูสถานะการจอง' },
+    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
     { href: '/schedule', label: 'ตาราง', icon: '�', desc: 'ดูตารางทั้งหมด' },
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
   ],
-  guest: [],
+  guest: [
+    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
+    { href: '/schedule', label: 'ตาราง', icon: '�', desc: 'ดูตารางทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
+  ],
 };
 
 /* ── Hook: click outside to close ──────────── */
