@@ -12,6 +12,7 @@ import { ScheduleTimeSlot, ScheduleViewModel } from '@/src/presentation/presente
 import { useSchedulePresenter } from '@/src/presentation/presenters/schedule/useSchedulePresenter';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'next/navigation';
+import ScheduleSkeleton from './ScheduleSkeleton';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -27,14 +28,7 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
   const isInstructor = user?.role === 'instructor';
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📅</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดตารางเรียน...</p>
-        </div>
-      </div>
-    );
+    return <ScheduleSkeleton />;
   }
 
   if (state.error && !vm) {
