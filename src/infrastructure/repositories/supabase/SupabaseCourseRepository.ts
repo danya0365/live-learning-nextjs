@@ -8,12 +8,12 @@
  */
 
 import {
-    Course,
-    CourseStats,
-    CreateCourseData,
-    ICourseRepository,
-    PaginatedResult,
-    UpdateCourseData,
+  Course,
+  CourseStats,
+  CreateCourseData,
+  ICourseRepository,
+  PaginatedResult,
+  UpdateCourseData,
 } from '@/src/application/repositories/ICourseRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -299,16 +299,16 @@ export class SupabaseCourseRepository implements ICourseRepository {
     return {
       id: raw.id,
       title: raw.title,
-      description: raw.description,
-      thumbnail: raw.thumbnail || '/images/placeholder-course.jpg',
-      categoryId: raw.category_id,
+      description: raw.description || '',
+      thumbnail: raw.thumbnail_url || '/images/placeholder-course.jpg', // thumbnail_url in new schema
+      categoryId: raw.category_id || '',
       categoryName: category?.name || 'Unknown Category',
-      level: raw.level,
+      level: (raw.level as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
       durationMinutes: (raw.total_hours || 0) * 60, // Convert hours to minutes
       price: raw.price,
       rating: raw.rating || 0,
       totalStudents: raw.total_students || 0,
-      instructorId: raw.instructor_profile_id,
+      instructorId: raw.instructor_profile_id || '',
       instructorName: profile?.full_name || 'Unknown Instructor',
       instructorAvatar: profile?.avatar_url || '/images/placeholder-avatar.jpg',
       isLive: raw.is_live,
