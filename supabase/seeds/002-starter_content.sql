@@ -11,7 +11,7 @@ INSERT INTO public.instructor_profiles (id, profile_id, title, specializations, 
 VALUES
   (
     '30000000-0000-0000-0000-000000000001',           -- Instructor Profile ID
-    '10000000-0000-0000-0000-000000000001',           -- Profile ID (Super Admin)
+    '10000000-0000-0000-0000-000000000002',           -- Profile ID (Lead Instructor)
     'Lead Instructor',                                -- Title
     '{"AI Specialist", "Full-stack", "System Design"}', -- Specializations
     'วิศวกรและสถาปนิกซอฟต์แวร์อาวุโส ผู้เชี่ยวชาญด้าน AI และการพัฒนาแอประดับ Enterprise พร้อมถ่ายทอดประสบการณ์จริง', -- Bio

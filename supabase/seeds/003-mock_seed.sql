@@ -9,7 +9,7 @@ INSERT INTO public.instructor_profiles (id, profile_id, title, specializations, 
 VALUES
   (
     '30000000-0000-0000-0000-000000000001',           -- Instructor Profile ID
-    '10000000-0000-0000-0000-000000000001',           -- Profile ID (Super Admin)
+    '10000000-0000-0000-0000-000000000002',           -- Profile ID (Lead Instructor)
     'Prof.',                                          -- Title
     '{"Full-stack", "AI", "Mobile", "Security"}',    -- Specializations (Combined)
     'Super Instructor capable of teaching everything from Web Dev to AI and Cybersecurity.', -- Bio
@@ -126,8 +126,8 @@ INSERT INTO public.bookings (id, student_profile_id, instructor_profile_id, cour
 VALUES
   (
     '60000000-0000-0000-0000-000000000001',
-    '10000000-0000-0000-0000-000000000001', -- Student: Super Admin
-    '30000000-0000-0000-0000-000000000001', -- Instructor: Super Admin
+    '10000000-0000-0000-0000-000000000003', -- Student: Active Student
+    '30000000-0000-0000-0000-000000000001', -- Instructor: Lead Instructor
     '40000000-0000-0000-0000-000000000001', -- Course: Advanced Full-stack
     NULL,                                   -- No slot ID (Ad-hoc or ancient booking)
     '2026-03-20', '10:00', '12:00',

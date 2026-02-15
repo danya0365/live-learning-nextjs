@@ -49,26 +49,67 @@ ON CONFLICT (provider_id, provider) DO NOTHING;
 -- ============================================================================
 -- PROFILES
 -- ============================================================================
+-- ============================================================================
+-- PROFILES
+-- ============================================================================
+-- Handle FK constraint: Remove default role created by trigger before updating profile ID
+DELETE FROM public.profile_roles 
+WHERE profile_id IN (
+    SELECT id FROM public.profiles WHERE auth_id = '00000000-0000-0000-0000-000000000001'
+);
+
 -- Update the auto-created profile (from trigger) with fixed ID and Data
 UPDATE public.profiles SET
   id = '10000000-0000-0000-0000-000000000001',
   username = 'admin',
   full_name = 'Super Admin',
-  avatar_url = '�',
+  avatar_url = '🛡️',
   bio = 'I am the Super Admin, capable of everything.'
 WHERE auth_id = '00000000-0000-0000-0000-000000000001';
 
 -- ============================================================================
 -- ASSIGN ROLES (ALL ROLES)
 -- ============================================================================
--- First, ensure the profile exists (trigger might be async in some environments, but here synchronous usually)
--- We insert roles. If conflicting with default 'student' role, we handle it.
-
--- Remove any default roles first to be clean
-DELETE FROM public.profile_roles WHERE profile_id = '10000000-0000-0000-0000-000000000001';
-
 -- Insert ALL roles
 INSERT INTO public.profile_roles (profile_id, role) VALUES
-  ('10000000-0000-0000-0000-000000000001', 'admin'),
-  ('10000000-0000-0000-0000-000000000001', 'instructor'),
-  ('10000000-0000-0000-0000-000000000001', 'student');
+  ('10000000-0000-0000-0000-000000000001', 'admin');
+
+-- ============================================================================
+-- ADDITIONAL PROFILES (For Same Auth User)
+-- ============================================================================
+-- The user wants 1 Auth User, but 3 Profiles.
+-- We manually create the other 2 profiles linked to the SAME auth_id.
+
+-- 1. Instructor Profile
+-- ----------------------------------------------------------------------------
+INSERT INTO public.profiles (
+  id, auth_id, username, full_name, avatar_url, bio
+) VALUES (
+  '10000000-0000-0000-0000-000000000002',       -- Profile ID
+  '00000000-0000-0000-0000-000000000001',       -- Auth ID (SAME as Admin)
+  'instructor',
+  'Lead Instructor',
+  '👨‍🏫',
+  'Experienced instructor teaching advanced topics.'
+);
+
+-- Trigger automatically adds 'student' role. accessing profile_roles to change it to 'instructor'
+UPDATE public.profile_roles
+SET role = 'instructor'
+WHERE profile_id = '10000000-0000-0000-0000-000000000002';
+
+
+-- 2. Student Profile
+-- ----------------------------------------------------------------------------
+INSERT INTO public.profiles (
+  id, auth_id, username, full_name, avatar_url, bio
+) VALUES (
+  '10000000-0000-0000-0000-000000000003',       -- Profile ID
+  '00000000-0000-0000-0000-000000000001',       -- Auth ID (SAME as Admin)
+  'student',
+  'Active Student',
+  '👨‍🎓',
+  'Eager to learn new technologies.'
+);
+
+-- Trigger adds 'student' role, which is correct for this profile.

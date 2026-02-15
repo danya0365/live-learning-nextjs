@@ -6,8 +6,9 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
+
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerHomePresenter();
+  const presenter = await createServerHomePresenter();
   return presenter.generateMetadata();
 }
 
@@ -16,12 +17,13 @@ export async function generateMetadata(): Promise<Metadata> {
  * Handled by HomePresenter + HomeView following Clean Architecture
  */
 export default async function HomePage() {
-  const presenter = createServerHomePresenter();
+  const presenter = await createServerHomePresenter();
 
   try {
     const viewModel = await presenter.getViewModel();
     return <HomeView initialViewModel={viewModel} />;
   } catch (error) {
+
     console.error("Error fetching home data:", error);
     // Fallback UI
     return (
