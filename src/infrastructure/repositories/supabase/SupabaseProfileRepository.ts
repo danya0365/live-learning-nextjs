@@ -78,7 +78,8 @@ export class SupabaseProfileRepository implements IProfileRepository {
           role
         )
       `)
-      .eq('auth_id', user.id);
+      .eq('auth_id', user.id)
+      .order('created_at', { ascending: true });
 
     if (error || !data) return [];
     
