@@ -218,6 +218,12 @@ export class MockInstructorRepository implements IInstructorRepository {
     };
   }
 
+  async getMe(): Promise<Instructor | null> {
+    await this.delay(100);
+    // Mock getting the first instructor as "me"
+    return this.items[0] || null;
+  }
+
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

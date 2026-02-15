@@ -71,4 +71,5 @@ export interface IInstructorRepository {
   update(id: string, data: UpdateInstructorData): Promise<Instructor>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<InstructorStats>;
+  getMe(): Promise<Instructor | null>;
 }

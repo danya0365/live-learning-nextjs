@@ -6,6 +6,21 @@
 
 import { AuthProfile } from "./IAuthRepository";
 
+export interface Achievement {
+  icon: string;
+  label: string;
+  description: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  name: string;
+  email?: string;
+  avatar: string;
+  joinDate: string;
+  level: string;
+}
+
 export interface IProfileRepository {
   /**
    * Get all profiles associated with the current user
@@ -22,4 +37,14 @@ export interface IProfileRepository {
    * Get the current active profile
    */
   getProfile(): Promise<AuthProfile | null>;
+
+  /**
+   * Get profile by specific ID
+   */
+  getById(id: string): Promise<AuthProfile | null>;
+
+  /**
+   * Get user achievements
+   */
+  getAchievements(userId: string): Promise<Achievement[]>;
 }

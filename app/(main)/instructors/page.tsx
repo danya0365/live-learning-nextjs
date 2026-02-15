@@ -5,12 +5,12 @@ import type { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerInstructorsPresenter();
+  const presenter = await createServerInstructorsPresenter();
   return presenter.generateMetadata();
 }
 
 export default async function InstructorsPage() {
-  const presenter = createServerInstructorsPresenter();
+  const presenter = await createServerInstructorsPresenter();
 
   try {
     const viewModel = await presenter.getViewModel();

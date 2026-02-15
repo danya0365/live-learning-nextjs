@@ -41,12 +41,27 @@ export class ApiProfileRepository implements IProfileRepository {
 
   async getProfile(): Promise<AuthProfile | null> {
     const res = await fetch(`${this.baseUrl}/me`);
-    
+    if (res.status === 401 || res.status === 404) return null;
+    if (!res.ok) throw new Error('Failed to fetch profile');
+    return res.json();
+  }
+
+  async getById(id: string): Promise<AuthProfile | null> {
+    const res = await fetch(`${this.baseUrl}/${id}`);
+    if (res.status === 404) return null;
     if (!res.ok) {
-       // If 404/Null, just return null
-       return null;
+        console.error('Failed to fetch profile by id');
+        return null;
     }
-    
+    return res.json();
+  }
+
+  async getAchievements(userId: string): Promise<any[]> {
+    const res = await fetch(`${this.baseUrl}/${userId}/achievements`);
+    if (!res.ok) {
+        console.error('Failed to fetch achievements');
+        return [];
+    }
     return res.json();
   }
 }

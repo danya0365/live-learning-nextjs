@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuthStore } from '@/src/stores/authStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScheduleFilters, ScheduleViewModel } from './SchedulePresenter';
 import { createClientSchedulePresenter } from './SchedulePresenterClientFactory';
@@ -21,6 +22,9 @@ export interface SchedulePresenterActions {
 export function useSchedulePresenter(
   initialViewModel?: ScheduleViewModel,
 ): [SchedulePresenterState, SchedulePresenterActions] {
+  const { user } = useAuthStore();
+  const isInstructor = user?.role === 'instructor';
+  
   const presenter = useMemo(() => createClientSchedulePresenter(), []);
   const isMountedRef = useRef(true);
 
@@ -41,6 +45,31 @@ export function useSchedulePresenter(
       if (isMountedRef.current) setLoading(false);
     }
   }, [presenter]);
+
+  // Handle Initial Load & Instructor Context
+  useEffect(() => {
+    if (initialViewModel) return;
+
+    const init = async () => {
+        let initialFilters: Partial<ScheduleFilters> = { ...filters };
+
+        if (isInstructor) {
+            try {
+                const instructorId = await presenter.getCurrentInstructorId();
+                if (instructorId) {
+                    initialFilters.instructorId = instructorId;
+                    setFilters(prev => ({ ...prev, instructorId }));
+                }
+            } catch (error) {
+                console.error('Failed to fetch instructor ID', error);
+            }
+        }
+
+        await loadData(initialFilters);
+    };
+
+    init();
+  }, [isInstructor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setInstructor = useCallback((id: string | null) => {
     const next = { ...filters, instructorId: id };
@@ -65,10 +94,6 @@ export function useSchedulePresenter(
     setFilters(next);
     loadData(next);
   }, [filters, loadData]);
-
-  useEffect(() => {
-    if (!initialViewModel) loadData(filters);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     isMountedRef.current = true;

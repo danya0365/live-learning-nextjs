@@ -54,16 +54,35 @@ export function useConsultationBoardDetailPresenter(requestId: string) {
     loadData();
   }, [loadData]);
 
-  const myOffer = offers.find((o) => o.instructorId === 'inst-001'); // Mock instructor ID
+  const [instructorId, setInstructorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch current instructor ID
+    fetch('/api/instructors/me')
+      .then(res => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then(data => {
+        if (data) setInstructorId(data.id);
+      })
+      .catch(err => console.error('Failed to fetch instructor profile', err));
+  }, []);
+
+  const myOffer = offers.find((o) => o.instructorId === instructorId);
   const hasOffered = !!myOffer;
 
   const submitOffer = async () => {
+    if (!instructorId) {
+      alert('Instructor profile not found');
+      return;
+    }
     if (!request || !offerForm.message || !offerForm.offeredPrice || !offerForm.offeredDate) return;
     setSubmitting(true);
     try {
       await presenter.submitOffer({
         requestId: request.id,
-        instructorId: 'inst-001',
+        instructorId: instructorId,
         message: offerForm.message,
         offeredPrice: parseInt(offerForm.offeredPrice),
         offeredDate: offerForm.offeredDate,

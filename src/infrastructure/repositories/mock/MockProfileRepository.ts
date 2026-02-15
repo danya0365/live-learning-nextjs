@@ -1,3 +1,4 @@
+import { AuthProfile } from '@/src/application/repositories/IAuthRepository';
 import { Achievement, IProfileRepository, StudentProfile } from '@/src/application/repositories/IProfileRepository';
 
 const DEMO_PROFILE: StudentProfile = {
@@ -17,33 +18,93 @@ const DEMO_ACHIEVEMENTS: Achievement[] = [
 ];
 
 export class MockProfileRepository implements IProfileRepository {
-  async getProfile(userId: string): Promise<StudentProfile | null> {
+  async getProfile(): Promise<AuthProfile | null> {
+    return {
+      id: 'student-001',
+      authId: 'auth-001',
+      fullName: 'น้องมิน',
+      email: 'min@demo.com',
+      avatarUrl: '🧑‍💻',
+      createdAt: '2025-09-15',
+      updatedAt: '2025-09-15',
+      role: 'student',
+      verificationStatus: 'verified',
+      isActive: true,
+      preferences: { language: 'th', notifications: true, theme: 'auto' },
+    } as AuthProfile;
+  }
+
+  async getById(id: string): Promise<AuthProfile | null> {
     // Return specific profile for demo instructor
-    if (userId === 'instructor-001') {
+    if (id === 'instructor-001') {
       return {
-        id: userId,
-        name: 'อ.สมชาย',
+        id,
+        authId: 'auth-inst-001',
+        fullName: 'อ.สมชาย',
         email: 'somchai@demo.com',
-        avatar: '👨‍🏫',
-        joinDate: '2024-03-01',
-        level: 'Expert',
-      };
+        avatarUrl: '👨‍🏫',
+        createdAt: '2024-03-01',
+        updatedAt: '2024-03-01',
+        role: 'instructor',
+        verificationStatus: 'verified',
+        isActive: true,
+        preferences: { language: 'th', notifications: true, theme: 'auto' },
+      } as AuthProfile;
     }
     
     // Return specific profile for demo admin
-    if (userId === 'admin-001') {
+    if (id === 'admin-001') {
       return {
-        id: userId,
-        name: 'แอดมิน',
+        id,
+        authId: 'auth-admin-001',
+        fullName: 'แอดมิน',
         email: 'admin@demo.com',
-        avatar: '🛡️',
-        joinDate: '2024-01-01',
-        level: 'Master',
-      };
+        avatarUrl: '🛡️',
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-01',
+        role: 'admin',
+        verificationStatus: 'verified',
+        isActive: true,
+        preferences: { language: 'th', notifications: true, theme: 'auto' },
+      } as AuthProfile;
     }
 
     // Default to student profile
-    return { ...DEMO_PROFILE, id: userId };
+    return {
+      id,
+      authId: 'auth-001',
+      fullName: 'น้องมิน',
+      email: 'min@demo.com',
+      avatarUrl: '🧑‍💻',
+      createdAt: '2025-09-15',
+      updatedAt: '2025-09-15',
+      role: 'student',
+      verificationStatus: 'verified',
+      isActive: true,
+      preferences: { language: 'th', notifications: true, theme: 'auto' },
+    } as AuthProfile;
+  }
+
+  async getProfiles(): Promise<AuthProfile[]> {
+      return [
+          {
+              id: 'student-001',
+              authId: 'auth-001', 
+              fullName: 'น้องมิน',
+              email: 'min@demo.com',
+              avatarUrl: '🧑‍💻',
+              role: 'student',
+              verificationStatus: 'verified',
+              isActive: true,
+              preferences: { language: 'th', notifications: true, theme: 'auto' },
+              createdAt: '2025-09-15',
+              updatedAt: '2025-09-15'
+          } as AuthProfile
+      ];
+  }
+
+  async switchProfile(profileId: string): Promise<boolean> {
+      return true;
   }
 
   async getAchievements(userId: string): Promise<Achievement[]> {

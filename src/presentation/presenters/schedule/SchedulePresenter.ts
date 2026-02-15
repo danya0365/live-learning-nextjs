@@ -5,14 +5,14 @@
  */
 
 import {
-  IBookingRepository
+    IBookingRepository
 } from '@/src/application/repositories/IBookingRepository';
 import {
-  ICourseRepository
+    ICourseRepository
 } from '@/src/application/repositories/ICourseRepository';
 import {
-  IInstructorRepository,
-  TimeSlot
+    IInstructorRepository,
+    TimeSlot
 } from '@/src/application/repositories/IInstructorRepository';
 import { type Metadata } from 'next';
 
@@ -130,5 +130,10 @@ export class SchedulePresenter {
       title: 'ตารางเรียน — Live Learning',
       description: 'ดูตารางเวลาสอนของอาจารย์ จองเวลาเรียนสดออนไลน์ หรือเข้าร่วมคลาสที่มีอยู่',
     };
+  }
+
+  async getCurrentInstructorId(): Promise<string | null> {
+    const me = await this.instructorRepository.getMe();
+    return me?.id || null;
   }
 }

@@ -5,11 +5,8 @@
  */
 
 
-import { MockBookingRepository } from '@/src/infrastructure/repositories/mock/MockBookingRepository';
-// import { MockCategoryRepository } from '@/src/infrastructure/repositories/mock/MockCategoryRepository';
+import { SupabaseBookingRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingRepository';
 import { SupabaseCategoryRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCategoryRepository';
-// import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
-// import { MockInstructorRepository } from '@/src/infrastructure/repositories/mock/MockInstructorRepository';
 import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
 import { SupabaseInstructorRepository } from '@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository';
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
@@ -25,7 +22,7 @@ export class HomePresenterServerFactory {
     const instructorRepository = new SupabaseInstructorRepository(supabase);
     
     // Keep others as Mock for now until implemented
-    const bookingRepository = new MockBookingRepository();
+    const bookingRepository = new SupabaseBookingRepository(supabase);
 
     return new HomePresenter(courseRepository, instructorRepository, categoryRepository, bookingRepository);
   }

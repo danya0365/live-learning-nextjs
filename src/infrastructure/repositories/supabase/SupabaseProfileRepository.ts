@@ -123,8 +123,8 @@ export class SupabaseProfileRepository implements IProfileRepository {
     }
   
     // 2. Fallback: Get ANY profile linked to this user (e.g. if none active)
-    const user = await this.getCurrentUser();
-    if (!user) return null;
+    const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+    if (userError || !user) return null;
 
     const { data, error } = await this.supabase
       .from('profiles')
@@ -140,5 +140,26 @@ export class SupabaseProfileRepository implements IProfileRepository {
     if (error || !data || data.length === 0) return null;
 
     return this.mapProfile(data[0] as unknown as ProfileRow);
+  }
+
+  async getById(id: string): Promise<AuthProfile | null> {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select(`
+        *,
+        profile_roles (
+          role
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+    return this.mapProfile(data as unknown as ProfileRow);
+  }
+
+  async getAchievements(userId: string): Promise<any[]> {
+    // Return empty for now as schema is unknown
+    return [];
   }
 }

@@ -26,7 +26,6 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
   const { user } = useAuthStore();
   const router = useRouter();
   const isInstructor = user?.role === 'instructor';
-
   if (state.loading && !vm) {
     return <ScheduleSkeleton />;
   }
@@ -46,12 +45,8 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
 
   if (!vm) return null;
 
-  // For instructors: filter to show only their own slots
-  // Mock: instructor-001 maps to instructor 'inst-001' in the schedule data
-  // We match by instructor name from the auth user
-  const displaySlots = isInstructor
-    ? vm.timeSlots.filter((slot) => slot.instructorName.includes(user?.name?.replace('อ.', '').trim() || ''))
-    : vm.timeSlots;
+  // TimeSlots are already filtered by the presenter based on role
+  const displaySlots = vm.timeSlots;
 
   // Group timeslots by day
   const slotsByDay: Record<number, ScheduleTimeSlot[]> = {};

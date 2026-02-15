@@ -36,17 +36,33 @@ export function useSettingsPresenter() {
 
   // Initial fetch
   useEffect(() => {
+    let mounted = true;
     if (!user) return;
-    setLoading(true);
-    presenter.getViewModel(user.id)
-      .then((vm) => {
-        setViewModel(vm);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+
+    const loadData = async () => {
+        // Use profileId if available, otherwise fallback to id (Auth ID)
+        const targetId = user.profileId || user.id;
+
+        setLoading(true);
+        try {
+            const vm = await presenter.getViewModel(targetId);
+            if (mounted) {
+                setViewModel(vm);
+            }
+        } catch (err) {
+            if (mounted) {
+                setError(err instanceof Error ? err.message : 'Unknown error');
+            }
+        } finally {
+            if (mounted) {
+                setLoading(false);
+            }
+        }
+    };
+
+    loadData();
+
+    return () => { mounted = false; };
   }, [user, presenter]);
 
   const showToast = useCallback((msg: string) => {
@@ -57,14 +73,16 @@ export function useSettingsPresenter() {
   const updateProfile = useCallback(async (name: string, bio: string) => {
     if (!user) return;
     try {
-      const updatedUser = await presenter.updateProfile(user.id, name, bio);
+      const targetId = user.profileId || user.id;
+      const updatedUser = await presenter.updateProfile(targetId, name, bio);
       updateUser(updatedUser);
       
       showToast('บันทึกโปรไฟล์เรียบร้อยแล้ว ✅');
-    } catch (err: any) {
-      showToast('เกิดข้อผิดพลาด: ' + err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      showToast('เกิดข้อผิดพลาด: ' + message);
     }
-  }, [user, presenter, showToast]);
+  }, [user, presenter, showToast, updateUser]);
 
   const updatePassword = useCallback(async (current: string, next: string, confirm: string): Promise<boolean> => {
     if (!user) return false;
@@ -72,8 +90,9 @@ export function useSettingsPresenter() {
       await presenter.updatePassword(user.id, current, next, confirm);
       showToast('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว ✅');
       return true;
-    } catch (err: any) {
-      showToast(err.message || 'เปลี่ยนรหัสผ่านไม่สำเร็จ ❌');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'เปลี่ยนรหัสผ่านไม่สำเร็จ ❌';
+      showToast(message);
       return false;
     }
   }, [user, presenter, showToast]);
@@ -81,16 +100,13 @@ export function useSettingsPresenter() {
   const updatePreferences = useCallback(async (data: SettingsViewModel) => {
     if (!user) return;
     try {
-      const newPrefs = await presenter.updatePreferences(user.id, data);
-      // Repo returns UserPreferences (full object). 
-      // We extract ViewModel parts.
-      // Or Presenter returns partial?
-      // Presenter `updatePreferences` returns `Promise<UserPreferences>`.
-      // We assume UserPreferences is compatible or superset.
+      const targetId = user.profileId || user.id;
+      const newPrefs = await presenter.updatePreferences(targetId, data);
       setViewModel((prev) => prev ? { ...prev, ...newPrefs } : newPrefs as unknown as SettingsViewModel);
       showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว 💾');
-    } catch (err: any) {
-      showToast('บันทึกไม่สำเร็จ: ' + err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      showToast('บันทึกไม่สำเร็จ: ' + message);
     }
   }, [user, presenter, showToast]);
 

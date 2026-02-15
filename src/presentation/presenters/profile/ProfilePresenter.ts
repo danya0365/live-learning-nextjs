@@ -32,17 +32,26 @@ export class ProfilePresenter {
   ) {}
 
   async getViewModel(studentId: string): Promise<ProfileViewModel> {
-    const [bookings, stats, allCourses, profile, achievements] = await Promise.all([
+    const [bookings, stats, allCourses, authProfile, achievements] = await Promise.all([
       this.bookingRepository.getByStudentId(studentId),
       this.bookingRepository.getStats(),
       this.courseRepository.getAll(),
-      this.profileRepository.getProfile(studentId),
+      this.profileRepository.getById(studentId),
       this.profileRepository.getAchievements(studentId),
     ]);
 
-    if (!profile) {
+    if (!authProfile) {
       throw new Error('Profile not found');
     }
+
+    const profile: StudentProfile = {
+        id: authProfile.id,
+        name: authProfile.fullName || 'Unknown',
+        // Email not available in public profile
+        avatar: authProfile.avatarUrl || '👤',
+        joinDate: authProfile.createdAt,
+        level: 'Student' // TODO: derive from AuthProfile or other source
+    };
 
     const recentBookings = bookings
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())

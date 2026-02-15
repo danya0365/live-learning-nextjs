@@ -110,18 +110,21 @@ export function useBookingWizardPresenter() {
     if (!selectedCourse || !selectedInstructor || !selectedSlot) return;
     
     setIsBooking(true);
-    // Mock booking call
-    const booking = await presenter.createBooking({ // Using mock createBooking
-        courseId: selectedCourse.id,
-        instructorId: selectedInstructor.id,
-        slotId: selectedSlot.id,
-        date: new Date().toISOString(),
-        action: bookingAction
-    });
-    
-    if (booking) {
+    // Create booking via API
+    try {
+        await presenter.createBooking({
+            courseId: selectedCourse.id,
+            instructorId: selectedInstructor.id,
+            slotId: selectedSlot.id,
+            date: new Date().toISOString(),
+            action: bookingAction
+        });
+        
         setIsBooking(false);
         setBookingDone(true);
+    } catch (error) {
+        console.error('Booking failed', error);
+        setIsBooking(false);
     }
   }, [selectedCourse, selectedInstructor, selectedSlot, bookingAction, presenter]);
 

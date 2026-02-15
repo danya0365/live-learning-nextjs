@@ -1,8 +1,8 @@
 'use client';
 
-import { MockConsultationRepository } from '@/src/infrastructure/repositories/mock/MockConsultationRepository';
+import { ApiConsultationRepository } from '@/src/infrastructure/repositories/api/ApiConsultationRepository';
 import { ConsultationsPresenter } from './ConsultationsPresenter';
 
 export function createClientConsultationsPresenter(): ConsultationsPresenter {
-  return new ConsultationsPresenter(new MockConsultationRepository());
+  return new ConsultationsPresenter(new ApiConsultationRepository());
 }

@@ -263,6 +263,54 @@ export class SupabaseInstructorRepository implements IInstructorRepository {
     };
   }
 
+  async getMe(): Promise<Instructor | null> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) return null;
+    
+    // Find instructor profile for this user
+    // In our schema, instructor_profiles.profile_id is unique and links to profiles.id (which is auth.uid via trigger usually)
+    // Actually, profiles.id is auth.uid usually. Or auth_id column?
+    // Let's check schema: profiles.auth_id is common or profiles.id is uuid.
+    // Assuming profiles.id matches auth.uid or there's a link.
+    // Based on previous files, profiles.id seems to be the main ID.
+    // Let's try to find by profile_id = user.id (if profiles.id == auth.uid)
+    
+    // Check if we need to query profiles table first to find profile_id from auth_id?
+    // Supabase Auth UID usually maps to public.profiles.id key.
+    
+    const { data, error } = await this.supabase
+      .from('instructor_profiles')
+      .select(`
+        *,
+        profiles!inner(*)
+      `)
+      .eq('profiles.auth_id', user.id) // safer to query by auth_id if the join allows or if we know relationship
+      // Actually simpler: 
+      // 1. Get profile by auth_id
+      // 2. Get instructor by profile_id
+      .single();
+      
+      // If the above query is complex, let's do two steps or a join.
+      // Trying direct join on profile's auth_id
+      
+    if (data) {
+        return this.mapToDomain(data as unknown as InstructorRow);
+    }
+    
+    // Fallback: try profiles.id = user.id
+    const { data: data2 } = await this.supabase
+        .from('instructor_profiles')
+        .select(`*, profiles(*)`)
+        .eq('profile_id', user.id)
+        .single();
+        
+    if (data2) {
+        return this.mapToDomain(data2 as unknown as InstructorRow);
+    }
+
+    return null;
+  }
+
   // ============================================================
   // DOMAIN MAPPING
   // ============================================================

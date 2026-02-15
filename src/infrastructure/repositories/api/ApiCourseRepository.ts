@@ -57,8 +57,8 @@ export class ApiCourseRepository implements ICourseRepository {
     return res.json();
   }
 
-  // Write operations usually go to specific endpoints or use Server Actions
-  // For now, these are placeholders or point to API endpoints if implemented
+  // Write operations via API
+
 
   async create(data: CreateCourseData): Promise<Course> {
     const res = await fetch(this.baseUrl, {
