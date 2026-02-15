@@ -1,14 +1,14 @@
 /**
  * AuthGuard — Protects pages that require authentication
  * Redirects to login page if not authenticated
- * Shows loading spinner during hydration to prevent flash
+ * Waits for auth store initialization (session restore) before deciding
  */
 
 'use client';
 
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -20,15 +20,11 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, allowedRoles, fallback }: AuthGuardProps) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
-  const [hydrated, setHydrated] = useState(false);
+  const { isAuthenticated, isInitialized, user } = useAuthStore();
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
+    // Don't redirect until the store has finished restoring the session
+    if (!isInitialized) return;
 
     if (!isAuthenticated) {
       router.replace('/auth/login');
@@ -38,14 +34,14 @@ export function AuthGuard({ children, allowedRoles, fallback }: AuthGuardProps) 
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
       router.replace('/');
     }
-  }, [hydrated, isAuthenticated, user, allowedRoles, router]);
+  }, [isInitialized, isAuthenticated, user, allowedRoles, router]);
 
-  // Still hydrating — show nothing or fallback to prevent flash
-  if (!hydrated) {
+  // Auth store still initializing (restoring session) — show skeleton
+  if (!isInitialized) {
     return fallback || <AuthGuardSkeleton />;
   }
 
-  // Not authenticated — will redirect, show nothing
+  // Not authenticated — will redirect, show skeleton
   if (!isAuthenticated) {
     return fallback || <AuthGuardSkeleton />;
   }
@@ -68,3 +64,4 @@ function AuthGuardSkeleton() {
     </div>
   );
 }
+
