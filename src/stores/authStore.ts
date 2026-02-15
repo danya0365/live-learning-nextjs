@@ -4,8 +4,9 @@
  */
 
 import { AuthProfile as RepoAuthProfile, AuthUser as RepoAuthUser } from '@/src/application/repositories/IAuthRepository';
+import { ApiProfileRepository } from '@/src/infrastructure/repositories/api/ApiProfileRepository';
 import { SupabaseAuthRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAuthRepository';
-import { createClient } from '@/src/infrastructure/supabase/client';
+import { createClient, resetClient } from '@/src/infrastructure/supabase/client';
 import { create } from 'zustand';
 
 /* ── Types ─────────────────────────────────── */
@@ -56,6 +57,9 @@ const getAuthRepository = () => {
   return new SupabaseAuthRepository(supabase);
 };
 
+// ✅ Use API Repository for profile operations to avoid connection pool exhaustion
+const profileRepository = new ApiProfileRepository();
+
 /* ── Mapper ────────────────────────────────── */
 
 const mapToStoreUser = (repoUser: RepoAuthUser, profile: RepoAuthProfile | null): AuthUser => {
@@ -99,11 +103,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
       const repo = getAuthRepository();
-      const session = await repo.getSession();
+      const session = await withTimeout(repo.getSession(), 5000).catch(() => null);
       
       if (session) {
         const storeUser = mapToStoreUser(session.user, session.profile);
-        const profiles = await repo.getProfiles();
+        
+        // ✅ Use API Repository for fetching profiles
+        const profiles = await profileRepository.getProfiles();
         const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
         
         set({ 
@@ -118,14 +124,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       repo.onAuthStateChange(async (session) => {
-        // Need to get a fresh repo or reuse? 
-        // Logic suggests callback is bound to the subscription, so we can use dynamic lookup inside if needed,
-        // but 'mapToStoreUser' is pure.
-        // However, we need to fetch profiles again.
         if (session) {
-          const innerRepo = getAuthRepository();
           const storeUser = mapToStoreUser(session.user, session.profile);
-          const profiles = await innerRepo.getProfiles();
+          
+          // ✅ Use API Repository
+          const profiles = await profileRepository.getProfiles();
           const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
           
           set({ user: storeUser, profiles: storeProfiles, isAuthenticated: true, isLoading: false });
@@ -206,14 +209,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   switchProfile: async (profileId: string) => {
       set({ isLoading: true });
       try {
-          const repo = getAuthRepository();
-          
-          // ✅ Wrap with timeout to prevent hanging indefinitely
-          const success = await withTimeout(repo.switchProfile(profileId), 10000);
+          // ✅ Use API Repository for switching profile
+          const success = await withTimeout(profileRepository.switchProfile(profileId), 10000);
           
           if (!success) throw new Error('Failed to switch profile');
           
           // Force refresh logic to update UI immediately
+          const repo = getAuthRepository();
           const session = await withTimeout(repo.getSession(), 5000);
           
           if (session) {
@@ -224,6 +226,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
       } catch (error) {
           console.error('Switch profile error', error);
+          resetClient(); // Force reset connection
           set({ isLoading: false });
       }
   },

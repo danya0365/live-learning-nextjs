@@ -238,9 +238,6 @@ export class SupabaseAuthRepository implements IAuthRepository {
         console.error('Failed to switch profile:', error);
         return false;
      }
-
-     // Force refresh session/user metadata
-     await this.supabase.auth.refreshSession();
      return data;
   }
 
