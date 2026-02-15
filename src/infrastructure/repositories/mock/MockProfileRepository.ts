@@ -1,13 +1,14 @@
 import { AuthProfile } from '@/src/application/repositories/IAuthRepository';
-import { Achievement, IProfileRepository, StudentProfile } from '@/src/application/repositories/IProfileRepository';
+import { Achievement, IProfileRepository, UserProfile } from '@/src/application/repositories/IProfileRepository';
 
-const DEMO_PROFILE: StudentProfile = {
+const DEMO_PROFILE: UserProfile = {
   id: 'student-001',
   name: 'น้องมิน',
   email: 'min@demo.com',
   avatar: '🧑‍💻',
   joinDate: '2025-09-15',
   level: 'Intermediate',
+  role: 'student',
 };
 
 const DEMO_ACHIEVEMENTS: Achievement[] = [
@@ -49,6 +50,7 @@ export class MockProfileRepository implements IProfileRepository {
         verificationStatus: 'verified',
         isActive: true,
         preferences: { language: 'th', notifications: true, theme: 'auto' },
+        level: 'Senior Instructor',
       } as AuthProfile;
     }
     

@@ -70,7 +70,7 @@ const mapToStoreUser = (repoUser: RepoAuthUser, profile: RepoAuthProfile | null)
     email: repoUser.email,
     avatar: profile?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.fullName || repoUser.email)}&background=random`,
     role: (profile?.role as UserRole) || 'student',
-    level: 'Member', 
+    level: (profile as any)?.level || (profile?.role === 'instructor' ? 'Instructor' : 'Student'), 
     joinDate: profile?.createdAt || repoUser.createdAt,
     bio: profile?.bio,
     emailVerified: repoUser.emailVerified,

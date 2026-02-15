@@ -29,14 +29,14 @@ export function useProfilePresenter(
     setLoading(true);
     setError(null);
     try {
-      const vm = await presenter.getViewModel(targetId);
+      const vm = await presenter.getViewModel(targetId, user?.role);
       if (isMountedRef.current) setViewModel(vm);
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [presenter, user?.profileId, user?.id]);
+  }, [presenter, user?.profileId, user?.id, user?.role]);
 
   useEffect(() => {
     if (!initialViewModel && (user?.profileId || user?.id)) loadData();

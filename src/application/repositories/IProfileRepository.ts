@@ -12,13 +12,14 @@ export interface Achievement {
   description: string;
 }
 
-export interface StudentProfile {
+export interface UserProfile {
   id: string;
   name: string;
   email?: string;
   avatar: string;
   joinDate: string;
   level: string;
+  role: 'student' | 'instructor' | 'admin';
 }
 
 export interface IProfileRepository {
