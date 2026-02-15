@@ -115,7 +115,7 @@ export function Header() {
   useClickOutside(authRef, () => setAuthMenuOpen(false));
 
   // Auth state from Zustand
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, profiles, switchProfile, isAuthenticated, logout } = useAuthStore();
 
   // Close menus on route change
   useEffect(() => {
@@ -264,13 +264,39 @@ export function Header() {
                     }}
                   >
                     {/* User info */}
-                    <div className="px-4 py-3 border-b border-border/30">
-                      <p className="text-sm font-bold text-text-primary">{user.name}</p>
-                      <p className="text-xs text-text-muted">
-                        {user.level} • <span className={roleInfo.color}>{roleInfo.label}</span>
-                      </p>
-                      <p className="text-[10px] text-text-muted mt-0.5">{user.email}</p>
-                    </div>
+                      <div className="px-4 py-3 border-b border-border/30">
+                        <p className="text-sm font-bold text-text-primary">{user.name}</p>
+                        <p className="text-xs text-text-muted">
+                          {user.level} • <span className={roleInfo.color}>{roleInfo.label}</span>
+                        </p>
+                        <p className="text-[10px] text-text-muted mt-0.5">{user.email}</p>
+                      </div>
+
+                      {/* Profile Switcher (if multiple profiles exist) */}
+                      {profiles.length > 1 && (
+                        <div className="p-2 border-b border-border/30">
+                          <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-2 mb-1">
+                            สลับโปรไฟล์
+                          </p>
+                          {profiles.map((p) => (
+                            <button
+                              key={p.role}
+                              onClick={() => {
+                                if (p.profileId) switchProfile(p.profileId);
+                              }}
+                              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors ${
+                                user.role === p.role 
+                                  ? 'bg-primary/10 text-primary font-bold' 
+                                  : 'text-text-secondary hover:bg-surface hover:text-text-primary'
+                              }`}
+                            >
+                              <span className="text-base">{p.avatar}</span>
+                              <span>{p.role}</span>
+                              {user.role === p.role && <span className="ml-auto text-primary">✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                     <div className="p-2">
                       {role === 'student' && (

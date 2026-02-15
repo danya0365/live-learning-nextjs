@@ -5,20 +5,14 @@
 
 'use client';
 
-import { DEMO_ACCOUNTS, type DemoAccountKey, useAuthStore } from '@/src/stores/authStore';
+import { IS_DEV, useAuthStore } from '@/src/stores/authStore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const DEMO_CARDS: { key: DemoAccountKey; label: string; desc: string }[] = [
-  { key: 'student', label: '🧑‍💻 นักเรียน', desc: 'ดูคอร์ส จอง เรียนสด' },
-  { key: 'instructor', label: '👨‍🏫 อาจารย์', desc: 'จัดการคอร์ส สอนสด' },
-  { key: 'admin', label: '🛡️ แอดมิน', desc: 'จัดการระบบทั้งหมด' },
-];
-
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, loginAsDemo, isAuthenticated, isLoading } = useAuthStore();
+  const { register, loginAsDevAdmin, isAuthenticated, isLoading } = useAuthStore();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -92,32 +86,34 @@ export default function RegisterPage() {
           <p className="text-text-secondary mt-2 text-sm">สร้างบัญชีเพื่อเริ่มเรียนรู้กับเรา</p>
         </div>
 
-        {/* Demo one-click */}
-        <div className="glass rounded-2xl p-5 border border-border/50 shadow-lg mb-6">
-          <h2 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
-            ⚡ ทดลองใช้งานทันที
-          </h2>
-          <div className="grid grid-cols-3 gap-2">
-            {DEMO_CARDS.map((demo) => {
-              const account = DEMO_ACCOUNTS[demo.key];
-              return (
-                <button
-                  key={demo.key}
-                  onClick={() => loginAsDemo(demo.key)}
-                  disabled={isLoading}
-                  className="group relative overflow-hidden rounded-xl p-3 text-center hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-50"
-                >
-                  <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                  <div className="relative">
-                    <div className="text-2xl mb-1">{account.user.avatar}</div>
-                    <p className="text-xs font-bold text-text-primary">{demo.label.split(' ')[1]}</p>
-                    <p className="text-[10px] text-text-muted mt-0.5">{demo.desc}</p>
-                  </div>
-                </button>
-              );
-            })}
+        {/* Demo one-click (Dev Only) */}
+        {IS_DEV && (
+          <div className="glass rounded-2xl p-5 border border-border/50 shadow-lg mb-6">
+            <h2 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
+              ⚡ Dev Mode Login
+            </h2>
+            <button
+              type="button"
+              onClick={() => loginAsDevAdmin()}
+              disabled={isLoading}
+              className="w-full group relative overflow-hidden rounded-xl p-4 text-left border border-primary/20 hover:border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all"
+            >
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    🚀
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors">
+                      เข้าใช้งานแบบ Admin (Super User)
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      บัญชีเดียว สลับได้ครบทุก Role (นักเรียน/อาจารย์)
+                    </p>
+                 </div>
+              </div>
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Register card */}
         <div className="glass rounded-2xl p-8 border border-border/50 shadow-xl">
