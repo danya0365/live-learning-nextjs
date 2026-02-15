@@ -1,142 +1,43 @@
-/**
- * Header — Role-based navigation
- *
- * Student:    🏠 หน้าหลัก, ➕ จองคลาส, 👤 โปรไฟล์
- * Instructor: 🏠 หน้าหลัก, 📅 ตารางสอน, 👤 โปรไฟล์
- * Guest:      🏠 หน้าหลัก, 🔑 เข้าสู่ระบบ
- *
- * All existing pages are kept in the "More" menu
- */
-
 'use client';
 
 import { HydrationGuard } from '@/src/presentation/components/common/HydrationGuard';
+import { LoadingOverlay } from '@/src/presentation/components/common/LoadingOverlay';
 import { ThemeToggle } from '@/src/presentation/components/common/ThemeToggle';
-import { useAuthStore, UserRole } from '@/src/stores/authStore';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-
-/* ── Nav config per role ──────────────────── */
-
-interface NavLink {
-  href: string;
-  label: string;
-  icon: string;
-}
-
-interface MoreLink extends NavLink {
-  desc: string;
-}
-
-const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
-  student: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/book', label: 'จองคลาส', icon: '➕' },
-    { href: '/consultations', label: 'ปรึกษา', icon: '💬' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
-  ],
-  instructor: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/schedule', label: 'ตารางสอน', icon: '📅' },
-    { href: '/consultations/board', label: 'บอร์ดปรึกษา', icon: '📋' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
-  ],
-  admin: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/schedule', label: 'ตาราง', icon: '📅' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
-  ],
-  guest: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/schedule', label: 'ตารางเรียน', icon: '📅' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-  ],
-};
-
-const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
-  student: [
-    { href: '/my-bookings', label: 'การจองของฉัน', icon: '📋', desc: 'ดูสถานะการจองทั้งหมด' },
-    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
-    { href: '/schedule', label: 'ตารางเรียน', icon: '📅', desc: 'ดูตารางเวลาสอนทั้งหมด' },
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
-    { href: '/consultations/board', label: 'บอร์ดปรึกษา', icon: '📋', desc: 'ดูคำขอจากนักเรียน' },
-  ],
-  instructor: [
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
-    { href: '/consultations', label: 'คำขอของนักเรียน', icon: '💬', desc: 'ดูคำขอปรึกษาทั้งหมด' },
-    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
-  ],
-  admin: [
-    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
-    { href: '/schedule', label: 'ตาราง', icon: '�', desc: 'ดูตารางทั้งหมด' },
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
-  ],
-  guest: [
-    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
-    { href: '/schedule', label: 'ตาราง', icon: '�', desc: 'ดูตารางทั้งหมด' },
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
-  ],
-};
-
-/* ── Hook: click outside to close ──────────── */
-function useClickOutside(ref: React.RefObject<HTMLElement | null>, onClose: () => void) {
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [ref, onClose]);
-}
-
-/* ── Role badges ───────────────────────────── */
-const ROLE_LABELS: Record<string, { label: string; color: string }> = {
-  student: { label: 'นักเรียน', color: 'text-blue-400' },
-  instructor: { label: 'อาจารย์', color: 'text-purple-400' },
-  admin: { label: 'แอดมิน', color: 'text-amber-400' },
-};
+import { useHeader } from './useHeader';
 
 /* ── Component ─────────────────────────────── */
 export function Header() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [authMenuOpen, setAuthMenuOpen] = useState(false);
-
-  const moreRef = useRef<HTMLDivElement>(null);
-  const authRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside(moreRef, () => setMoreOpen(false));
-  useClickOutside(authRef, () => setAuthMenuOpen(false));
-
-  // Auth state from Zustand
-  const { user, profiles, switchProfile, isAuthenticated, logout } = useAuthStore();
-
-  // Close menus on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-    setMoreOpen(false);
-    setAuthMenuOpen(false);
-  }, [pathname]);
-
-  const role: UserRole | 'guest' = isAuthenticated && user ? user.role : 'guest';
-  const primaryLinks = NAV_BY_ROLE[role];
-  const moreLinks = MORE_BY_ROLE[role];
-
-  const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href);
-
-  function handleLogout() {
-    logout();
-    router.push('/auth/login');
-  }
-
-  const roleInfo = user ? ROLE_LABELS[user.role] || ROLE_LABELS.student : ROLE_LABELS.student;
+  const {
+    // State
+    mobileMenuOpen,
+    moreOpen,
+    authMenuOpen,
+    isSwitchingProfile,
+    isAuthenticated,
+    user,
+    profiles,
+    role,
+    
+    // Derived
+    primaryLinks,
+    moreLinks,
+    roleInfo,
+    
+    // Refs
+    moreRef,
+    authRef,
+    
+    // Setters
+    setMobileMenuOpen,
+    setMoreOpen,
+    setAuthMenuOpen,
+    
+    // Methods
+    isActive,
+    handleLogout,
+    handleSwitchProfile,
+  } = useHeader();
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -282,7 +183,9 @@ export function Header() {
                             <button
                               key={p.role}
                               onClick={() => {
-                                if (p.profileId) switchProfile(p.profileId);
+                                if (p.profileId) {
+                                  handleSwitchProfile(p.profileId);
+                                }
                               }}
                               className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors ${
                                 user.role === p.role 
@@ -301,12 +204,12 @@ export function Header() {
                     <div className="p-2">
                       {role === 'student' && (
                         <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
-                          <span>�</span> การจองของฉัน
+                          <span>📋</span> การจองของฉัน
                         </Link>
                       )}
                       {role === 'instructor' && (
                         <Link href="/schedule" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
-                          <span>�</span> ตารางสอนของฉัน
+                          <span>📅</span> ตารางสอนของฉัน
                         </Link>
                       )}
                       <Link href="/settings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-colors">
@@ -431,7 +334,7 @@ export function Header() {
                 )}
                 {role === 'instructor' && (
                   <Link href="/schedule" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface font-medium transition-colors">
-                    <span className="text-lg">�</span><span className="text-sm">ตารางสอนของฉัน</span>
+                    <span className="text-lg">📅</span><span className="text-sm">ตารางสอนของฉัน</span>
                   </Link>
                 )}
                 <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface font-medium transition-colors">
@@ -461,6 +364,7 @@ export function Header() {
           </nav>
         </div>
       </div>
+      <LoadingOverlay isLoading={isSwitchingProfile} message="กำลังสลับโปรไฟล์..." />
     </header>
   );
 }

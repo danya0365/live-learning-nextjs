@@ -49,8 +49,12 @@ export const IS_DEV = process.env.NODE_ENV !== 'production';
 
 /* ── Repository Integration ────────────────── */
 
-const supabase = createClient();
-const authRepository = new SupabaseAuthRepository(supabase);
+// ✅ Use a factory/getter to ensure we always use the current client instance
+// This avoids issues with module-level initialization where the client might be stale or not yet ready
+const getAuthRepository = () => {
+  const supabase = createClient();
+  return new SupabaseAuthRepository(supabase);
+};
 
 /* ── Mapper ────────────────────────────────── */
 
@@ -69,6 +73,18 @@ const mapToStoreUser = (repoUser: RepoAuthUser, profile: RepoAuthProfile | null)
   };
 };
 
+
+/* ── Helpers ───────────────────────────────── */
+
+const withTimeout = <T>(promise: Promise<T>, ms: number = 10000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Connection timed out (${ms}ms)`)), ms)
+    )
+  ]);
+};
+
 /* ── Store ─────────────────────────────────── */
 
 
@@ -82,11 +98,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     try {
       set({ isLoading: true });
-      const session = await authRepository.getSession();
+      const repo = getAuthRepository();
+      const session = await repo.getSession();
       
       if (session) {
         const storeUser = mapToStoreUser(session.user, session.profile);
-        const profiles = await authRepository.getProfiles();
+        const profiles = await repo.getProfiles();
         const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
         
         set({ 
@@ -100,10 +117,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user: null, profiles: [], isAuthenticated: false, isLoading: false, isInitialized: true });
       }
 
-      authRepository.onAuthStateChange(async (session) => {
+      repo.onAuthStateChange(async (session) => {
+        // Need to get a fresh repo or reuse? 
+        // Logic suggests callback is bound to the subscription, so we can use dynamic lookup inside if needed,
+        // but 'mapToStoreUser' is pure.
+        // However, we need to fetch profiles again.
         if (session) {
+          const innerRepo = getAuthRepository();
           const storeUser = mapToStoreUser(session.user, session.profile);
-          const profiles = await authRepository.getProfiles();
+          const profiles = await innerRepo.getProfiles();
           const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
           
           set({ user: storeUser, profiles: storeProfiles, isAuthenticated: true, isLoading: false });
@@ -121,7 +143,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     try {
-      const result = await authRepository.signIn({ email, password });
+      const repo = getAuthRepository();
+      const result = await repo.signIn({ email, password });
       
       if (!result.success) {
         set({ isLoading: false });
@@ -137,7 +160,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   register: async (name, email, password) => {
     set({ isLoading: true });
     try {
-      const result = await authRepository.signUp({ 
+      const repo = getAuthRepository();
+      const result = await repo.signUp({ 
         email, 
         password, 
         fullName: name 
@@ -166,10 +190,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const adminEmail = 'admin@livelearning.com';
         const adminPass = '12345678';
         
-        const currentUser = await authRepository.getCurrentUser();
+        const repo = getAuthRepository();
+        const currentUser = await repo.getCurrentUser();
         // If not already logged in as admin, do login
         if (!currentUser || currentUser.email !== adminEmail) {
-            const result = await authRepository.signIn({ email: adminEmail, password: adminPass });
+            const result = await repo.signIn({ email: adminEmail, password: adminPass });
             if (!result.success) throw new Error(result.message || 'Dev Login Failed');
         }
       } catch (error: any) {
@@ -181,8 +206,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   switchProfile: async (profileId: string) => {
       set({ isLoading: true });
       try {
-          const success = await authRepository.switchProfile(profileId);
+          const repo = getAuthRepository();
+          
+          // ✅ Wrap with timeout to prevent hanging indefinitely
+          const success = await withTimeout(repo.switchProfile(profileId), 10000);
+          
           if (!success) throw new Error('Failed to switch profile');
+          
+          // Force refresh logic to update UI immediately
+          const session = await withTimeout(repo.getSession(), 5000);
+          
+          if (session) {
+             const storeUser = mapToStoreUser(session.user, session.profile);
+             set({ user: storeUser, isAuthenticated: true, isLoading: false });
+          } else {
+             set({ isLoading: false });
+          }
       } catch (error) {
           console.error('Switch profile error', error);
           set({ isLoading: false });
@@ -191,12 +230,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     set({ isLoading: true });
-    await authRepository.signOut();
+    const repo = getAuthRepository();
+    await repo.signOut();
     set({ user: null, profiles: [], isAuthenticated: false, isLoading: false });
   },
   
   refreshProfile: async () => {
-     const session = await authRepository.getSession();
+     const repo = getAuthRepository();
+     const session = await repo.getSession();
      if (session) {
         const storeUser = mapToStoreUser(session.user, session.profile);
         set({ user: storeUser });
