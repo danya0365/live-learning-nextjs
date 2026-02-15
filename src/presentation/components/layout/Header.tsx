@@ -244,28 +244,71 @@ export function Header() {
                   {/* Profile Switcher (if multiple profiles exist) */}
                   {profiles.length > 1 && (
                     <div className="p-2 border-b border-border/30">
-                      <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-2 mb-1">
-                        สลับโปรไฟล์
+                      <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-2 mb-1.5 flex items-center justify-between">
+                        <span>สลับโปรไฟล์</span>
+                        <span className="text-[10px] bg-surface-elevated px-1.5 py-0.5 rounded text-text-muted">{profiles.length}</span>
                       </p>
-                      {profiles.map((p) => (
-                        <button
-                          key={p.role}
-                          onClick={() => {
-                            if (p.profileId) {
-                              handleSwitchProfile(p.profileId);
-                            }
-                          }}
-                          className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-all duration-150 ${
-                            user.role === p.role
-                              ? 'bg-primary/10 text-primary font-bold'
-                              : 'text-text-secondary hover:bg-surface hover:text-text-primary'
-                          }`}
-                        >
-                          <span className="text-base">{p.avatar}</span>
-                          <span>{p.role}</span>
-                          {user.role === p.role && <span className="ml-auto text-primary">✓</span>}
-                        </button>
-                      ))}
+                      <div className="space-y-1">
+                        {profiles.map((p) => {
+                          const isCurrent = user.role === p.role;
+                          const roleLabel = p.role === 'instructor' ? 'อาจารย์' : p.role === 'admin' ? 'แอดมิน' : 'นักเรียน';
+                          const roleIcon = p.role === 'instructor' ? '👨‍🏫' : p.role === 'admin' ? '🛡️' : '🎓';
+                          
+                          return (
+                            <button
+                              key={p.role}
+                              onClick={() => {
+                                if (p.profileId) {
+                                  handleSwitchProfile(p.profileId);
+                                }
+                              }}
+                              className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group ${
+                                isCurrent
+                                  ? 'bg-primary/5 ring-1 ring-primary/20'
+                                  : 'hover:bg-surface'
+                              }`}
+                            >
+                              {/* Avatar */}
+                              <div className="relative shrink-0">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm ${
+                                  isCurrent ? 'bg-gradient-to-br from-primary to-secondary text-white' : 'bg-surface-elevated text-text-secondary grayscale group-hover:grayscale-0 transition-all'
+                                }`}>
+                                  {p.avatar}
+                                </div>
+                                {isCurrent && (
+                                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background" />
+                                )}
+                              </div>
+                              
+                              {/* Info */}
+                              <div className="flex-1 text-left min-w-0">
+                                <p className={`text-xs font-bold truncate ${isCurrent ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                                  {p.name}
+                                </p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded-md ${
+                                    p.role === 'instructor' 
+                                      ? 'bg-purple-100/50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300' 
+                                      : 'bg-blue-100/50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
+                                  }`}>
+                                    <span>{roleIcon}</span>
+                                    <span>{roleLabel}</span>
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              {/* Checkmark */}
+                              {isCurrent && (
+                                <div className="text-primary shrink-0">
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
@@ -423,26 +466,63 @@ export function Header() {
 
               {/* Profile Switcher in Mobile */}
               {profiles.length > 1 && (
-                <div className="px-1 mb-2">
-                  <div className="flex gap-1.5">
-                    {profiles.map((p) => (
-                      <button
-                        key={p.role}
-                        onClick={() => {
-                          if (p.profileId) {
-                            handleSwitchProfile(p.profileId);
-                          }
-                        }}
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all duration-150 ${
-                          user.role === p.role
-                            ? 'bg-primary/10 text-primary font-bold ring-1 ring-primary/30'
-                            : 'text-text-secondary hover:bg-surface/60 hover:text-text-primary'
-                        }`}
-                      >
-                        <span className="text-base">{p.avatar}</span>
-                        <span>{p.role}</span>
-                      </button>
-                    ))}
+                <div className="px-1 mb-2 mt-2">
+                  <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-2 mb-2">
+                    สลับโปรไฟล์
+                  </p>
+                  <div className="space-y-2">
+                    {profiles.map((p) => {
+                      const isCurrent = user.role === p.role;
+                      const roleLabel = p.role === 'instructor' ? 'อาจารย์' : p.role === 'admin' ? 'แอดมิน' : 'นักเรียน';
+                      const roleIcon = p.role === 'instructor' ? '👨‍🏫' : p.role === 'admin' ? '🛡️' : '🎓';
+
+                      return (
+                        <button
+                          key={p.role}
+                          onClick={() => {
+                            if (p.profileId) {
+                              handleSwitchProfile(p.profileId);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 border ${
+                            isCurrent
+                              ? 'bg-primary/5 border-primary/20 shadow-sm'
+                              : 'bg-surface/50 border-transparent hover:bg-surface'
+                          }`}
+                        >
+                          {/* Avatar */}
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base shadow-sm shrink-0 ${
+                            isCurrent ? 'bg-gradient-to-br from-primary to-secondary text-white' : 'bg-surface-elevated text-text-secondary'
+                          }`}>
+                            {p.avatar}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 text-left min-w-0">
+                            <p className={`text-sm font-bold truncate ${isCurrent ? 'text-text-primary' : 'text-text-secondary'}`}>
+                              {p.name}
+                            </p>
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] mt-0.5 ${
+                                p.role === 'instructor' 
+                                  ? 'bg-purple-100/50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300' 
+                                  : 'bg-blue-100/50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
+                              }`}>
+                              <span>{roleIcon}</span>
+                              <span>{roleLabel}</span>
+                            </span>
+                          </div>
+
+                           {/* Checkmark */}
+                           {isCurrent && (
+                            <div className="text-primary shrink-0 bg-primary/10 p-1 rounded-full">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

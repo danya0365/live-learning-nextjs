@@ -149,6 +149,7 @@ export function useHeader() {
     isSwitchingProfile,
     isAuthenticated,
     user,
+    // profiles, // Real profiles
     profiles,
     role,
     
