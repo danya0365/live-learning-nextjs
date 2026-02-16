@@ -233,10 +233,18 @@ export function Header() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-text-primary truncate">{user.name}</p>
-                        <p className="text-xs text-text-muted">
-                          {user.level} • <span className={roleInfo.color}>{roleInfo.label}</span>
-                        </p>
-                        <p className="text-[10px] text-text-muted mt-0.5 truncate">{user.email}</p>
+                        <div className="mt-1">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${
+                            user.role === 'instructor' 
+                              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' 
+                              : user.role === 'admin'
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300'
+                              : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                          }`}>
+                            <span>{user.role === 'instructor' ? '👨‍🏫' : user.role === 'admin' ? '🛡️' : '🎓'}</span>
+                            <span>{roleInfo.label}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
