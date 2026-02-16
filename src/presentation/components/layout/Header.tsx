@@ -193,24 +193,15 @@ export function Header() {
               <div ref={authRef} className="relative">
                 <button
                   onClick={() => setAuthMenuOpen(!authMenuOpen)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-surface/60 transition-all duration-200 group/auth"
+                  className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-elevated transition-all duration-200 group/auth ring-2 ring-transparent hover:ring-primary/20"
                 >
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-base shadow-md ring-2 ring-transparent group-hover/auth:ring-primary/30 transition-all duration-200">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-md transition-transform duration-200 group-hover/auth:scale-105">
                       {user.avatar}
                     </div>
                     {/* Online indicator */}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background" />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-success border-2 border-background shadow-sm" />
                   </div>
-                  <span className="hidden sm:block text-sm font-medium text-text-primary max-w-[80px] truncate">
-                    {user.name}
-                  </span>
-                  <svg
-                    className={`hidden sm:block w-3.5 h-3.5 text-text-muted transition-transform duration-200 ${authMenuOpen ? 'rotate-180' : ''}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
                 </button>
 
                 {/* Auth dropdown */}
@@ -468,7 +459,18 @@ export function Header() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-text-primary">{user.name}</p>
-                  <p className="text-[10px] text-text-muted">{user.level} • <span className={roleInfo.color}>{roleInfo.label}</span></p>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${
+                      user.role === 'instructor' 
+                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' 
+                        : user.role === 'admin'
+                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                    }`}>
+                      <span>{user.role === 'instructor' ? '👨‍🏫' : user.role === 'admin' ? '🛡️' : '🎓'}</span>
+                      <span>{roleInfo.label}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
