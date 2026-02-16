@@ -1,16 +1,12 @@
-/**
- * CourseDetailView
- * Course detail page with hero, info, instructor card, timeslots, related courses
- * Pure CSS — no react-spring
- */
-
 'use client';
 
 import { CourseDetailViewModel } from '@/src/presentation/presenters/course-detail/CourseDetailPresenter';
 import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/useCourseDetailPresenter';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import CourseDetailSkeleton from './CourseDetailSkeleton';
+import { EasyBookingModal } from './EasyBookingModal';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -23,6 +19,9 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
   const router = useRouter();
   const state = useCourseDetailPresenter(courseId, initialViewModel);
   const vm = state.viewModel;
+
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | undefined>(undefined);
 
   if (state.loading && !vm) {
     return <CourseDetailSkeleton />;
@@ -47,6 +46,11 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
 
   const levelLabel = (l: string) =>
     l === 'beginner' ? '🟢 เริ่มต้น' : l === 'intermediate' ? '🟡 ปานกลาง' : '🔴 ขั้นสูง';
+  
+  const handleOpenBooking = (slotId?: string) => {
+    setSelectedSlotId(slotId);
+    setIsBookingModalOpen(true);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -139,7 +143,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                     )}
                     {!slot.isBooked && (
                       <button
-                        onClick={() => router.push('/book')}
+                        onClick={() => handleOpenBooking(slot.id)}
                         className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
                       >
                         จองเวลานี้
@@ -180,7 +184,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
               <p className="text-xs text-text-muted">ราคาต่อคอร์ส</p>
             </div>
             <button
-              onClick={() => router.push('/book')}
+              onClick={() => handleOpenBooking()}
               className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
             >
               🎓 ลงทะเบียนเรียน
@@ -244,6 +248,16 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
           </Link>
         </div>
       </div>
+      
+      {isBookingModalOpen && (
+        <EasyBookingModal
+          course={course}
+          instructor={instructor}
+          initialSlotId={selectedSlotId}
+          onClose={() => setIsBookingModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
+
