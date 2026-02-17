@@ -56,7 +56,8 @@ export class MockSettingsRepository implements ISettingsRepository {
 
   async updatePreferences(data: UserPreferences): Promise<UserPreferences> {
     await new Promise((resolve) => setTimeout(resolve, 600));
-    MOCK_PREFS[data.userId] = data;
-    return data;
+    const userId = data.userId || 'user-001';
+    MOCK_PREFS[userId] = { ...data, userId };
+    return MOCK_PREFS[userId];
   }
 }

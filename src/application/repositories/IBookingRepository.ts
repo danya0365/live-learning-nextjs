@@ -58,4 +58,5 @@ export interface IBookingRepository {
   update(id: string, data: UpdateBookingData): Promise<Booking>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<BookingStats>;
+  getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]>;
 }

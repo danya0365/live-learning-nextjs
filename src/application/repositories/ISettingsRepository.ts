@@ -8,7 +8,7 @@ export interface UpdateProfileData {
 }
 
 export interface UpdatePasswordData {
-  userId: string;
+  userId?: string;
   current: string;
   new: string;
 }
@@ -27,7 +27,7 @@ export interface UserPreferences {
 }
 
 export interface ISettingsRepository {
-  getPreferences(userId: string): Promise<UserPreferences>;
+  getPreferences(userId?: string): Promise<UserPreferences>;
   updateProfile(data: UpdateProfileData): Promise<AuthUser>;
   updatePassword(data: UpdatePasswordData): Promise<boolean>;
   updatePreferences(data: UserPreferences): Promise<UserPreferences>;

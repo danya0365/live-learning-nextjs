@@ -8,13 +8,13 @@
 'use client';
 
 import {
-    ConsultationOffer,
-    ConsultationRequest,
-    ConsultationRequestStats,
-    ConsultationRequestStatus,
-    CreateConsultationOfferData,
-    CreateConsultationRequestData,
-    IConsultationRepository
+  ConsultationOffer,
+  ConsultationRequest,
+  ConsultationRequestStats,
+  ConsultationRequestStatus,
+  CreateConsultationOfferData,
+  CreateConsultationRequestData,
+  IConsultationRepository
 } from '@/src/application/repositories/IConsultationRepository';
 
 export class ApiConsultationRepository implements IConsultationRepository {
@@ -44,7 +44,9 @@ export class ApiConsultationRepository implements IConsultationRepository {
   }
 
   async getRequestsByStudentId(studentId: string): Promise<ConsultationRequest[]> {
-    const res = await fetch(`${this.baseUrl}?studentId=${studentId}`);
+    // SECURE: Use specific sub-route for authenticated student's requests
+    // Ignores studentId param as we trust the session
+    const res = await fetch(`${this.baseUrl}/student`);
     if (!res.ok) throw new Error('Failed to fetch student requests');
     return res.json();
   }
@@ -78,10 +80,11 @@ export class ApiConsultationRepository implements IConsultationRepository {
   // ============================================================
 
   async createRequest(data: CreateConsultationRequestData): Promise<ConsultationRequest> {
+    const { studentId, ...payload } = data;
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Failed to create request');
     return res.json();
@@ -129,10 +132,11 @@ export class ApiConsultationRepository implements IConsultationRepository {
   // ============================================================
 
   async createOffer(data: CreateConsultationOfferData): Promise<ConsultationOffer> {
+    const { instructorId, ...payload } = data;
     const res = await fetch(`${this.baseUrl}/${data.requestId}/offers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Failed to create offer');
     return res.json();

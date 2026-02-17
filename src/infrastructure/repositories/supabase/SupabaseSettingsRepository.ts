@@ -7,10 +7,10 @@
  */
 
 import {
-    ISettingsRepository,
-    UpdatePasswordData,
-    UpdateProfileData,
-    UserPreferences
+  ISettingsRepository,
+  UpdatePasswordData,
+  UpdateProfileData,
+  UserPreferences
 } from '@/src/application/repositories/ISettingsRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { AuthUser } from '@/src/stores/authStore';

@@ -3,7 +3,7 @@
  * Manages user authentication state using SupabaseAuthRepository
  */
 
-import { AuthProfile as RepoAuthProfile, AuthUser as RepoAuthUser } from '@/src/application/repositories/IAuthRepository';
+import { AuthProfile as RepoAuthProfile, AuthSession as RepoAuthSession, AuthUser as RepoAuthUser } from '@/src/application/repositories/IAuthRepository';
 import { ApiProfileRepository } from '@/src/infrastructure/repositories/api/ApiProfileRepository';
 import { SupabaseAuthRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAuthRepository';
 import { createClient, resetClient } from '@/src/infrastructure/supabase/client';
@@ -103,38 +103,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
       const repo = getAuthRepository();
-      const session = await withTimeout(repo.getSession(), 5000).catch(() => null);
       
-      if (session) {
-        const storeUser = mapToStoreUser(session.user, session.profile);
-        
-        // ✅ Use API Repository for fetching profiles
-        const profiles = await profileRepository.getProfiles();
-        const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
-        
-        set({ 
-            user: storeUser, 
-            profiles: storeProfiles, 
-            isAuthenticated: true, 
-            isLoading: false, 
-            isInitialized: true 
-        });
-      } else {
-        set({ user: null, profiles: [], isAuthenticated: false, isLoading: false, isInitialized: true });
-      }
-
-      repo.onAuthStateChange(async (session) => {
-        if (session) {
-          const storeUser = mapToStoreUser(session.user, session.profile);
-          
-          // ✅ Use API Repository
-          const profiles = await profileRepository.getProfiles();
-          const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
-          
-          set({ user: storeUser, profiles: storeProfiles, isAuthenticated: true, isLoading: false });
-        } else {
-          set({ user: null, profiles: [], isAuthenticated: false, isLoading: false });
+      /**
+       * Helper: Process session state
+       * Handles auto-logout if profile is missing
+       * Fetches available profiles for switching
+       */
+      const processSession = async (session: RepoAuthSession | null) => {
+        // 1. No Session -> Clear State
+        if (!session) {
+            set({ user: null, profiles: [], isAuthenticated: false, isLoading: false, isInitialized: true });
+            return;
         }
+
+        // 2. Session exists but NO Profile -> Auto Logout (User deleted)
+        if (!session.profile) {
+            console.warn('User has session but no profile (Account deleted?). Logging out...');
+            await repo.signOut();
+            set({ user: null, profiles: [], isAuthenticated: false, isLoading: false, isInitialized: true });
+            return;
+        }
+
+        // 3. Valid Session & Profile -> Load full state
+        try {
+            const storeUser = mapToStoreUser(session.user, session.profile);
+            
+            // Fetch available profiles for switching
+            const profiles = await profileRepository.getProfiles();
+            const storeProfiles = profiles.map(p => mapToStoreUser(session.user, p));
+            
+            set({ 
+                user: storeUser, 
+                profiles: storeProfiles, 
+                isAuthenticated: true, 
+                isLoading: false, 
+                isInitialized: true 
+            });
+        } catch (err) {
+            console.error('Error processing session:', err);
+            // Fallback to logged out state if critical error
+            set({ user: null, profiles: [], isAuthenticated: false, isLoading: false, isInitialized: true });
+        }
+      };
+
+      // A. Initial Check
+      const session = await withTimeout(repo.getSession(), 5000).catch(() => null);
+      await processSession(session);
+
+      // B. Subscribe to changes
+      repo.onAuthStateChange(async (newSession) => {
+        // Reset loading state on change? Maybe not needed for silent refresh
+        // But for login/logout it's good.
+        await processSession(newSession);
       });
       
     } catch (error) {

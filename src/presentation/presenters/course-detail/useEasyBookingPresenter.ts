@@ -7,12 +7,13 @@ export interface EasyBookingState {
   loading: boolean;
   isBooking: boolean;
   bookingSuccess: boolean;
+  bookingId: string | null;
   error: string | null;
 }
 
 export interface EasyBookingActions {
   loadSlots: (instructorId: string) => Promise<void>;
-  confirmBooking: (courseId: string, instructorId: string, slot: WizardSlot) => Promise<void>;
+  confirmBooking: (courseId: string, instructorId: string, slot: WizardSlot) => Promise<string | undefined>;
   reset: () => void;
 }
 
@@ -23,6 +24,7 @@ export function useEasyBookingPresenter() {
   const [loading, setLoading] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadSlots = useCallback(async (instructorId: string) => {
@@ -44,14 +46,16 @@ export function useEasyBookingPresenter() {
     setError(null);
     try {
       const action = slot.status === 'booked' ? 'join' : 'new';
-      await presenter.createBooking({
+      const booking = await presenter.createBooking({
         courseId,
         instructorId,
         slotId: slot.id,
         date: new Date().toISOString(),
         action,
       });
+      setBookingId(booking.id);
       setBookingSuccess(true);
+      return booking.id;
     } catch (err) {
       console.error('Booking failed:', err);
       setError('Booking failed. Please try again.');
@@ -72,6 +76,7 @@ export function useEasyBookingPresenter() {
       loading,
       isBooking,
       bookingSuccess,
+      bookingId,
       error,
     },
     actions: {

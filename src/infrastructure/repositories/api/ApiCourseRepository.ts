@@ -9,12 +9,12 @@
 'use client';
 
 import {
-    Course,
-    CourseStats,
-    CreateCourseData,
-    ICourseRepository,
-    PaginatedResult,
-    UpdateCourseData,
+  Course,
+  CourseStats,
+  CreateCourseData,
+  ICourseRepository,
+  PaginatedResult,
+  UpdateCourseData,
 } from '@/src/application/repositories/ICourseRepository';
 
 export class ApiCourseRepository implements ICourseRepository {
@@ -61,10 +61,11 @@ export class ApiCourseRepository implements ICourseRepository {
 
 
   async create(data: CreateCourseData): Promise<Course> {
+    const { instructorId, ...payload } = data;
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Failed to create course');
     return res.json();
@@ -98,6 +99,13 @@ export class ApiCourseRepository implements ICourseRepository {
             averageRating: 0
         };
     }
+    return res.json();
+  }
+
+  async getForCurrentInstructor(): Promise<Course[]> {
+    // SECURE: Use specific sub-route for authenticated instructor's courses
+    const res = await fetch(`${this.baseUrl}/instructor`);
+    if (!res.ok) throw new Error('Failed to fetch instructor courses');
     return res.json();
   }
 }

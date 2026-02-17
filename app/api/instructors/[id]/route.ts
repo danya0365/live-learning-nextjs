@@ -26,7 +26,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const repository = new SupabaseInstructorRepository(supabase);
   
   try {
-      // TODO: Permissions check
+      // SECURE: Permissions check
+      const currentInstructor = await repository.getMe();
+      
+      if (!currentInstructor || currentInstructor.id !== id) {
+          return NextResponse.json({ error: 'Unauthorized: You can only update your own profile' }, { status: 403 });
+      }
       
       const updated = await repository.update(id, body);
       return NextResponse.json(updated);
@@ -41,7 +46,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseInstructorRepository(supabase);
   
-  // TODO: Permissions check
+  // SECURE: Permissions check
+  const currentInstructor = await repository.getMe();
+  
+  if (!currentInstructor || currentInstructor.id !== id) {
+      return NextResponse.json({ error: 'Unauthorized: You can only delete your own profile' }, { status: 403 });
+  }
   
   const success = await repository.delete(id);
   

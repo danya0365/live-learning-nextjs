@@ -122,9 +122,8 @@ export function useStudentHomePresenter(
       
       setLoading(true);
       try {
-        // Fallback to demo ID if needed
-        const targetId = user.id.startsWith('user-') ? 'student-001' : user.id;
-        const data = await presenter.getStudentDashboardData(targetId);
+        // Fix: No need to pass ID to Client/Presenter
+        const data = await presenter.getStudentDashboardData();
         
         if (!isCancelled) {
           setBookings(data.bookings);
@@ -182,9 +181,8 @@ export function useInstructorHomePresenter(
       
       setLoading(true);
       try {
-        // Fallback to demo ID if needed
-        const targetId = user.id.startsWith('user-') ? 'inst-001' : user.id;
-        const data = await presenter.getInstructorDashboardData(targetId);
+        // Fix: No need to pass ID, server infers from session
+        const data = await presenter.getInstructorDashboardData();
         
         if (!isCancelled) {
           setSchedule(data.schedule);

@@ -1,54 +1,37 @@
-
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
-import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
-
-  const searchParams = request.nextUrl.searchParams;
-  const page = searchParams.get('page');
-  const perPage = searchParams.get('perPage');
-  const studentId = searchParams.get('studentId');
-  const instructorId = searchParams.get('instructorId');
-  const courseId = searchParams.get('courseId');
-
-  try {
-    if (page && perPage) {
-        const result = await repository.getPaginated(Number(page), Number(perPage));
-        return NextResponse.json(result);
-    }
-
-    if (studentId) {
-        const result = await repository.getByStudentId(studentId);
-        return NextResponse.json(result);
-    }
-
-    if (instructorId) {
-        const result = await repository.getByInstructorId(instructorId);
-        return NextResponse.json(result);
-    }
-    
-    if (courseId) {
-        const result = await repository.getByCourseId(courseId);
-        return NextResponse.json(result);
-    }
-
-    const result = await repository.getAll();
-    return NextResponse.json(result);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  return NextResponse.json(
+    { error: 'Deprecated endpoint. Use /api/bookings/students or /api/bookings/instructors' },
+    { status: 410 } // Gone
+  );
 }
+
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
+import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
+import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseBookingRepository(supabase);
+  const authRepo = new SupabaseAuthRepository(supabase);
 
   try {
+    const profile = await authRepo.getProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: 'Unauthorized: No active profile found' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const result = await repository.create(body);
+    
+    // SECURE: Overwrite client-provided studentId with authenticated USER PROFILE ID
+    const safeData = {
+        ...body,
+        studentId: profile.id
+    };
+
+    const result = await repository.create(safeData);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -190,6 +190,7 @@ export class MockCourseRepository implements ICourseRepository {
     const newItem: Course = {
       id: `course-${Date.now()}`,
       ...data,
+      instructorId: data.instructorId || 'inst-001',
       thumbnail: data.thumbnail || '',
       categoryName: '',
       rating: 0,
@@ -240,6 +241,12 @@ export class MockCourseRepository implements ICourseRepository {
       totalStudents,
       averageRating: Math.round(averageRating * 10) / 10,
     };
+  }
+
+  async getForCurrentInstructor(): Promise<Course[]> {
+    await this.delay(100);
+    // Return all courses for mock, or filter by a mock ID if we had one in context
+    return this.items; 
   }
 
   private delay(ms: number): Promise<void> {

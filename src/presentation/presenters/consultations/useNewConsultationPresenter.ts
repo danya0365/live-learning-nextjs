@@ -76,7 +76,7 @@ export function useNewConsultationPresenter() {
     try {
       const presenter = createClientConsultationsPresenter();
       await presenter.createRequest({
-        studentId: 'student-001', // TODO: Get from Auth
+        studentId: '', // Handled by Server
         categoryId,
         title: title.trim(),
         description: description.trim(),

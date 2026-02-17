@@ -106,21 +106,9 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         // I'll fetch 'me' profile first? 
         // No, that's slow.
         
-        // Let's fetch the current user's profile ID via ApiProfileRepository?
-        // const profileRepo = new ApiProfileRepository();
-        // const profile = await profileRepo.getProfile();
-        
-        // This is safe.
-        
-        // But wait, I can just hardcode strict check or fix the repository interface later.
-        // For now, let's fetch profile.
-        
-        const res = await fetch('/api/profiles/me');
-        if(!res.ok) throw new Error('Not authenticated');
-        const profile = await res.json();
-        
+        // We don't need to fetch profile ID anymore, server handles it.
         return this.bookingRepo.create({
-            studentId: profile.id,
+            'studentId': 'me',
             instructorId: data.instructorId,
             courseId: data.courseId,
             timeSlotId: data.slotId,

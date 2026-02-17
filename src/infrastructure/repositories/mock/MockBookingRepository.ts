@@ -140,6 +140,7 @@ export class MockBookingRepository implements IBookingRepository {
     const newItem: Booking = {
       id: `book-${Date.now()}`,
       ...data,
+      studentId: data.studentId || '',
       studentName: '',
       instructorName: '',
       courseName: '',
@@ -184,6 +185,16 @@ export class MockBookingRepository implements IBookingRepository {
       completedCount: this.items.filter((i) => i.status === 'completed').length,
       cancelledCount: this.items.filter((i) => i.status === 'cancelled').length,
     };
+  }
+
+  async getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]> {
+    await this.delay(100);
+    // Return mock data for the default demo users
+    if (role === 'student') {
+        return this.items.filter(item => item.studentId === 'student-001');
+    } else {
+        return this.items.filter(item => item.instructorId === 'inst-001');
+    }
   }
 
   private delay(ms: number): Promise<void> {

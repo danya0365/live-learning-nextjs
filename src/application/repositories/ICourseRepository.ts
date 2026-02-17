@@ -78,4 +78,5 @@ export interface ICourseRepository {
   update(id: string, data: UpdateCourseData): Promise<Course>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<CourseStats>;
+  getForCurrentInstructor(): Promise<Course[]>;
 }

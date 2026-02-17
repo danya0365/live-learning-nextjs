@@ -259,9 +259,6 @@ export class SupabaseBookingRepository implements IBookingRepository {
   }
 
   async getStats(): Promise<BookingStats> {
-      // Simplification: Fetch all relevant or use count query
-      // For performance, use .count()
-      
       const { count: total } = await this.supabase.from('bookings').select('*', { count: 'exact', head: true });
       const { count: active } = await this.supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('is_active', true);
       const { count: pending } = await this.supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending');
@@ -278,5 +275,49 @@ export class SupabaseBookingRepository implements IBookingRepository {
           completedCount: completed || 0,
           cancelledCount: cancelled || 0
       };
+  }
+
+  async getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]> {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user) return [];
+
+      // Resolve Profile ID from Auth ID
+      // NOTE: This assumes 'profiles' table has 'auth_id' or 'id' matches 'user.id'. 
+      // Based on schema, profiles.id IS usually auth.uid OR linked via auth_id.
+      // Let's assume simplest: fetch profile by auth_id.
+      
+      if (role === 'student') {
+        // Try getting profile.
+        // If profiles.id == auth.uid, we can just use user.id.
+        // If separate, we need to query.
+        // Safest: Query profile by auth_id (if column exists) or id.
+        // Assuming profiles.id is the key used in bookings.student_profile_id
+        
+        // Let's check if we can get the profile first
+        const { data: profile } = await this.supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id) // Assuming id is same as auth.uid, or logic needs adjustment if different
+            .single();
+            
+        if (!profile) return [];
+        return this.getByStudentId(profile.id);
+      }
+      
+      if (role === 'instructor') {
+          // Find instructor profile for this user
+          // Instructor is linked to profile, which is linked to user.
+          // instructor_profiles -> profile_id
+          const { data: instructor } = await this.supabase
+            .from('instructor_profiles')
+            .select('id')
+            .eq('profile_id', user.id) // Assuming user.id is profile_id
+            .single();
+            
+          if (!instructor) return [];
+          return this.getByInstructorId(instructor.id);
+      }
+      
+      return [];
   }
 }

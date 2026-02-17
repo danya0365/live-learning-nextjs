@@ -169,6 +169,21 @@ export class SupabaseCourseRepository implements ICourseRepository {
     return (data as unknown as CourseRow[]).map(this.mapToDomain);
   }
 
+  async getForCurrentInstructor(): Promise<Course[]> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data: instructor } = await this.supabase
+      .from('instructor_profiles')
+      .select('id')
+      .eq('profile_id', user.id)
+      .single();
+
+    if (!instructor) return [];
+
+    return this.getByInstructorId(instructor.id);
+  }
+
   // ============================================================
   // WRITE OPERATIONS
   // ============================================================

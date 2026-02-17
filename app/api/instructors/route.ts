@@ -43,12 +43,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
     const supabase = await createServerSupabaseClient();
+    
+    // SECURE: Check authentication
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const repository = new SupabaseInstructorRepository(supabase);
     
-    // TODO: Permissions check
+    // TODO: Add stricter Admin check here if this is an admin-only endpoint
     
+    const body = await request.json();
     const instructor = await repository.create(body);
     
     return NextResponse.json(instructor);

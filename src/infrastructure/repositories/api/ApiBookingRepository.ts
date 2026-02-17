@@ -8,11 +8,11 @@
 'use client';
 
 import {
-    Booking,
-    BookingStats,
-    CreateBookingData,
-    IBookingRepository,
-    UpdateBookingData
+  Booking,
+  BookingStats,
+  CreateBookingData,
+  IBookingRepository,
+  UpdateBookingData
 } from '@/src/application/repositories/IBookingRepository';
 
 export class ApiBookingRepository implements IBookingRepository {
@@ -56,10 +56,11 @@ export class ApiBookingRepository implements IBookingRepository {
   }
 
   async create(data: CreateBookingData): Promise<Booking> {
+    const { studentId, ...payload } = data;
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Failed to create booking');
     return res.json();
@@ -95,6 +96,14 @@ export class ApiBookingRepository implements IBookingRepository {
             cancelledCount: 0
         };
     }
+    return res.json();
+  }
+
+  async getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]> {
+    // SECURE: Request by specific sub-route, no ID passed.
+    const endpoint = role === 'student' ? '/students' : '/instructors';
+    const res = await fetch(`${this.baseUrl}${endpoint}`);
+    if (!res.ok) throw new Error(`Failed to fetch ${role} bookings`);
     return res.json();
   }
 }

@@ -60,9 +60,9 @@ export class HomePresenter {
     }
   }
 
-  async getStudentDashboardData(studentId: string): Promise<{ bookings: Booking[] }> {
+  async getStudentDashboardData(): Promise<{ bookings: Booking[] }> {
     try {
-      const bookings = await this.bookingRepository.getByStudentId(studentId);
+      const bookings = await this.bookingRepository.getForCurrentUser('student');
       return { bookings };
     } catch (error) {
       console.error('Error getting student dashboard data:', error);
@@ -70,9 +70,9 @@ export class HomePresenter {
     }
   }
 
-  async getInstructorDashboardData(instructorId: string): Promise<{ schedule: Booking[] }> {
+  async getInstructorDashboardData(): Promise<{ schedule: Booking[] }> {
     try {
-      const schedule = await this.bookingRepository.getByInstructorId(instructorId);
+      const schedule = await this.bookingRepository.getForCurrentUser('instructor');
       return { schedule };
     } catch (error) {
       console.error('Error getting instructor dashboard data:', error);

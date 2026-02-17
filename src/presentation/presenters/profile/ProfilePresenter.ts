@@ -1,11 +1,11 @@
 import {
-    Booking,
-    BookingStats,
-    IBookingRepository,
+  Booking,
+  BookingStats,
+  IBookingRepository,
 } from '@/src/application/repositories/IBookingRepository';
 import {
-    Course,
-    ICourseRepository,
+  Course,
+  ICourseRepository,
 } from '@/src/application/repositories/ICourseRepository';
 import { Achievement, IProfileRepository, UserProfile } from '@/src/application/repositories/IProfileRepository';
 
@@ -63,9 +63,10 @@ export class ProfilePresenter {
     };
 
     // Fetch role-specific booking data
+    // Use getForCurrentUser to leverage secure session-based endpoints
     const bookings = isInstructor
-      ? await this.bookingRepository.getByInstructorId(userId)
-      : await this.bookingRepository.getByStudentId(userId);
+      ? await this.bookingRepository.getForCurrentUser('instructor')
+      : await this.bookingRepository.getForCurrentUser('student');
 
     const recentBookings = bookings
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())

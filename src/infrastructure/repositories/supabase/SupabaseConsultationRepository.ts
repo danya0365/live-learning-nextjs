@@ -7,16 +7,16 @@
  */
 
 import {
-    ConsultationLevel,
-    ConsultationOffer,
-    ConsultationOfferStatus,
-    ConsultationRequest,
-    ConsultationRequestStats,
-    ConsultationRequestStatus,
-    CreateConsultationOfferData,
-    CreateConsultationRequestData,
-    IConsultationRepository,
-    PreferredTime
+  ConsultationLevel,
+  ConsultationOffer,
+  ConsultationOfferStatus,
+  ConsultationRequest,
+  ConsultationRequestStats,
+  ConsultationRequestStatus,
+  CreateConsultationOfferData,
+  CreateConsultationRequestData,
+  IConsultationRepository,
+  PreferredTime
 } from '@/src/application/repositories/IConsultationRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';

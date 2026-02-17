@@ -34,10 +34,18 @@ function getNextDateForDay(dayOfWeek: number): string {
   return nextDate.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
+import { ApiPaymentRepository } from '@/src/infrastructure/repositories/api/ApiPaymentRepository';
+
+// ... (existing imports)
+
 export function EasyBookingModal({ course, instructor, initialSlotId, onClose }: EasyBookingModalProps) {
   const { state, actions } = useEasyBookingPresenter();
   const { slots, loading, isBooking, bookingSuccess, error } = state;
   const [selectedSlot, setSelectedSlot] = useState<WizardSlot | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  
+  // Initialize repository
+  const paymentRepo = new ApiPaymentRepository();
 
   useEffect(() => {
     actions.loadSlots(instructor.id);
@@ -50,9 +58,26 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
     }
   }, [slots, initialSlotId]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedSlot) {
-      actions.confirmBooking(course.id, instructor.id, selectedSlot);
+      const bookingId = await actions.confirmBooking(course.id, instructor.id, selectedSlot);
+      
+      if (bookingId && course.price > 0) {
+        setIsRedirecting(true);
+        try {
+          const result = await paymentRepo.createCheckoutSession(bookingId);
+          if (result.url) {
+            window.location.href = result.url;
+          } else {
+             // Handle error
+             console.error('Failed to create checkout session');
+             setIsRedirecting(false);
+          }
+        } catch (err) {
+          console.error('Payment redirection error:', err);
+          setIsRedirecting(false);
+        }
+      }
     }
   };
 
@@ -64,6 +89,18 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
   }, {} as Record<number, WizardSlot[]>);
 
   const days = [1, 2, 3, 4, 5, 6, 0]; // Mon-Sun
+
+  if (isRedirecting || (bookingSuccess && course.price > 0)) {
+     return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full relative shadow-2xl border border-white/10 text-center">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-6" />
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">กำลังเข้าสู่ระบบชำระเงิน</h2>
+                <p className="text-slate-500">กรุณารอสักครู่...</p>
+            </div>
+        </div>
+     );
+  }
 
   if (bookingSuccess) {
     return (
@@ -225,7 +262,7 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
           </div>
           <button
             onClick={handleConfirm}
-            disabled={!selectedSlot || isBooking}
+            disabled={!selectedSlot || isBooking || isRedirecting}
             className="w-full py-3.5 rounded-xl btn-game text-white font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] transition-transform shadow-lg shadow-primary/20"
           >
             {isBooking ? (

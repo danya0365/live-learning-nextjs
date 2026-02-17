@@ -32,9 +32,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const supabase = await createServerSupabaseClient();
+    
+    // SECURE: Check authentication
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const repository = new SupabaseCategoryRepository(supabase);
     
-    // TODO: Permissions check
+    // TODO: Add Admin role check here
     
     const category = await repository.create(body);
     

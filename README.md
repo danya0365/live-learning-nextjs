@@ -40,8 +40,10 @@ live-learning-nextjs/
 │   │   ├── instructors/        # Instructor listing & profile
 │   │   ├── categories/         # Category browser
 │   │   ├── live/               # Live sessions list
+│   │   ├── consultations/      # Consultation requests
 │   │   ├── my-bookings/        # Student bookings
 │   │   ├── schedule/           # Instructor schedule
+│   │   ├── payment/            # Checkout & Payment status
 │   │   ├── profile/            # User profile
 │   │   └── settings/           # Settings
 │   └── (fullscreen)/           # Fullscreen layout routes
@@ -127,7 +129,7 @@ live-learning-nextjs/
 
 ## 🗃️ Database Schema
 
-10 tables, PostgreSQL via Supabase
+11 tables, PostgreSQL via Supabase
 
 ```
 auth.users
@@ -139,6 +141,7 @@ auth.users
        │   ├── live_sessions
        │   └── consultation_offers
        ├── bookings (as student)
+       │   └── payments
        └── consultation_requests (as student)
 
 categories
@@ -155,6 +158,7 @@ categories
 | `courses` | Course catalog |
 | `time_slots` | Weekly instructor availability |
 | `bookings` | Class reservations |
+| `payments` | Payment transactions |
 | `live_sessions` | Live streaming sessions |
 | `consultation_requests` | Student help requests |
 | `consultation_offers` | Instructor offers on requests |

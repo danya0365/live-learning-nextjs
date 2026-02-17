@@ -14,10 +14,10 @@ export async function GET(request: NextRequest) {
   const categoryId = searchParams.get('categoryId');
 
   try {
-    if (studentId) {
-        const requests = await repository.getRequestsByStudentId(studentId);
-        return NextResponse.json(requests);
-    }
+    // if (studentId) {
+    //    // MOVED TO /api/consultations/student
+    //    return NextResponse.json({ error: 'Use /api/consultations/student' }, { status: 410 });
+    // }
     
     if (categoryId) {
         // Assuming we want open requests only for category view unless specified?
@@ -39,13 +39,29 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
+
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseConsultationRepository(supabase);
+  const authRepo = new SupabaseAuthRepository(supabase);
 
   try {
+    const profile = await authRepo.getProfile();
+
+    if (!profile) {
+      return NextResponse.json({ error: 'Unauthorized: No active profile found' }, { status: 401 });
+    }
+
     const body: CreateConsultationRequestData = await request.json();
-    const result = await repository.createRequest(body);
+    
+    // SECURE: Overwrite client-provided studentId with authenticated USER PROFILE ID
+    const safeData = {
+        ...body,
+        studentId: profile.id
+    };
+
+    const result = await repository.createRequest(safeData);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

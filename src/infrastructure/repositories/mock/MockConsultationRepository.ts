@@ -282,6 +282,7 @@ export class MockConsultationRepository implements IConsultationRepository {
     const newReq: ConsultationRequest = {
       id: `req-${Date.now()}`,
       ...data,
+      studentId: data.studentId || 'student-001',
       studentName: '',
       studentAvatar: '',
       categoryName: '',
@@ -350,6 +351,7 @@ export class MockConsultationRepository implements IConsultationRepository {
     const newOffer: ConsultationOffer = {
       id: `offer-${Date.now()}`,
       ...data,
+      instructorId: data.instructorId || 'inst-001',
       instructorName: '',
       instructorAvatar: '',
       instructorRating: 0,

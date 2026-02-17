@@ -17,16 +17,30 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
+import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body: CreateConsultationOfferData = await request.json();
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseConsultationRepository(supabase);
+  const instructorRepo = new SupabaseInstructorRepository(supabase);
 
-  // Ideally, validate logged in user = instructor
-  // For now rely on frontend validation + simple repo call
   try {
-    const result = await repository.createOffer({ ...body, requestId: id });
+    // SECURE: Verify user is an instructor
+    const instructor = await instructorRepo.getMe();
+    if (!instructor) {
+        return NextResponse.json({ error: 'Unauthorized: Only instructors can create offers' }, { status: 403 });
+    }
+
+    // SECURE: Overwrite instructorId with authenticated user's instructor ID
+    const safeBody = {
+        ...body,
+        requestId: id,
+        instructorId: instructor.id
+    };
+
+    const result = await repository.createOffer(safeBody);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

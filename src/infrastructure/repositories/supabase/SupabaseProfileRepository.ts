@@ -87,6 +87,22 @@ export class SupabaseProfileRepository implements IProfileRepository {
   }
 
   async switchProfile(profileId: string): Promise<boolean> {
+     // SECURE: Verify ownership first
+     const { data: { user } } = await this.supabase.auth.getUser();
+     if (!user) return false;
+
+     const { data: profile } = await this.supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', profileId)
+        .eq('auth_id', user.id)
+        .single();
+
+     if (!profile) {
+        console.error('Unauthorized profile switch attempt');
+        return false;
+     }
+
      const { data, error } = await this.supabase.rpc('set_profile_active', {
         profile_id: profileId,
      });

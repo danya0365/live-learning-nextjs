@@ -19,13 +19,31 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json(course);
 }
 
+import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await request.json();
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseCourseRepository(supabase);
+  const instructorRepo = new SupabaseInstructorRepository(supabase);
   
   try {
+      // SECURE: Verify ownership
+      const instructor = await instructorRepo.getMe();
+      if (!instructor) {
+          return NextResponse.json({ error: 'Unauthorized: Only instructors can update courses' }, { status: 403 });
+      }
+
+      const existing = await repository.getById(id);
+      if (!existing) {
+          return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+      }
+
+      if (existing.instructorId !== instructor.id) {
+          return NextResponse.json({ error: 'Unauthorized: You can only update your own courses' }, { status: 403 });
+      }
+
       const updated = await repository.update(id, body);
       return NextResponse.json(updated);
   } catch (error) {
@@ -38,12 +56,32 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseCourseRepository(supabase);
+  const instructorRepo = new SupabaseInstructorRepository(supabase);
   
-  const success = await repository.delete(id);
-  
-  if (!success) {
+  try {
+      // SECURE: Verify ownership
+      const instructor = await instructorRepo.getMe();
+      if (!instructor) {
+          return NextResponse.json({ error: 'Unauthorized: Only instructors can delete courses' }, { status: 403 });
+      }
+
+      const existing = await repository.getById(id);
+      if (!existing) {
+          return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+      }
+
+      if (existing.instructorId !== instructor.id) {
+          return NextResponse.json({ error: 'Unauthorized: You can only delete your own courses' }, { status: 403 });
+      }
+      
+      const success = await repository.delete(id);
+      
+      if (!success) {
+          return NextResponse.json({ error: 'Failed to delete course' }, { status: 500 });
+      }
+      
+      return NextResponse.json({ success: true });
+  } catch (error) {
       return NextResponse.json({ error: 'Failed to delete course' }, { status: 500 });
   }
-  
-  return NextResponse.json({ success: true });
 }
