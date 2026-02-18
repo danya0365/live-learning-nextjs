@@ -53,17 +53,11 @@ export function Header() {
   return (
     <header
       id="main-header"
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
-      style={{
-        backdropFilter: scrolled ? 'blur(20px) saturate(1.4)' : 'blur(12px) saturate(1.2)',
-        WebkitBackdropFilter: scrolled ? 'blur(20px) saturate(1.4)' : 'blur(12px) saturate(1.2)',
-        background: scrolled
-          ? 'var(--header-bg-scrolled, rgba(var(--header-rgb, 255, 255, 255), 0.85))'
-          : 'var(--header-bg, rgba(var(--header-rgb, 255, 255, 255), 0.4))',
-        boxShadow: scrolled
-          ? '0 4px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)'
-          : 'none',
-      }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'backdrop-blur-[20px] backdrop-saturate-[1.4] bg-[var(--header-bg-scrolled,rgba(var(--header-rgb,255,255,255),0.85))] shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]'
+          : 'backdrop-blur-[12px] backdrop-saturate-[1.2] bg-[var(--header-bg,rgba(var(--header-rgb,255,255,255),0.4))] shadow-none'
+      }`}
     >
       {/* Main bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,15 +137,11 @@ export function Header() {
 
                 {/* Dropdown */}
                 <div
-                  className="absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl overflow-hidden transition-all duration-200 origin-top-right"
-                  style={{
-                    opacity: moreOpen ? 1 : 0,
-                    transform: moreOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)',
-                    pointerEvents: moreOpen ? 'auto' : 'none',
-                    backdropFilter: 'blur(24px) saturate(1.5)',
-                    WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
-                    background: 'var(--glass-bg)',
-                  }}
+                  className={`absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-xl backdrop-saturate-[1.5] bg-[var(--glass-bg)] ${
+                    moreOpen
+                      ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                  }`}
                 >
                   <div className="p-2">
                     {moreLinks.map((link) => (
@@ -206,15 +196,11 @@ export function Header() {
 
                 {/* Auth dropdown */}
                 <div
-                  className="absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl overflow-hidden transition-all duration-200 origin-top-right"
-                  style={{
-                    opacity: authMenuOpen ? 1 : 0,
-                    transform: authMenuOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)',
-                    pointerEvents: authMenuOpen ? 'auto' : 'none',
-                    backdropFilter: 'blur(24px) saturate(1.5)',
-                    WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
-                    background: 'var(--glass-bg)',
-                  }}
+                  className={`absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-xl backdrop-saturate-[1.5] bg-[var(--glass-bg)] ${
+                    authMenuOpen
+                      ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                  }`}
                 >
                   {/* User info */}
                   <div className="px-4 py-3.5 border-b border-border/30">
