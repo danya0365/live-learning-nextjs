@@ -12,8 +12,8 @@ import {
   ConsultationRequest,
   ConsultationRequestStats,
   ConsultationRequestStatus,
-  CreateConsultationOfferData,
-  CreateConsultationRequestData,
+  CreateConsultationOfferPayload,
+  CreateConsultationRequestPayload,
   IConsultationRepository
 } from '@/src/application/repositories/IConsultationRepository';
 
@@ -79,12 +79,11 @@ export class ApiConsultationRepository implements IConsultationRepository {
   // REQUESTS - WRITE
   // ============================================================
 
-  async createRequest(data: CreateConsultationRequestData): Promise<ConsultationRequest> {
-    const { studentId, ...payload } = data;
+  async createRequest(data: CreateConsultationRequestPayload): Promise<ConsultationRequest> {
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create request');
     return res.json();
@@ -131,12 +130,11 @@ export class ApiConsultationRepository implements IConsultationRepository {
   // OFFERS - WRITE
   // ============================================================
 
-  async createOffer(data: CreateConsultationOfferData): Promise<ConsultationOffer> {
-    const { instructorId, ...payload } = data;
+  async createOffer(data: CreateConsultationOfferPayload): Promise<ConsultationOffer> {
     const res = await fetch(`${this.baseUrl}/${data.requestId}/offers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create offer');
     return res.json();

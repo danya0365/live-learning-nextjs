@@ -82,13 +82,10 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
     }
 
     async createBooking(data: CreateWizardBookingData): Promise<Booking> {
-        // Need current user ID. 
-        // Supabase client should be authenticated one.
-        
+        // 🔒 Server-Injected Identity: resolve studentId from auth session
         const { data: { user } } = await this.supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        // We need profile ID, not auth ID.
         const { data: profile } = await this.supabase
             .from('profiles')
             .select('id')
@@ -97,12 +94,12 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
 
         if (!profile) throw new Error('Profile not found');
         
+        // Pass studentId as separate parameter (Option A)
         return this.bookingRepo.create({
-            studentId: profile.id,
             instructorId: data.instructorId,
             courseId: data.courseId,
             timeSlotId: data.slotId,
             scheduledDate: data.date
-        });
+        }, profile.id);
     }
 }

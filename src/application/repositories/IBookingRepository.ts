@@ -35,12 +35,18 @@ export interface BookingStats {
 }
 
 export interface CreateBookingData {
-  studentId: string;
+  studentId: string;        // 🔒 Server-injected from auth session
   instructorId: string;
   courseId: string;
   timeSlotId: string;
   scheduledDate: string;
 }
+
+/**
+ * 🔒 Server-Injected Identity Pattern
+ * Client-safe payload — auth IDs (studentId) are resolved server-side from session
+ */
+export type CreateBookingPayload = Omit<CreateBookingData, 'studentId'>;
 
 export interface UpdateBookingData {
   status?: BookingStatus;
@@ -54,7 +60,7 @@ export interface IBookingRepository {
   getByStudentId(studentId: string): Promise<Booking[]>;
   getByInstructorId(instructorId: string): Promise<Booking[]>;
   getByCourseId(courseId: string): Promise<Booking[]>;
-  create(data: CreateBookingData): Promise<Booking>;
+  create(data: CreateBookingPayload): Promise<Booking>;
   update(id: string, data: UpdateBookingData): Promise<Booking>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<BookingStats>;

@@ -9,8 +9,8 @@ import {
     ConsultationRequest,
     ConsultationRequestStats,
     ConsultationRequestStatus,
-    CreateConsultationOfferData,
-    CreateConsultationRequestData,
+    CreateConsultationOfferPayload,
+    CreateConsultationRequestPayload,
     IConsultationRepository,
 } from '@/src/application/repositories/IConsultationRepository';
 
@@ -277,13 +277,13 @@ export class MockConsultationRepository implements IConsultationRepository {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
-  async createRequest(data: CreateConsultationRequestData): Promise<ConsultationRequest> {
+  async createRequest(data: CreateConsultationRequestPayload): Promise<ConsultationRequest> {
     await this.delay(200);
     const newReq: ConsultationRequest = {
       id: `req-${Date.now()}`,
       ...data,
-      studentId: data.studentId || 'student-001',
-      studentName: '',
+      studentId: 'student-001', // 🔒 Mock: auto-assigned (server resolves in prod)
+      studentName: 'Mock Student',
       studentAvatar: '',
       categoryName: '',
       categoryIcon: '',
@@ -346,13 +346,13 @@ export class MockConsultationRepository implements IConsultationRepository {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
-  async createOffer(data: CreateConsultationOfferData): Promise<ConsultationOffer> {
+  async createOffer(data: CreateConsultationOfferPayload): Promise<ConsultationOffer> {
     await this.delay(200);
     const newOffer: ConsultationOffer = {
       id: `offer-${Date.now()}`,
       ...data,
-      instructorId: data.instructorId || 'inst-001',
-      instructorName: '',
+      instructorId: 'inst-001', // 🔒 Mock: auto-assigned (server resolves in prod)
+      instructorName: 'Mock Instructor',
       instructorAvatar: '',
       instructorRating: 0,
       instructorSpecializations: [],

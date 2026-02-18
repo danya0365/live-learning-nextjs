@@ -77,38 +77,8 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
     }
 
     async createBooking(data: CreateWizardBookingData): Promise<Booking> {
-        // TODO: Handle user ID from Auth context? 
-        // The Repo should ideally assume the user is authenticated on server side or pass studentId.
-        // But CreateWizardBookingData doesn't have studentId.
-        // We might need to rely on the backend API to infer studentId from session.
-        // But ApiBookingRepository.create expects CreateBookingData which HAS studentId.
-        
-        // Strategy: We call a specialized endpoint OR we duplicate the logic here.
-        // If ApiBookingRepository.create needs studentId, and we don't have it here...
-        // We should probably rely on the backend to set studentId from session.
-        
-        // Let's assume we can pass a placeholder 'me' or similar if API handles it.
-        // Or we should update the interface CreateWizardBookingData to include studentId.
-        // But for now, let's look at how Mock does it: 'user-001'.
-        
-        // I will assume for now we can't easily get studentId here without AuthStore.
-        // But I can import useAuthStore? No, this is a class.
-        
-        // Better approach:
-        // Use a new route POST /api/bookings/wizard which handles session extraction.
-        // OR
-        // Just call ApiBookingRepository.create with a placeholder and ensure backend overrides it with session user.
-        
-        // Let's go with creating via ApiBookingRepository and assume standard CreateBookingData.
-        // We'll map CreateWizardBookingData -> CreateBookingData
-        
-        // Oops, I miss studentId.
-        // I'll fetch 'me' profile first? 
-        // No, that's slow.
-        
-        // We don't need to fetch profile ID anymore, server handles it.
+        // 🔒 Server-Injected Identity: studentId is resolved server-side from session
         return this.bookingRepo.create({
-            'studentId': 'me',
             instructorId: data.instructorId,
             courseId: data.courseId,
             timeSlotId: data.slotId,

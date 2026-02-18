@@ -10,7 +10,7 @@ import {
   Booking,
   BookingStats,
   BookingStatus,
-  CreateBookingData,
+  CreateBookingPayload,
   IBookingRepository,
   UpdateBookingData
 } from '@/src/application/repositories/IBookingRepository';
@@ -177,29 +177,23 @@ export class SupabaseBookingRepository implements IBookingRepository {
     return data.map(this.mapBooking);
   }
 
-  async create(data: CreateBookingData): Promise<Booking> {
-     // TODO: Calculate end_time or use existing time logic
-     // Usually booking duration comes from course or slot?
-     // Assuming data.date + start_time/end_time logic needs to be handled.
-     // But CreateBookingData only has scheduledDate and timeSlotId?
-     // Wait, interface: CreateBookingData { timeSlotId, scheduledDate, ... }
-     // We need to fetch the TimeSlot to know start/end time?
-     // Or just insert and trigger handles it?
-     // Let's assume we need to fetch slot details first.
-     
+  async create(data: CreateBookingPayload, studentId?: string): Promise<Booking> {
+     // 🔒 Server-Injected Identity: studentId is provided separately by API route
+     const resolvedStudentId = studentId || '';
+
      const { data: slot } = await this.supabase
         .from('time_slots')
         .select('*')
         .eq('id', data.timeSlotId)
         .single();
         
-     const startTime = slot ? slot.start_time : '09:00:00'; // Fallback
-     const endTime = slot ? slot.end_time : '10:00:00'; // Fallback
+     const startTime = slot ? slot.start_time : '09:00:00';
+     const endTime = slot ? slot.end_time : '10:00:00';
 
      const { data: created, error } = await this.supabase
       .from('bookings')
       .insert({
-          student_profile_id: data.studentId,
+          student_profile_id: resolvedStudentId,
           instructor_profile_id: data.instructorId,
           course_id: data.courseId,
           time_slot_id: data.timeSlotId,

@@ -1,5 +1,5 @@
 
-import { CreateConsultationRequestData } from "@/src/application/repositories/IConsultationRepository";
+import { CreateConsultationRequestPayload } from "@/src/application/repositories/IConsultationRepository";
 import { SupabaseConsultationRepository } from "@/src/infrastructure/repositories/supabase/SupabaseConsultationRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -53,15 +53,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: No active profile found' }, { status: 401 });
     }
 
-    const body: CreateConsultationRequestData = await request.json();
+    const body: CreateConsultationRequestPayload = await request.json();
     
-    // SECURE: Overwrite client-provided studentId with authenticated USER PROFILE ID
-    const safeData = {
-        ...body,
-        studentId: profile.id
-    };
-
-    const result = await repository.createRequest(safeData);
+    // 🔒 Server-Injected Identity: pass studentId as separate parameter
+    const result = await repository.createRequest(body, profile.id);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

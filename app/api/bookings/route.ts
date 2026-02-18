@@ -25,13 +25,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     
-    // SECURE: Overwrite client-provided studentId with authenticated USER PROFILE ID
-    const safeData = {
-        ...body,
-        studentId: profile.id
-    };
-
-    const result = await repository.create(safeData);
+    // 🔒 Server-Injected Identity: pass studentId as separate parameter
+    const result = await repository.create(body, profile.id);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

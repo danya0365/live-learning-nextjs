@@ -65,7 +65,7 @@ export interface ConsultationRequestStats {
 }
 
 export interface CreateConsultationRequestData {
-  studentId: string;
+  studentId: string;        // 🔒 Server-injected from auth session
   categoryId: string;
   title: string;
   description: string;
@@ -76,15 +76,27 @@ export interface CreateConsultationRequestData {
   preferredTimes: PreferredTime[];
 }
 
+/**
+ * 🔒 Server-Injected Identity Pattern
+ * Client-safe payload — studentId is resolved server-side from session
+ */
+export type CreateConsultationRequestPayload = Omit<CreateConsultationRequestData, 'studentId'>;
+
 export interface CreateConsultationOfferData {
   requestId: string;
-  instructorId: string;
+  instructorId: string;     // 🔒 Server-injected from auth session
   message: string;
   offeredPrice: number;
   offeredDate: string;
   offeredStartTime: string;
   offeredEndTime: string;
 }
+
+/**
+ * 🔒 Server-Injected Identity Pattern
+ * Client-safe payload — instructorId is resolved server-side from session
+ */
+export type CreateConsultationOfferPayload = Omit<CreateConsultationOfferData, 'instructorId'>;
 
 export interface IConsultationRepository {
   // Requests
@@ -93,7 +105,7 @@ export interface IConsultationRepository {
   getOpenRequests(): Promise<ConsultationRequest[]>;
   getRequestsByStudentId(studentId: string): Promise<ConsultationRequest[]>;
   getRequestsByCategory(categoryId: string): Promise<ConsultationRequest[]>;
-  createRequest(data: CreateConsultationRequestData): Promise<ConsultationRequest>;
+  createRequest(data: CreateConsultationRequestPayload): Promise<ConsultationRequest>;
   updateRequestStatus(id: string, status: ConsultationRequestStatus): Promise<ConsultationRequest>;
   cancelRequest(id: string): Promise<ConsultationRequest>;
   getRequestStats(studentId?: string): Promise<ConsultationRequestStats>;
@@ -102,7 +114,7 @@ export interface IConsultationRepository {
   getOfferById(id: string): Promise<ConsultationOffer | null>;
   getOffersByRequestId(requestId: string): Promise<ConsultationOffer[]>;
   getOffersByInstructorId(instructorId: string): Promise<ConsultationOffer[]>;
-  createOffer(data: CreateConsultationOfferData): Promise<ConsultationOffer>;
+  createOffer(data: CreateConsultationOfferPayload): Promise<ConsultationOffer>;
   acceptOffer(offerId: string): Promise<ConsultationOffer>;
   rejectOffer(offerId: string): Promise<ConsultationOffer>;
   withdrawOffer(offerId: string): Promise<ConsultationOffer>;

@@ -1,5 +1,5 @@
 
-import { CreateConsultationOfferData } from "@/src/application/repositories/IConsultationRepository";
+import { CreateConsultationOfferPayload } from "@/src/application/repositories/IConsultationRepository";
 import { SupabaseConsultationRepository } from "@/src/infrastructure/repositories/supabase/SupabaseConsultationRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -21,7 +21,7 @@ import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const body: CreateConsultationOfferData = await request.json();
+  const body: CreateConsultationOfferPayload = await request.json();
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseConsultationRepository(supabase);
   const instructorRepo = new SupabaseInstructorRepository(supabase);
@@ -33,14 +33,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ error: 'Unauthorized: Only instructors can create offers' }, { status: 403 });
     }
 
-    // SECURE: Overwrite instructorId with authenticated user's instructor ID
+    // 🔒 Server-Injected Identity: pass instructorId as separate parameter
     const safeBody = {
         ...body,
         requestId: id,
-        instructorId: instructor.id
     };
 
-    const result = await repository.createOffer(safeBody);
+    const result = await repository.createOffer(safeBody, instructor.id);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

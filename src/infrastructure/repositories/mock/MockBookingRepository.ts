@@ -5,11 +5,11 @@
  */
 
 import {
-    Booking,
-    BookingStats,
-    CreateBookingData,
-    IBookingRepository,
-    UpdateBookingData,
+  Booking,
+  BookingStats,
+  CreateBookingPayload,
+  IBookingRepository,
+  UpdateBookingData,
 } from '@/src/application/repositories/IBookingRepository';
 
 const MOCK_BOOKINGS: Booking[] = [
@@ -135,13 +135,13 @@ export class MockBookingRepository implements IBookingRepository {
     return this.items.filter((item) => item.courseId === courseId);
   }
 
-  async create(data: CreateBookingData): Promise<Booking> {
+  async create(data: CreateBookingPayload): Promise<Booking> {
     await this.delay(200);
     const newItem: Booking = {
       id: `book-${Date.now()}`,
       ...data,
-      studentId: data.studentId || '',
-      studentName: '',
+      studentId: 'student-001', // 🔒 Mock: auto-assigned (server resolves in prod)
+      studentName: 'Mock Student',
       instructorName: '',
       courseName: '',
       startTime: '',

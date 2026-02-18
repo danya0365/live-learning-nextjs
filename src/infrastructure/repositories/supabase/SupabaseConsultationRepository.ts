@@ -13,8 +13,8 @@ import {
   ConsultationRequest,
   ConsultationRequestStats,
   ConsultationRequestStatus,
-  CreateConsultationOfferData,
-  CreateConsultationRequestData,
+  CreateConsultationOfferPayload,
+  CreateConsultationRequestPayload,
   IConsultationRepository,
   PreferredTime
 } from '@/src/application/repositories/IConsultationRepository';
@@ -203,11 +203,14 @@ export class SupabaseConsultationRepository implements IConsultationRepository {
   // REQUESTS - WRITE
   // ============================================================
 
-  async createRequest(data: CreateConsultationRequestData): Promise<ConsultationRequest> {
+  async createRequest(data: CreateConsultationRequestPayload, studentId?: string): Promise<ConsultationRequest> {
+    // 🔒 Server-Injected Identity: studentId is provided separately by API route
+    const resolvedStudentId = studentId || '';
+
     const { data: created, error } = await this.supabase
       .from('consultation_requests')
       .insert({
-        student_profile_id: data.studentId,
+        student_profile_id: resolvedStudentId,
         category_id: data.categoryId,
         title: data.title,
         description: data.description,
@@ -215,7 +218,7 @@ export class SupabaseConsultationRepository implements IConsultationRepository {
         budget_min: data.budgetMin,
         budget_max: data.budgetMax,
         preferred_dates: data.preferredDates,
-        preferred_times: data.preferredTimes as any, // Cast for JSON
+        preferred_times: data.preferredTimes as any,
         status: 'open',
         is_active: true
       })
@@ -309,12 +312,15 @@ export class SupabaseConsultationRepository implements IConsultationRepository {
   // OFFERS - WRITE
   // ============================================================
 
-  async createOffer(data: CreateConsultationOfferData): Promise<ConsultationOffer> {
+  async createOffer(data: CreateConsultationOfferPayload, instructorId?: string): Promise<ConsultationOffer> {
+    // 🔒 Server-Injected Identity: instructorId is provided separately by API route
+    const resolvedInstructorId = instructorId || '';
+
     const { data: created, error } = await this.supabase
       .from('consultation_offers')
       .insert({
         request_id: data.requestId,
-        instructor_profile_id: data.instructorId,
+        instructor_profile_id: resolvedInstructorId,
         message: data.message,
         offered_price: data.offeredPrice,
         offered_date: data.offeredDate,
@@ -334,7 +340,6 @@ export class SupabaseConsultationRepository implements IConsultationRepository {
 
     if (error) throw error;
     
-    // Increment offer count on request
     // Increment offer count on request
     const { data: reqData } = await this.supabase
       .from('consultation_requests')

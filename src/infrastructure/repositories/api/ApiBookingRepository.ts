@@ -10,7 +10,7 @@
 import {
   Booking,
   BookingStats,
-  CreateBookingData,
+  CreateBookingPayload,
   IBookingRepository,
   UpdateBookingData
 } from '@/src/application/repositories/IBookingRepository';
@@ -55,12 +55,11 @@ export class ApiBookingRepository implements IBookingRepository {
     return res.json();
   }
 
-  async create(data: CreateBookingData): Promise<Booking> {
-    const { studentId, ...payload } = data;
+  async create(data: CreateBookingPayload): Promise<Booking> {
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create booking');
     return res.json();
