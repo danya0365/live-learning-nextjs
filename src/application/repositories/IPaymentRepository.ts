@@ -12,7 +12,8 @@ export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface Payment {
   id: string;
-  bookingId: string;
+  bookingId?: string;
+  enrollmentId?: string;
   amount: number;
   currency: string;
   paymentMethod: string;
@@ -31,7 +32,8 @@ export interface PaymentStats {
 }
 
 export interface CreatePaymentData {
-  bookingId: string;
+  bookingId?: string;
+  enrollmentId?: string;
   amount: number;
   currency: string;
   paymentMethod: string;
@@ -79,8 +81,8 @@ export interface IPaymentRepository {
 
   // Business Operations
   /**
-   * Initiates a checkout session for a booking
-   * @param bookingId The booking to pay for
+   * Initiates a checkout session for an enrollment or booking
+   * @param targetId The enrollment or booking ID to pay for
    */
-  createCheckoutSession(bookingId: string): Promise<CheckoutResult>;
+  createCheckoutSession(targetId: string): Promise<CheckoutResult>;
 }

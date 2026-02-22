@@ -1,9 +1,14 @@
 'use client';
 
 import { ApiCourseRepository } from '@/src/infrastructure/repositories/api/ApiCourseRepository';
+import { ApiEnrollmentRepository } from '@/src/infrastructure/repositories/api/ApiEnrollmentRepository';
 import { ApiInstructorRepository } from '@/src/infrastructure/repositories/api/ApiInstructorRepository';
 import { CourseDetailPresenter } from './CourseDetailPresenter';
 
 export function createClientCourseDetailPresenter(): CourseDetailPresenter {
-  return new CourseDetailPresenter(new ApiCourseRepository(), new ApiInstructorRepository());
+  return new CourseDetailPresenter(
+    new ApiCourseRepository(),
+    new ApiInstructorRepository(),
+    new ApiEnrollmentRepository(),
+  );
 }

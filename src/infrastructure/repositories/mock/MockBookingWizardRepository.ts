@@ -91,6 +91,7 @@ export class MockBookingWizardRepository implements IBookingWizardRepository {
       scheduledDate: data.date,
       startTime: slot?.startTime || '',
       endTime: slot?.endTime || '',
+      bookedHours: 0,
       status: 'pending',
       isActive: true,
       createdAt: new Date().toISOString(),

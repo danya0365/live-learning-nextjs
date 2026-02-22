@@ -7,14 +7,14 @@
  */
 
 import {
-    CheckoutResult,
-    CreatePaymentData,
-    IPaymentRepository,
-    PaginatedResult,
-    Payment,
-    PaymentStats,
-    PaymentStatus,
-    UpdatePaymentData
+  CheckoutResult,
+  CreatePaymentData,
+  IPaymentRepository,
+  PaginatedResult,
+  Payment,
+  PaymentStats,
+  PaymentStatus,
+  UpdatePaymentData
 } from '@/src/application/repositories/IPaymentRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -94,16 +94,19 @@ export class SupabasePaymentRepository implements IPaymentRepository {
   }
 
   async create(data: CreatePaymentData): Promise<Payment> {
+    const insertPayload: any = {
+      amount: data.amount,
+      currency: data.currency,
+      payment_method: data.paymentMethod,
+      transaction_id: data.transactionId,
+      status: data.status || 'pending',
+    };
+    if (data.bookingId) insertPayload.booking_id = data.bookingId;
+    if (data.enrollmentId) insertPayload.enrollment_id = data.enrollmentId;
+
     const { data: created, error } = await this.supabase
       .from('payments')
-      .insert({
-        booking_id: data.bookingId,
-        amount: data.amount,
-        currency: data.currency,
-        payment_method: data.paymentMethod,
-        transaction_id: data.transactionId,
-        status: data.status || 'pending',
-      })
+      .insert(insertPayload)
       .select()
       .single();
 

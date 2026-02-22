@@ -1,4 +1,5 @@
 import { WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
+import { Enrollment } from '@/src/application/repositories/IEnrollmentRepository';
 import { useEasyBookingPresenter } from '@/src/presentation/presenters/course-detail/useEasyBookingPresenter';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -17,35 +18,15 @@ interface EasyBookingModalProps {
     rating: number;
     avatar?: string;
   };
-  initialSlotId?: string; // If opened from a specific slot
+  enrollment: Enrollment;
+  initialSlotId?: string;
   onClose: () => void;
 }
 
-const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-const DAY_SHORT = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-
-function getNextDateForDay(dayOfWeek: number): string {
-  const now = new Date();
-  const currentDay = now.getDay();
-  let diff = dayOfWeek - currentDay;
-  if (diff <= 0) diff += 7;
-  const nextDate = new Date(now);
-  nextDate.setDate(now.getDate() + diff);
-  return nextDate.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long' });
-}
-
-import { ApiPaymentRepository } from '@/src/infrastructure/repositories/api/ApiPaymentRepository';
-
-// ... (existing imports)
-
-export function EasyBookingModal({ course, instructor, initialSlotId, onClose }: EasyBookingModalProps) {
+export function EasyBookingModal({ course, instructor, enrollment, initialSlotId, onClose }: EasyBookingModalProps) {
   const { state, actions } = useEasyBookingPresenter();
   const { slots, loading, isBooking, bookingSuccess, error } = state;
   const [selectedSlot, setSelectedSlot] = useState<WizardSlot | null>(null);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-  
-  // Initialize repository
-  const paymentRepo = new ApiPaymentRepository();
 
   useEffect(() => {
     actions.loadSlots(instructor.id);
@@ -58,26 +39,19 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
     }
   }, [slots, initialSlotId]);
 
+  // Calculate hours for selected slot
+  const getSlotHours = (slot: WizardSlot): number => {
+    const [startH, startM] = slot.startTime.split(':').map(Number);
+    const [endH, endM] = slot.endTime.split(':').map(Number);
+    return (endH * 60 + endM - (startH * 60 + startM)) / 60;
+  };
+
+  const selectedSlotHours = selectedSlot ? getSlotHours(selectedSlot) : 0;
+  const wouldExceedHours = selectedSlotHours > enrollment.remainingHours;
+
   const handleConfirm = async () => {
-    if (selectedSlot) {
-      const bookingId = await actions.confirmBooking(course.id, instructor.id, selectedSlot);
-      
-      if (bookingId && course.price > 0) {
-        setIsRedirecting(true);
-        try {
-          const result = await paymentRepo.createCheckoutSession(bookingId);
-          if (result.url) {
-            window.location.href = result.url;
-          } else {
-             // Handle error
-             console.error('Failed to create checkout session');
-             setIsRedirecting(false);
-          }
-        } catch (err) {
-          console.error('Payment redirection error:', err);
-          setIsRedirecting(false);
-        }
-      }
+    if (selectedSlot && !wouldExceedHours) {
+      await actions.confirmBooking(course.id, instructor.id, selectedSlot);
     }
   };
 
@@ -90,40 +64,42 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
 
   const days = [1, 2, 3, 4, 5, 6, 0]; // Mon-Sun
 
-  if (isRedirecting || (bookingSuccess && course.price > 0)) {
-     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full relative shadow-2xl border border-white/10 text-center">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">กำลังเข้าสู่ระบบชำระเงิน</h2>
-                <p className="text-slate-500">กรุณารอสักครู่...</p>
-            </div>
-        </div>
-     );
-  }
-
   if (bookingSuccess) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full relative shadow-2xl border border-white/10">
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             ✕
           </button>
-          
+
           <div className="text-center">
             <div className="text-6xl mb-4 animate-bounce-soft">🎉</div>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">จองสำเร็จ!</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
-              คุณได้ลงทะเบียนเรียนคอร์ส <br/>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              คุณได้จองเวลาเรียนคอร์ส <br/>
               <span className="font-bold text-primary">{course.title}</span> เรียบร้อยแล้ว
             </p>
 
+            {/* Hour tracking update */}
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-slate-500">ใช้ชั่วโมง</span>
+                <span className="font-bold text-primary">{selectedSlotHours} ชม.</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">เหลืออีก</span>
+                <span className="font-bold text-text-primary">
+                  {Math.max(0, enrollment.remainingHours - selectedSlotHours)} ชม. / {enrollment.totalHours} ชม.
+                </span>
+              </div>
+            </div>
+
             <div className="space-y-3">
               <Link
-                href="/my-bookings" 
+                href="/my-bookings"
                 className="block w-full py-3.5 rounded-xl btn-game text-white font-bold hover:scale-[1.02] transition-transform shadow-lg shadow-primary/20"
               >
                 📋 ดูการจองของฉัน
@@ -150,10 +126,10 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
         {/* Header */}
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">ลงทะเบียนเรียน</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">📅 จองเวลาเรียน</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">เลือกเวลาเรียนกับ {instructor.name}</p>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
@@ -172,7 +148,7 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
             <div className="text-center py-12">
               <div className="text-4xl mb-3">⚠️</div>
               <p className="text-slate-500 mb-4">{error}</p>
-              <button 
+              <button
                 onClick={() => actions.loadSlots(instructor.id)}
                 className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 font-medium hover:bg-slate-200 dark:hover:bg-slate-700"
               >
@@ -181,17 +157,26 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
             </div>
           ) : (
             <>
-              {/* Selected Course Info */}
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 mb-6">
+              {/* Course + Hour Info */}
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 mb-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                   📚
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-bold text-slate-900 dark:text-white">{course.title}</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {course.categoryName} • ฿{course.price.toLocaleString()}
+                    {course.categoryName}
                   </p>
                 </div>
+              </div>
+
+              {/* Remaining hours badge */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20 mb-6">
+                <span className="text-lg">⏱️</span>
+                <span className="text-sm text-text-secondary">
+                  ชั่วโมงเหลือ: <span className="font-bold text-primary">{enrollment.remainingHours} ชม.</span>
+                  <span className="text-text-muted"> / {enrollment.totalHours} ชม.</span>
+                </span>
               </div>
 
               <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -215,30 +200,35 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
                       {daySlots.map((slot) => {
                         const isSelected = selectedSlot?.id === slot.id;
                         const isAvailable = slot.status === 'available';
-                        
+                        const slotHours = getSlotHours(slot);
+
                         return (
                           <button
                             key={slot.id}
                             onClick={() => setSelectedSlot(slot)}
+                            disabled={!isAvailable}
                             className={`w-full text-left p-3 rounded-xl border transition-all ${
-                              isSelected 
+                              isSelected
                                 ? 'border-primary bg-primary/5 ring-1 ring-primary'
                                 : isAvailable
                                   ? 'border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-800'
-                                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60' // Booked but joinable? Logic says yes
+                                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60 cursor-not-allowed'
                             }`}
                           >
                             <div className="flex items-center justify-between">
                               <span className={`font-bold ${isSelected ? 'text-primary' : 'text-slate-700 dark:text-slate-200'}`}>
                                 {slot.startTime} - {slot.endTime}
                               </span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                                isAvailable 
-                                  ? 'bg-success/10 text-success'
-                                  : 'bg-warning/10 text-warning'
-                              }`}>
-                                {isAvailable ? 'ว่าง' : 'จองแล้ว'}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-400">{slotHours} ชม.</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                                  isAvailable
+                                    ? 'bg-success/10 text-success'
+                                    : 'bg-warning/10 text-warning'
+                                }`}>
+                                  {isAvailable ? 'ว่าง' : 'จองแล้ว'}
+                                </span>
+                              </div>
                             </div>
                             {slot.bookedCourseName && (
                                <p className="text-[10px] text-warning mt-1 truncate">📌 {slot.bookedCourseName}</p>
@@ -256,13 +246,22 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
 
         {/* Footer */}
         <div className="p-6 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 rounded-b-3xl">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-slate-500">ยอดรวม</span>
-            <span className="text-2xl font-extrabold text-primary">฿{course.price.toLocaleString()}</span>
-          </div>
+          {selectedSlot && (
+            <div className="flex items-center justify-between mb-4 text-sm">
+              <span className="text-slate-500">ใช้ชั่วโมง</span>
+              <span className={`text-lg font-extrabold ${wouldExceedHours ? 'text-error' : 'text-primary'}`}>
+                {selectedSlotHours} ชม.
+              </span>
+            </div>
+          )}
+          {wouldExceedHours && selectedSlot && (
+            <p className="text-xs text-error mb-3 text-center">
+              ⚠️ ชั่วโมงเรียนไม่เพียงพอ (เหลือ {enrollment.remainingHours} ชม.)
+            </p>
+          )}
           <button
             onClick={handleConfirm}
-            disabled={!selectedSlot || isBooking || isRedirecting}
+            disabled={!selectedSlot || isBooking || wouldExceedHours}
             className="w-full py-3.5 rounded-xl btn-game text-white font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] transition-transform shadow-lg shadow-primary/20"
           >
             {isBooking ? (
@@ -271,7 +270,7 @@ export function EasyBookingModal({ course, instructor, initialSlotId, onClose }:
                 กำลังยืนยัน...
               </span>
             ) : (
-              'ยืนยันการลงทะเบียน'
+              '📅 ยืนยันการจอง'
             )}
           </button>
         </div>

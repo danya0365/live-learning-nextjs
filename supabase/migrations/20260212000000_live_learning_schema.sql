@@ -123,7 +123,39 @@ CREATE INDEX IF NOT EXISTS idx_time_slots_instructor ON public.time_slots(instru
 CREATE INDEX IF NOT EXISTS idx_time_slots_day ON public.time_slots(day_of_week);
 
 -- ============================================================================
--- 5. BOOKINGS
+-- 5. ENROLLMENTS (student purchases a course)
+-- ============================================================================
+CREATE TYPE public.enrollment_status AS ENUM ('pending', 'active', 'completed', 'expired', 'refunded');
+
+CREATE TABLE IF NOT EXISTS public.enrollments (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  student_profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE NOT NULL,
+  
+  -- Hour tracking
+  total_hours NUMERIC(5,1) NOT NULL DEFAULT 0,     -- total course hours (e.g. 40)
+  used_hours NUMERIC(5,1) NOT NULL DEFAULT 0,      -- hours booked so far
+  
+  -- Status: pending (awaiting payment) → active (paid) → completed/expired/refunded
+  status public.enrollment_status NOT NULL DEFAULT 'pending',
+  
+  enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- One enrollment per student per course
+  UNIQUE (student_profile_id, course_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_enrollments_student ON public.enrollments(student_profile_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_course ON public.enrollments(course_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_status ON public.enrollments(status);
+
+-- ============================================================================
+-- 6. BOOKINGS (individual live session reservations, requires enrollment)
 -- ============================================================================
 CREATE TYPE public.booking_status AS ENUM ('pending', 'confirmed', 'completed', 'cancelled');
 
@@ -132,11 +164,15 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   student_profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   instructor_profile_id UUID REFERENCES public.instructor_profiles(id) ON DELETE CASCADE NOT NULL,
   course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE NOT NULL,
+  enrollment_id UUID REFERENCES public.enrollments(id) ON DELETE SET NULL,
   time_slot_id UUID REFERENCES public.time_slots(id) ON DELETE SET NULL,
   
   scheduled_date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
+  
+  -- Hours consumed by this booking (calculated from start_time/end_time)
+  booked_hours NUMERIC(4,1) NOT NULL DEFAULT 0,
   
   status public.booking_status NOT NULL DEFAULT 'pending',
   notes TEXT DEFAULT '',
@@ -149,6 +185,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
 CREATE INDEX IF NOT EXISTS idx_bookings_student ON public.bookings(student_profile_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_instructor ON public.bookings(instructor_profile_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_course ON public.bookings(course_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_enrollment ON public.bookings(enrollment_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON public.bookings(scheduled_date);
 
@@ -206,6 +243,10 @@ CREATE TRIGGER update_time_slots_updated_at
   BEFORE UPDATE ON public.time_slots
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_enrollments_updated_at
+  BEFORE UPDATE ON public.enrollments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_bookings_updated_at
   BEFORE UPDATE ON public.bookings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -221,6 +262,7 @@ ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.instructor_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.time_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.live_sessions ENABLE ROW LEVEL SECURITY;
 
@@ -294,6 +336,39 @@ CREATE POLICY "Admins can manage all time slots"
   ON public.time_slots FOR ALL
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
+
+-- Enrollments: students see own, instructors see enrollments for their courses, admin sees all
+CREATE POLICY "Students can view their own enrollments"
+  ON public.enrollments FOR SELECT
+  USING (student_profile_id = public.get_active_profile_id());
+
+CREATE POLICY "Instructors can view enrollments for their courses"
+  ON public.enrollments FOR SELECT
+  USING (
+    course_id IN (
+      SELECT c.id FROM public.courses c
+      JOIN public.instructor_profiles ip ON c.instructor_profile_id = ip.id
+      WHERE ip.profile_id = public.get_active_profile_id()
+    )
+  );
+
+CREATE POLICY "Students can create enrollments"
+  ON public.enrollments FOR INSERT
+  WITH CHECK (
+    auth.role() = 'authenticated'
+    AND student_profile_id = public.get_active_profile_id()
+  );
+
+CREATE POLICY "Admins can manage all enrollments"
+  ON public.enrollments FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- Service role can update enrollment status (for webhook callbacks)
+CREATE POLICY "Service role can manage enrollments"
+  ON public.enrollments FOR ALL
+  USING (auth.jwt() ->> 'role' = 'service_role')
+  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
 
 -- Bookings: students see own, instructors see their bookings, admin sees all
 CREATE POLICY "Students can view their own bookings"

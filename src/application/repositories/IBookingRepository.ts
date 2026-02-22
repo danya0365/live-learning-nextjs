@@ -14,10 +14,12 @@ export interface Booking {
   instructorName: string;
   courseId: string;
   courseName: string;
+  enrollmentId?: string;
   timeSlotId: string;
   scheduledDate: string;
   startTime: string;
   endTime: string;
+  bookedHours: number;
   status: BookingStatus;
   isActive: boolean;
   createdAt: string;
@@ -38,6 +40,7 @@ export interface CreateBookingData {
   studentId: string;        // 🔒 Server-injected from auth session
   instructorId: string;
   courseId: string;
+  enrollmentId?: string;
   timeSlotId: string;
   scheduledDate: string;
 }

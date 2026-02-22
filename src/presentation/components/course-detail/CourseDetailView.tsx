@@ -1,5 +1,7 @@
 'use client';
 
+import { ApiEnrollmentRepository } from '@/src/infrastructure/repositories/api/ApiEnrollmentRepository';
+import { ApiPaymentRepository } from '@/src/infrastructure/repositories/api/ApiPaymentRepository';
 import { CourseDetailViewModel } from '@/src/presentation/presenters/course-detail/CourseDetailPresenter';
 import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/useCourseDetailPresenter';
 import Link from 'next/link';
@@ -22,6 +24,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
 
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedSlotId, setSelectedSlotId] = useState<string | undefined>(undefined);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   if (state.loading && !vm) {
     return <CourseDetailSkeleton />;
@@ -42,14 +45,41 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
     );
   }
 
-  const { course, instructor, instructorTimeSlots, relatedCourses } = vm;
+  const { course, instructor, instructorTimeSlots, relatedCourses, enrollment, remainingHours } = vm;
+  const isEnrolled = enrollment?.status === 'active';
+  const hasRemainingHours = remainingHours > 0;
 
   const levelLabel = (l: string) =>
     l === 'beginner' ? '🟢 เริ่มต้น' : l === 'intermediate' ? '🟡 ปานกลาง' : '🔴 ขั้นสูง';
-  
+
   const handleOpenBooking = (slotId?: string) => {
+    if (!isEnrolled) return; // Payment gate
     setSelectedSlotId(slotId);
     setIsBookingModalOpen(true);
+  };
+
+  const handleEnroll = async () => {
+    setIsEnrolling(true);
+    try {
+      const enrollmentRepo = new ApiEnrollmentRepository();
+      const newEnrollment = await enrollmentRepo.createEnrollment({ courseId: course.id });
+
+      if (course.price > 0) {
+        // Redirect to Stripe checkout for enrollment payment
+        const paymentRepo = new ApiPaymentRepository();
+        const result = await paymentRepo.createCheckoutSession(newEnrollment.id);
+        if (result.url) {
+          window.location.href = result.url;
+          return;
+        }
+      }
+
+      // Free course → reload to show enrolled state
+      window.location.reload();
+    } catch (err) {
+      console.error('Enrollment error:', err);
+      setIsEnrolling(false);
+    }
   };
 
   return (
@@ -142,12 +172,28 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                       <p className="text-xs text-text-muted mt-1">กำลังสอน: {slot.bookedCourseName}</p>
                     )}
                     {!slot.isBooked && (
-                      <button
-                        onClick={() => handleOpenBooking(slot.id)}
-                        className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
-                      >
-                        จองเวลานี้
-                      </button>
+                      isEnrolled && hasRemainingHours ? (
+                        <button
+                          onClick={() => handleOpenBooking(slot.id)}
+                          className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
+                        >
+                          📅 จองเวลานี้
+                        </button>
+                      ) : isEnrolled && !hasRemainingHours ? (
+                        <button
+                          disabled
+                          className="mt-2 w-full py-1.5 text-xs rounded-lg font-medium bg-border/30 text-text-muted cursor-not-allowed"
+                        >
+                          ⏱️ ชั่วโมงเรียนครบแล้ว
+                        </button>
+                      ) : (
+                        <button
+                          disabled
+                          className="mt-2 w-full py-1.5 text-xs rounded-lg font-medium bg-border/30 text-text-muted cursor-not-allowed"
+                        >
+                          🔒 ต้องลงทะเบียนก่อนจอง
+                        </button>
+                      )
                     )}
                   </div>
                 ))}
@@ -177,19 +223,73 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
 
         {/* Sidebar - right col */}
         <div className="space-y-6">
-          {/* Price card */}
+          {/* Price & Enrollment card */}
           <div className="glass rounded-2xl p-6 sticky top-24">
             <div className="text-center mb-6">
               <div className="text-3xl font-extrabold text-primary mb-1">฿{course.price.toLocaleString()}</div>
               <p className="text-xs text-text-muted">ราคาต่อคอร์ส</p>
             </div>
-            <button
-              onClick={() => handleOpenBooking()}
-              className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
-            >
-              🎓 ลงทะเบียนเรียน
-            </button>
-            {course.isLive && (
+
+            {/* Enrollment Status Section */}
+            {isEnrolled ? (
+              <>
+                {/* Enrolled — show status + hour tracking */}
+                <div className="w-full py-3 rounded-xl bg-success/10 border border-success/30 text-center mb-3">
+                  <div className="text-success font-bold text-lg">✅ ลงทะเบียนแล้ว</div>
+                </div>
+
+                {/* Hour tracking bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-xs text-text-secondary mb-1.5">
+                    <span>เรียนไปแล้ว</span>
+                    <span className="font-bold text-text-primary">{enrollment!.usedHours} / {enrollment!.totalHours} ชม.</span>
+                  </div>
+                  <div className="w-full bg-border/30 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-primary to-secondary h-2.5 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (enrollment!.usedHours / enrollment!.totalHours) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-text-muted mt-1">
+                    เหลืออีก <span className="font-bold text-primary">{remainingHours} ชม.</span>
+                  </div>
+                </div>
+              </>
+            ) : enrollment?.status === 'pending' ? (
+              /* Pending payment */
+              <button
+                onClick={handleEnroll}
+                disabled={isEnrolling}
+                className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform disabled:opacity-50"
+              >
+                {isEnrolling ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    กำลังดำเนินการ...
+                  </span>
+                ) : (
+                  '💳 ชำระเงินเพื่อเริ่มเรียน'
+                )}
+              </button>
+            ) : (
+              /* Not enrolled — Show enroll button */
+              <button
+                onClick={handleEnroll}
+                disabled={isEnrolling}
+                className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform disabled:opacity-50"
+              >
+                {isEnrolling ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    กำลังดำเนินการ...
+                  </span>
+                ) : (
+                  '🎓 ลงทะเบียนเรียน'
+                )}
+              </button>
+            )}
+
+            {course.isLive && isEnrolled && (
               <button
                 onClick={() => router.push(`/live/${course.id}`)}
                 className="w-full py-3 rounded-xl border-2 border-error text-error font-bold hover:bg-error/10 transition-colors"
@@ -248,11 +348,12 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
           </Link>
         </div>
       </div>
-      
+
       {isBookingModalOpen && (
         <EasyBookingModal
           course={course}
           instructor={instructor}
+          enrollment={enrollment!}
           initialSlotId={selectedSlotId}
           onClose={() => setIsBookingModalOpen(false)}
         />
@@ -260,4 +361,3 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
     </div>
   );
 }
-

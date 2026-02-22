@@ -120,18 +120,50 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
--- 4. BOOKINGS (Self-booking strictly for demo purposes)
+-- 4. ENROLLMENTS (Student purchased courses)
 -- ============================================================================
-INSERT INTO public.bookings (id, student_profile_id, instructor_profile_id, course_id, time_slot_id, scheduled_date, start_time, end_time, status, is_active)
+INSERT INTO public.enrollments (id, student_profile_id, course_id, total_hours, used_hours, status, is_active)
+VALUES
+  -- Student enrolled in Advanced Full-stack (40 hrs, used 4)
+  (
+    '55000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000003', -- Student: Active Student
+    '40000000-0000-0000-0000-000000000001', -- Course: Advanced Full-stack
+    40.0, 4.0, 'active', TRUE
+  ),
+  -- Student enrolled in AI for Everyone (20 hrs, used 0)
+  (
+    '55000000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000003', -- Student: Active Student
+    '40000000-0000-0000-0000-000000000002', -- Course: AI for Everyone
+    20.0, 0.0, 'active', TRUE
+  )
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 5. BOOKINGS (Session reservations, linked to enrollment)
+-- ============================================================================
+INSERT INTO public.bookings (id, student_profile_id, instructor_profile_id, course_id, enrollment_id, time_slot_id, scheduled_date, start_time, end_time, booked_hours, status, is_active)
 VALUES
   (
     '60000000-0000-0000-0000-000000000001',
     '10000000-0000-0000-0000-000000000003', -- Student: Active Student
     '30000000-0000-0000-0000-000000000001', -- Instructor: Lead Instructor
     '40000000-0000-0000-0000-000000000001', -- Course: Advanced Full-stack
-    NULL,                                   -- No slot ID (Ad-hoc or ancient booking)
-    '2026-03-20', '10:00', '12:00',
+    '55000000-0000-0000-0000-000000000001', -- Enrollment
+    NULL,
+    '2026-03-20', '10:00', '12:00', 2.0,
     'confirmed', TRUE
+  ),
+  (
+    '60000000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000003', -- Student: Active Student
+    '30000000-0000-0000-0000-000000000001', -- Instructor: Lead Instructor
+    '40000000-0000-0000-0000-000000000001', -- Course: Advanced Full-stack
+    '55000000-0000-0000-0000-000000000001', -- Enrollment
+    NULL,
+    '2026-03-22', '10:00', '12:00', 2.0,
+    'completed', TRUE
   )
 ON CONFLICT (id) DO NOTHING;
 
