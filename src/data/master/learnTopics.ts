@@ -12,6 +12,7 @@ export interface LearnTopic {
   color: string;
   order: number;
   lessonCount: number;
+  courseSlug: string;
 }
 
 export const learnTopics: LearnTopic[] = [
@@ -26,6 +27,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-green-500 to-emerald-600",
     order: 1,
     lessonCount: 8,
+    courseSlug: "javascript",
   },
   {
     id: "topic-control",
@@ -38,6 +40,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-blue-500 to-cyan-600",
     order: 2,
     lessonCount: 6,
+    courseSlug: "javascript",
   },
   {
     id: "topic-functions",
@@ -50,6 +53,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-purple-500 to-pink-600",
     order: 3,
     lessonCount: 7,
+    courseSlug: "javascript",
   },
   {
     id: "topic-objects",
@@ -62,6 +66,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-orange-500 to-red-600",
     order: 4,
     lessonCount: 8,
+    courseSlug: "javascript",
   },
   {
     id: "topic-classes",
@@ -74,6 +79,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-indigo-500 to-violet-600",
     order: 5,
     lessonCount: 5,
+    courseSlug: "javascript",
   },
   {
     id: "topic-async",
@@ -86,6 +92,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-teal-500 to-cyan-600",
     order: 6,
     lessonCount: 6,
+    courseSlug: "javascript",
   },
   {
     id: "topic-dom",
@@ -98,6 +105,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-rose-500 to-pink-600",
     order: 7,
     lessonCount: 6,
+    courseSlug: "javascript",
   },
   // HTML Topics
   {
@@ -111,6 +119,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-orange-500 to-red-600",
     order: 1,
     lessonCount: 4,
+    courseSlug: "html",
   },
   {
     id: "topic-html-semantic",
@@ -123,6 +132,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-red-500 to-pink-600",
     order: 2,
     lessonCount: 3,
+    courseSlug: "html",
   },
   // Go Topics
   {
@@ -136,6 +146,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-cyan-500 to-teal-600",
     order: 1,
     lessonCount: 3,
+    courseSlug: "go",
   },
   {
     id: "topic-go-concurrency",
@@ -148,6 +159,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-teal-500 to-emerald-600",
     order: 2,
     lessonCount: 2,
+    courseSlug: "go",
   },
   // Next.js Topics
   {
@@ -161,6 +173,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-slate-700 to-slate-900",
     order: 1,
     lessonCount: 2,
+    courseSlug: "nextjs",
   },
   {
     id: "topic-next-data",
@@ -173,6 +186,7 @@ export const learnTopics: LearnTopic[] = [
     color: "from-blue-600 to-indigo-800",
     order: 2,
     lessonCount: 1,
+    courseSlug: "nextjs",
   },
 ];
 
@@ -182,4 +196,8 @@ export function getTopicBySlug(slug: string): LearnTopic | undefined {
 
 export function getTopicById(id: string): LearnTopic | undefined {
   return learnTopics.find((topic) => topic.id === id);
+}
+
+export function getTopicsForCourse(courseSlug: string): LearnTopic[] {
+  return learnTopics.filter((topic) => topic.courseSlug === courseSlug);
 }

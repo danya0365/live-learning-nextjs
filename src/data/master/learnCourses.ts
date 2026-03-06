@@ -77,18 +77,4 @@ export function getValidCourseSlugs(): string[] {
   return learnCourses.map((course) => course.slug);
 }
 
-// Map course slug to the topic filter logic
-export function getTopicFilterForCourse(courseSlug: string): (topicId: string) => boolean {
-  switch (courseSlug) {
-    case "javascript":
-      return (topicId: string) => !topicId.startsWith("topic-html") && !topicId.startsWith("topic-go");
-    case "html":
-      return (topicId: string) => topicId.startsWith("topic-html");
-    case "go":
-      return (topicId: string) => topicId.startsWith("topic-go");
-    case "nextjs":
-      return (topicId: string) => topicId.startsWith("topic-next");
-    default:
-      return () => false;
-  }
-}
+// Map course slug to the topic filter logic is now handled by getTopicsForCourse in learnTopics.ts

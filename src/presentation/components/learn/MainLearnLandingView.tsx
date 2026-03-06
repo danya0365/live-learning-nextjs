@@ -1,8 +1,8 @@
 "use client";
 
-import { getTopicFilterForCourse, learnCourses } from "@/src/data/master/learnCourses";
+import { learnCourses } from "@/src/data/master/learnCourses";
 import { getLessonsByTopic, learnLessons } from "@/src/data/master/learnLessons";
-import { learnTopics } from "@/src/data/master/learnTopics";
+import { getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
 
@@ -10,8 +10,7 @@ export function MainLearnLandingView() {
   const { isLessonComplete } = useProgressStore();
 
   const getProgressForCourse = (courseSlug: string) => {
-    const topicFilter = getTopicFilterForCourse(courseSlug);
-    const courseTopics = learnTopics.filter(t => topicFilter(t.id));
+    const courseTopics = getTopicsForCourse(courseSlug);
     let completed = 0;
     let total = 0;
     courseTopics.forEach(topic => {
@@ -34,8 +33,7 @@ export function MainLearnLandingView() {
   })();
 
   const getCourseTopics = (courseSlug: string) => {
-    const filter = getTopicFilterForCourse(courseSlug);
-    return learnTopics.filter(t => filter(t.id));
+    return getTopicsForCourse(courseSlug);
   };
 
   const courseColors: Record<string, { bg: string; border: string; text: string; progress: string; hover: string; shadow: string }> = {

@@ -7,26 +7,27 @@ import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
 
 interface LearnTopicViewProps {
+  courseId: string;
   topicSlug: string;
   courseSlug: string;
 }
 
-export function MainLearnTopicView({ topicSlug, courseSlug }: LearnTopicViewProps) {
+export function MainLearnTopicView({ courseId, topicSlug, courseSlug }: LearnTopicViewProps) {
   const { isLessonComplete } = useProgressStore();
   
   const course = getCourseBySlug(courseSlug);
   const topic = getTopicBySlug(topicSlug);
   const lessons = topic ? getLessonsByTopic(topic.id) : [];
 
-  const basePath = `/learn/${courseSlug}/${topicSlug}`;
-  const backPath = `/learn/${courseSlug}`;
+  const basePath = `/courses/${courseId}/learn/${topicSlug}`;
+  const backPath = `/courses/${courseId}/learn`;
 
   if (!topic || !course) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">❌ ไม่พบหัวข้อนี้</h1>
-        <Link href="/learn" className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 block">
-          ← กลับไปหน้า Learn
+        <Link href={`/courses/${courseId}/learn`} className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 block">
+          ← กลับไปหน้า Interactive Lab
         </Link>
       </div>
     );
@@ -47,7 +48,7 @@ export function MainLearnTopicView({ topicSlug, courseSlug }: LearnTopicViewProp
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-        <Link href="/learn" className="hover:text-indigo-600 dark:hover:text-indigo-400">Learn</Link>
+        <Link href={`/courses/${courseId}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">Course</Link>
         <span>/</span>
         <Link href={backPath} className={`hover:${colors.text}`}>{course.title}</Link>
         <span>/</span>

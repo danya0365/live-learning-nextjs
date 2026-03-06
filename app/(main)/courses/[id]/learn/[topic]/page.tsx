@@ -1,30 +1,24 @@
-import { getCourseBySlug, getTopicFilterForCourse, learnCourses } from "@/src/data/master/learnCourses";
-import { getTopicBySlug, learnTopics } from "@/src/data/master/learnTopics";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
+import { getTopicBySlug, getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { LearnTopicView } from "@/src/presentation/components/learn/LearnTopicView";
+import { createServerCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/CourseDetailPresenterServerFactory';
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 interface Props {
-  params: Promise<{ course: string; topic: string }>;
-}
-
-export async function generateStaticParams() {
-  const paths: { course: string; topic: string }[] = [];
-  
-  learnCourses.forEach((course) => {
-    const topicFilter = getTopicFilterForCourse(course.slug);
-    learnTopics
-      .filter(t => topicFilter(t.id))
-      .forEach((topic) => {
-        paths.push({ course: course.slug, topic: topic.slug });
-      });
-  });
-  
-  return paths;
+  params: Promise<{ id: string; topic: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { course: courseSlug, topic: topicSlug } = await params;
+  const { id, topic: topicSlug } = await params;
+  const presenter = await createServerCourseDetailPresenter();
+  const viewModel = await presenter.getViewModel(id);
+  
+  if (!viewModel || !viewModel.course.interactiveLabSlug) {
+    return { title: "Not Found" };
+  }
+
+  const courseSlug = viewModel.course.interactiveLabSlug;
   const course = getCourseBySlug(courseSlug);
   const topic = getTopicBySlug(topicSlug);
   
@@ -39,7 +33,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function LearnTopicPage({ params }: Props) {
-  const { course: courseSlug, topic: topicSlug } = await params;
+  const { id, topic: topicSlug } = await params;
+  
+  const presenter = await createServerCourseDetailPresenter();
+  const viewModel = await presenter.getViewModel(id);
+  
+  if (!viewModel || !viewModel.course.hasInteractiveLab || !viewModel.course.interactiveLabSlug) {
+    notFound();
+  }
+
+  const courseSlug = viewModel.course.interactiveLabSlug;
   const course = getCourseBySlug(courseSlug);
   const topic = getTopicBySlug(topicSlug);
   
@@ -48,10 +51,10 @@ export default async function LearnTopicPage({ params }: Props) {
   }
 
   // Validate that topic belongs to this course
-  const topicFilter = getTopicFilterForCourse(courseSlug);
-  if (!topicFilter(topic.id)) {
+  const topics = getTopicsForCourse(courseSlug);
+  if (!topics.find(t => t.id === topic.id)) {
     notFound();
   }
 
-  return <LearnTopicView topicSlug={topicSlug} courseSlug={courseSlug} />;
+  return <LearnTopicView courseId={id} topicSlug={topicSlug} courseSlug={courseSlug} />;
 }

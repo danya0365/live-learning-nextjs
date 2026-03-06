@@ -1,6 +1,8 @@
 // Learn Lessons Master Data
 // Lessons for the /learn page
 
+import { getTopicBySlug } from "./learnTopics";
+
 export interface LearnLesson {
   id: string;
   topicId: string;
@@ -3004,20 +3006,10 @@ export function getLessonsByTopic(topicId: string): LearnLesson[] {
 }
 
 export function getLessonBySlug(topicSlug: string, lessonSlug: string): LearnLesson | undefined {
-  // Map topic slug to topic ID
-  const slugToId: Record<string, string> = {
-    "basics": "topic-basics",
-    "control-flow": "topic-control",
-    "functions": "topic-functions",
-    "objects-arrays": "topic-objects",
-    "classes": "topic-classes",
-    "async": "topic-async",
-    "dom": "topic-dom",
-    "typescript": "topic-typescript"
-  };
+  const topic = getTopicBySlug(topicSlug);
+  if (!topic) return undefined;
   
-  const topicId = slugToId[topicSlug] || `topic-${topicSlug}`;
-  return learnLessons.find(l => l.topicId === topicId && l.slug === lessonSlug);
+  return learnLessons.find(l => l.topicId === topic.id && l.slug === lessonSlug);
 }
 
 export function getLessonById(id: string): LearnLesson | undefined {

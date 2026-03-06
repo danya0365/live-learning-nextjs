@@ -1,8 +1,8 @@
 "use client";
 
-import { getCourseBySlug, getTopicFilterForCourse } from "@/src/data/master/learnCourses";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { learnTopics } from "@/src/data/master/learnTopics";
+import { getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { useBackgroundMusic } from "@/src/presentation/hooks/useBackgroundMusic";
 import { useTTS } from "@/src/presentation/hooks/useTTS";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
@@ -39,8 +39,7 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
 
   // Get all lessons dynamically based on course
   const allLessons = useMemo(() => {
-    const topicFilter = getTopicFilterForCourse(courseSlug);
-    const topics = learnTopics.filter(t => topicFilter(t.id));
+    const topics = getTopicsForCourse(courseSlug);
     const lessons: LearnLesson[] = [];
     topics.forEach(topic => {
       lessons.push(...getLessonsByTopic(topic.id));

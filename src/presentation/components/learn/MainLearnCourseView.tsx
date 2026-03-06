@@ -1,8 +1,8 @@
 "use client";
 
-import { getCourseBySlug, getTopicFilterForCourse } from "@/src/data/master/learnCourses";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { learnTopics } from "@/src/data/master/learnTopics";
+import { getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
@@ -13,16 +13,16 @@ import { LearnPodcastView } from "./LearnPodcastView";
 import { LearnPresentationView } from "./LearnPresentationView";
 
 interface LearnCourseViewProps {
+  courseId: string;
   courseType: string;
 }
 
-export function MainLearnCourseView({ courseType }: LearnCourseViewProps) {
+export function MainLearnCourseView({ courseId, courseType }: LearnCourseViewProps) {
   const { isLessonComplete } = useProgressStore();
   const { viewMode } = useLearnModeStore();
 
   const course = getCourseBySlug(courseType);
-  const topicFilter = getTopicFilterForCourse(courseType);
-  const topics = learnTopics.filter(t => topicFilter(t.id));
+  const topics = getTopicsForCourse(courseType);
 
   const getTopicProgress = (topicId: string) => {
     const lessons = getLessonsByTopic(topicId);
@@ -66,7 +66,7 @@ export function MainLearnCourseView({ courseType }: LearnCourseViewProps) {
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-        <Link href="/learn" className="hover:text-indigo-600 dark:hover:text-indigo-400">Learn</Link>
+        <Link href={`/courses/${courseId}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">Course Detail</Link>
         <span>/</span>
         <span className="text-gray-900 dark:text-white">{course?.title || courseType}</span>
       </div>
@@ -116,7 +116,7 @@ export function MainLearnCourseView({ courseType }: LearnCourseViewProps) {
           return (
             <Link
               key={topic.id}
-              href={`/learn/${courseType}/${topic.slug}`}
+              href={`/courses/${courseId}/learn/${topic.slug}`}
               className={`block p-6 rounded-2xl border transition-all hover:scale-[1.01] ${
                 isComplete
                   ? "bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-500/50"
@@ -159,8 +159,8 @@ export function MainLearnCourseView({ courseType }: LearnCourseViewProps) {
 
       {/* Back Link */}
       <div className="mt-8">
-        <Link href="/learn" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors">
-          ← กลับหน้า Learn
+        <Link href={`/courses/${courseId}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors">
+          ← กลับหน้าคอร์สเรียน
         </Link>
       </div>
     </div>

@@ -113,6 +113,16 @@ VALUES
     '40000000-0000-0000-0000-000000000114', '30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
     'System Design สำหรับเตรียมสัมภาษณ์งาน Tech', 'system-design-interview', 'เตรียมพร้อมสัมภาษณ์บริษัทระดับ FAANG เรียนรู้ Scalability, Distributed Systems และ Pattern การออกแบบระบบขนาดใหญ่', 3900, 5000, 5.00, 0, 0, 20, 30, 'advanced', '{"System Design", "Architecture", "FAANG"}', FALSE, TRUE, TRUE
   ),
+  -- 137. JavaScript Foundation
+  (
+    '40000000-0000-0000-0000-000000000137', '30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
+    'JavaScript Foundations สำหรับผู้เริ่มต้น', 'javascript-foundations', 'เรียนรู้การเขียนโปรแกรมด้วย JavaScript ตั้งแต่ตัวแปร ฟังก์ชัน ออบเจกต์ ไปจนถึงระดับกลาง พร้อมแบบฝึกหัด Interactive', 1500, 2000, 5.00, 0, 0, 15, 25, 'beginner', '{"JavaScript", "Web", "Frontend"}', FALSE, TRUE, TRUE
+  ),
+  -- 138. HTML & CSS Masterclass
+  (
+    '40000000-0000-0000-0000-000000000138', '30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
+    'HTML & CSS Masterclass โครงสร้างพื้นฐานเว็บ', 'html-css-masterclass', 'ปูพื้นฐานการทำแอปพลิเคชันบนเว็บ ตั้งแต่โครงสร้าง Semantic HTML จนถึงการจัดรูปแบบด้วย CSS', 1200, 1800, 5.00, 0, 0, 10, 20, 'beginner', '{"HTML", "CSS", "Frontend"}', FALSE, FALSE, TRUE
+  ),
 
   -- ==========================================================================
   -- SECTION 3: MOBILE & GAME DEVELOPMENT
@@ -219,7 +229,23 @@ VALUES
 
 ON CONFLICT (id) DO NOTHING;
 
--- Apply interactive lab flag to Next.js Fullstack Masterclass
+-- Apply interactive lab flags to matching courses
+-- Next.js 14 Fullstack Masterclass
 UPDATE public.courses
 SET has_interactive_lab = TRUE, interactive_lab_slug = 'nextjs'
 WHERE id = '40000000-0000-0000-0000-000000000102';
+
+-- Golang Microservices
+UPDATE public.courses
+SET has_interactive_lab = TRUE, interactive_lab_slug = 'go'
+WHERE id = '40000000-0000-0000-0000-000000000113';
+
+-- JavaScript Foundations
+UPDATE public.courses
+SET has_interactive_lab = TRUE, interactive_lab_slug = 'javascript'
+WHERE id = '40000000-0000-0000-0000-000000000137';
+
+-- HTML & CSS Masterclass
+UPDATE public.courses
+SET has_interactive_lab = TRUE, interactive_lab_slug = 'html'
+WHERE id = '40000000-0000-0000-0000-000000000138';

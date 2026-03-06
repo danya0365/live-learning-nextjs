@@ -1,6 +1,6 @@
-import { getCourseBySlug, getTopicFilterForCourse } from "@/src/data/master/learnCourses";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { getTopicBySlug } from "@/src/data/master/learnTopics";
+import { getTopicBySlug, getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { LearnLessonView } from "@/src/presentation/components/learn/LearnLessonView";
 import { createServerCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/CourseDetailPresenterServerFactory';
 import type { Metadata } from "next";
@@ -55,8 +55,8 @@ export default async function LearnLessonPage({ params }: Props) {
   }
 
   // Validate that topic belongs to this course
-  const topicFilter = getTopicFilterForCourse(courseSlug);
-  if (!topicFilter(topic.id)) {
+  const topics = getTopicsForCourse(courseSlug);
+  if (!topics.find(t => t.id === topic.id)) {
     notFound();
   }
 
@@ -67,5 +67,5 @@ export default async function LearnLessonPage({ params }: Props) {
     notFound();
   }
 
-  return <LearnLessonView topicSlug={topicSlug} lessonSlug={lessonSlug} courseSlug={courseSlug} />;
+  return <LearnLessonView courseId={id} topicSlug={topicSlug} lessonSlug={lessonSlug} courseSlug={courseSlug} />;
 }

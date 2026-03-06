@@ -130,12 +130,13 @@ function QuizSection({ quiz, lessonId, onComplete }: QuizSectionProps) {
 }
 
 interface LearnLessonViewProps {
+  courseId: string;
   topicSlug: string;
   lessonSlug: string;
   courseSlug: string;
 }
 
-export function MainLearnLessonView({ topicSlug, lessonSlug, courseSlug }: LearnLessonViewProps) {
+export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlug }: LearnLessonViewProps) {
   const { isLessonComplete, markLessonComplete, totalPoints } = useProgressStore();
   const [isCompleted, setIsCompleted] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -148,9 +149,9 @@ export function MainLearnLessonView({ topicSlug, lessonSlug, courseSlug }: Learn
   const prevLesson = lessonIndex > 0 ? lessons[lessonIndex - 1] : null;
   const nextLesson = lessonIndex < lessons.length - 1 ? lessons[lessonIndex + 1] : null;
 
-  const basePath = `/learn/${courseSlug}/${topicSlug}`;
-  const topicPath = `/learn/${courseSlug}/${topicSlug}`;
-  const coursePath = `/learn/${courseSlug}`;
+  const basePath = `/courses/${courseId}/learn/${topicSlug}`;
+  const topicPath = `/courses/${courseId}/learn/${topicSlug}`;
+  const coursePath = `/courses/${courseId}/learn`;
 
   useEffect(() => {
     if (lesson) {
@@ -162,8 +163,8 @@ export function MainLearnLessonView({ topicSlug, lessonSlug, courseSlug }: Learn
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">❌ ไม่พบบทเรียนนี้</h1>
-        <Link href="/learn" className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 block">
-          ← กลับไปหน้า Learn
+        <Link href={`/courses/${courseId}/learn`} className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 block">
+          ← กลับไปหน้า Interactive Lab
         </Link>
       </div>
     );
@@ -212,7 +213,7 @@ export function MainLearnLessonView({ topicSlug, lessonSlug, courseSlug }: Learn
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6 flex-wrap">
-        <Link href="/learn" className="hover:text-indigo-600 dark:hover:text-indigo-400">Learn</Link>
+        <Link href={`/courses/${courseId}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">Course</Link>
         <span>/</span>
         <Link href={coursePath} className={`hover:${colors.text}`}>{course.title}</Link>
         <span>/</span>

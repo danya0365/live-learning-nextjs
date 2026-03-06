@@ -30,5 +30,5 @@ export default async function LearnCoursePage({ params }: Props) {
     notFound();
   }
 
-  return <LearnCourseView courseType={courseSlug as "javascript" | "typescript"} />;
+  return <LearnCourseView courseId={id} courseType={courseSlug} />;
 }

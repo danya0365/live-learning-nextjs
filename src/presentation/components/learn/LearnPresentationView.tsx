@@ -1,8 +1,8 @@
 "use client";
 
-import { getCourseBySlug, getTopicFilterForCourse } from "@/src/data/master/learnCourses";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { LearnTopic, learnTopics } from "@/src/data/master/learnTopics";
+import { LearnTopic, getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -49,8 +49,7 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
 
   // Get topics dynamically based on course
   const topics = useMemo(() => {
-    const topicFilter = getTopicFilterForCourse(courseSlug);
-    return learnTopics.filter(t => topicFilter(t.id));
+    return getTopicsForCourse(courseSlug);
   }, [courseSlug]);
 
   // Get all lessons with their topics

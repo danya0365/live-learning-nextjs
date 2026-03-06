@@ -1,8 +1,8 @@
 "use client";
 
-import { getCourseBySlug, getTopicFilterForCourse } from "@/src/data/master/learnCourses";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { learnTopics } from "@/src/data/master/learnTopics";
+import { getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { useTTS } from "@/src/presentation/hooks/useTTS";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
@@ -38,8 +38,7 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
 
   // Get all lessons dynamically based on course
   const allLessons = useMemo(() => {
-    const topicFilter = getTopicFilterForCourse(courseSlug);
-    const topics = learnTopics.filter(t => topicFilter(t.id));
+    const topics = getTopicsForCourse(courseSlug);
     const lessons: LearnLesson[] = [];
     topics.forEach(topic => {
       lessons.push(...getLessonsByTopic(topic.id));

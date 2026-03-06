@@ -1,8 +1,8 @@
 "use client";
 
-import { getCourseBySlug, getTopicFilterForCourse } from "@/src/data/master/learnCourses";
+import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { LearnTopic, learnTopics } from "@/src/data/master/learnTopics";
+import { LearnTopic, getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { CodeEditor } from "@/src/presentation/components/editor/CodeEditor";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
@@ -168,8 +168,7 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
 
   // Get topics dynamically based on course
   const topics = useMemo(() => {
-    const topicFilter = getTopicFilterForCourse(courseSlug);
-    return learnTopics.filter(t => topicFilter(t.id));
+    return getTopicsForCourse(courseSlug);
   }, [courseSlug]);
 
   // Get all lessons with their topics
