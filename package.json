@@ -39,6 +39,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "excalidraw": "^0.6.4",
+    "framer-motion": "^12.35.0",
     "html2canvas": "^1.4.1",
     "localforage": "^1.10.0",
     "nanoid": "^5.1.6",

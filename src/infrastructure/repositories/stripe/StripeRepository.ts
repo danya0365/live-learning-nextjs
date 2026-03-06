@@ -15,7 +15,7 @@ export class StripeRepository implements IStripeRepository {
       throw new Error('Stripe secret key is missing');
     }
     this.stripe = new Stripe(secretKey, {
-      apiVersion: '2026-01-28.clover', // Keep consistent with env
+      apiVersion: '2026-02-25.clover', // Keep consistent with env
       typescript: true,
     });
   }
