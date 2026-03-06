@@ -10,6 +10,9 @@ export interface Achievement {
   icon: string;
   label: string;
   description: string;
+  unlockedAt?: string | null;
+  progress?: number;
+  maxProgress?: number;
 }
 
 export interface UserProfile {

@@ -139,7 +139,7 @@ export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
               { icon: '⏱️', value: `${learningStats.totalHours} ชม.`, label: 'เวลาเรียนรวม', color: 'text-primary' },
               { icon: '🎓', value: learningStats.coursesCompleted, label: 'เรียนจบแล้ว', color: 'text-success' },
               { icon: '📖', value: learningStats.coursesInProgress, label: 'กำลังเรียน', color: 'text-warning' },
-              { icon: '🏅', value: learningStats.achievements.length, label: 'เหรียญรางวัล', color: 'text-secondary' },
+              { icon: '🏅', value: learningStats.achievements.filter(a => !!a.unlockedAt).length, label: 'เหรียญรางวัล', color: 'text-secondary' },
             ].map((stat) => (
               <div key={stat.label} className="glass rounded-2xl p-4 text-center hover:scale-[1.02] transition-transform border border-border/50">
                 <div className="text-3xl mb-2">{stat.icon}</div>
@@ -164,13 +164,53 @@ export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
             </div>
            
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {learningStats.achievements.map((ach) => (
-                <div key={ach.label} className="glass rounded-xl p-3 text-center hover:scale-105 transition-transform border border-border/30 bg-surface/30">
-                  <div className="text-4xl mb-2 drop-shadow-sm">{ach.icon}</div>
-                  <p className="text-xs font-bold text-text-primary mb-1 line-clamp-1">{ach.label}</p>
-                  <p className="text-[10px] text-text-muted line-clamp-2 leading-tight">{ach.description}</p>
-                </div>
-              ))}
+              {[...learningStats.achievements]
+                .sort((a, b) => {
+                  const aUnlocked = a.unlockedAt ? 1 : 0;
+                  const bUnlocked = b.unlockedAt ? 1 : 0;
+                  return bUnlocked - aUnlocked; // unlocked first
+                })
+                .slice(0, 8)
+                .map((ach) => {
+                  const isUnlocked = !!ach.unlockedAt;
+                  const progress = ach.progress ?? 0;
+                  const max = ach.maxProgress ?? 1;
+                  const pct = max > 0 ? Math.round((progress / max) * 100) : 0;
+
+                  return (
+                    <div
+                      key={ach.label}
+                      className={`glass rounded-xl p-3 text-center hover:scale-105 transition-transform border ${
+                        isUnlocked
+                          ? 'border-primary/30 bg-primary/5'
+                          : 'border-border/30 bg-surface/30 opacity-60'
+                      }`}
+                    >
+                      <div className={`text-4xl mb-2 drop-shadow-sm ${isUnlocked ? '' : 'grayscale'}`}>
+                        {ach.icon}
+                      </div>
+                      <p className={`text-xs font-bold mb-1 line-clamp-1 ${isUnlocked ? 'text-text-primary' : 'text-text-muted'}`}>
+                        {ach.label}
+                        {isUnlocked && <span className="ml-1 text-success">✓</span>}
+                        {!isUnlocked && <span className="ml-1">🔒</span>}
+                      </p>
+                      {/* Mini progress bar */}
+                      <div className="h-1 rounded-full bg-surface-elevated overflow-hidden mt-1.5">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isUnlocked
+                              ? 'bg-gradient-to-r from-success to-primary'
+                              : 'bg-text-muted/30'
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-text-muted mt-1">
+                        {progress}/{max}
+                      </p>
+                    </div>
+                  );
+                })}
             </div>
           </div>
 
