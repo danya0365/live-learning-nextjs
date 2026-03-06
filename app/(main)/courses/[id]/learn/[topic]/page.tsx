@@ -1,7 +1,6 @@
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { getTopicBySlug, getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { LearnTopicView } from "@/src/presentation/components/learn/LearnTopicView";
 import { createServerCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/CourseDetailPresenterServerFactory';
+import { createServerStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/StaticLearnContentPresenterServerFactory";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -19,8 +18,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const courseSlug = viewModel.course.interactiveLabSlug;
-  const course = getCourseBySlug(courseSlug);
-  const topic = getTopicBySlug(topicSlug);
+  const learnPresenter = createServerStaticLearnContentPresenter();
+  const course = await learnPresenter.getCourseBySlug(courseSlug);
+  const topic = await learnPresenter.getTopicBySlug(topicSlug);
   
   if (!course || !topic) {
     return { title: "Not Found" };
@@ -43,15 +43,16 @@ export default async function LearnTopicPage({ params }: Props) {
   }
 
   const courseSlug = viewModel.course.interactiveLabSlug;
-  const course = getCourseBySlug(courseSlug);
-  const topic = getTopicBySlug(topicSlug);
+  const learnPresenter = createServerStaticLearnContentPresenter();
+  const course = await learnPresenter.getCourseBySlug(courseSlug);
+  const topic = await learnPresenter.getTopicBySlug(topicSlug);
   
   if (!course || !topic) {
     notFound();
   }
 
   // Validate that topic belongs to this course
-  const topics = getTopicsForCourse(courseSlug);
+  const topics = await learnPresenter.getTopicsForCourse(courseSlug);
   if (!topics.find(t => t.id === topic.id)) {
     notFound();
   }

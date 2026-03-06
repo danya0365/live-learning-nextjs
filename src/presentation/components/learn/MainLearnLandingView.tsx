@@ -1,20 +1,77 @@
 "use client";
 
-import { learnCourses } from "@/src/data/master/learnCourses";
-import { getLessonsByTopic, learnLessons } from "@/src/data/master/learnLessons";
-import { getTopicsForCourse } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnTopic } from "@/src/domain/types/learn-content";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function MainLearnLandingView() {
   const { isLessonComplete } = useProgressStore();
 
+  const presenter = useStaticLearnContentPresenter();
+  const [data, setData] = useState<{
+    courses: LearnCourse[];
+    totalLessons: number;
+    totalCourses: number;
+    topicsByCourse: Record<string, LearnTopic[]>;
+    lessonsByTopic: Record<string, { id: string }[]>;
+    loading: boolean;
+  }>({
+    courses: [],
+    totalLessons: 0,
+    totalCourses: 0,
+    topicsByCourse: {},
+    lessonsByTopic: {},
+    loading: true
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [courses, allLessons, allTopics] = await Promise.all([
+          presenter.getAllCourses(),
+          presenter.getAllLessons(),
+          presenter.getAllTopics()
+        ]);
+        
+        const topicsByCourse: Record<string, LearnTopic[]> = {};
+        const lessonsByTopic: Record<string, {id: string}[]> = {};
+        
+        // Group lessons by topic id
+        allTopics.forEach(t => {
+          lessonsByTopic[t.id] = allLessons.filter(l => l.topicId === t.id);
+        });
+
+        // Group topics by course slug
+        courses.forEach(c => {
+          topicsByCourse[c.slug] = allTopics.filter(t => t.courseSlug === c.slug);
+        });
+        
+        setData({
+          courses,
+          totalLessons: allLessons.length,
+          totalCourses: courses.length,
+          topicsByCourse,
+          lessonsByTopic,
+          loading: false
+        });
+      } catch (e) {
+        console.error("Failed to load static content", e);
+        setData(prev => ({ ...prev, loading: false }));
+      }
+    }
+    loadData();
+  }, [presenter]);
+
   const getProgressForCourse = (courseSlug: string) => {
-    const courseTopics = getTopicsForCourse(courseSlug);
+    if (data.loading) return { completed: 0, total: 0, percent: 0 };
+    
+    const courseTopics = data.topicsByCourse[courseSlug] || [];
     let completed = 0;
     let total = 0;
     courseTopics.forEach(topic => {
-      const lessons = getLessonsByTopic(topic.id);
+      const lessons = data.lessonsByTopic[topic.id] || [];
       completed += lessons.filter(l => isLessonComplete(l.id)).length;
       total += lessons.length;
     });
@@ -22,9 +79,11 @@ export function MainLearnLandingView() {
   };
 
   const totalProgress = (() => {
+    if (data.loading) return { completed: 0, total: 0, percent: 0 };
+    
     let completed = 0;
     let total = 0;
-    learnCourses.forEach(course => {
+    data.courses.forEach(course => {
       const progress = getProgressForCourse(course.slug);
       completed += progress.completed;
       total += progress.total;
@@ -33,7 +92,7 @@ export function MainLearnLandingView() {
   })();
 
   const getCourseTopics = (courseSlug: string) => {
-    return getTopicsForCourse(courseSlug);
+    return data.topicsByCourse[courseSlug] || [];
   };
 
   const courseColors: Record<string, { bg: string; border: string; text: string; progress: string; hover: string; shadow: string }> = {
@@ -90,11 +149,15 @@ export function MainLearnLandingView() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto mb-12">
             <div className="bg-white/80 dark:bg-white/5 backdrop-blur rounded-xl p-4 text-center border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{learnLessons.length}</div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                {data.loading ? "-" : data.totalLessons}
+              </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">บทเรียน</div>
             </div>
             <div className="bg-white/80 dark:bg-white/5 backdrop-blur rounded-xl p-4 text-center border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">{learnCourses.length}</div>
+              <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                {data.loading ? "-" : data.totalCourses}
+              </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">คอร์ส</div>
             </div>
             <div className="bg-white/80 dark:bg-white/5 backdrop-blur rounded-xl p-4 text-center border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-none">
@@ -122,7 +185,7 @@ export function MainLearnLandingView() {
       {/* Course Cards - Dynamic */}
       <div className="max-w-6xl mx-auto px-4 py-12 -mt-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {learnCourses.map(course => {
+          {data.courses.map(course => {
             const progress = getProgressForCourse(course.slug);
             const topics = getCourseTopics(course.slug);
             const colors = courseColors[course.slug] || courseColors.javascript;
@@ -204,7 +267,7 @@ export function MainLearnLandingView() {
       <div className="max-w-6xl mx-auto px-4 py-12 text-center">
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">พร้อมเริ่มเรียนแล้วหรือยัง?</h3>
         <div className="flex justify-center gap-4 flex-wrap">
-          {learnCourses.slice(0, 2).map(course => {
+          {data.courses.slice(0, 2).map(course => {
             const colors = courseColors[course.slug] || courseColors.javascript;
             return (
               <Link

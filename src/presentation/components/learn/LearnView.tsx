@@ -1,15 +1,55 @@
 "use client";
 
-import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { learnTopics } from "@/src/data/master/learnTopics";
+import { LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function LearnView() {
   const { isLessonComplete, totalPoints } = useProgressStore();
 
+  const presenter = useStaticLearnContentPresenter();
+
+  const [data, setData] = useState<{
+    topics: LearnTopic[];
+    lessonsByTopic: Record<string, LearnLesson[]>;
+    loading: boolean;
+  }>({
+    topics: [],
+    lessonsByTopic: {},
+    loading: true
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const topics = await presenter.getAllTopics();
+        const lessonsByTopic: Record<string, LearnLesson[]> = {};
+        for (const topic of topics) {
+          lessonsByTopic[topic.id] = await presenter.getLessonsByTopic(topic.id);
+        }
+        setData({ topics, lessonsByTopic, loading: false });
+      } catch (e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter]);
+
+  const { topics, lessonsByTopic, loading } = data;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
   const getTopicProgress = (topicId: string) => {
-    const lessons = getLessonsByTopic(topicId);
+    const lessons = lessonsByTopic[topicId] || [];
     const completed = lessons.filter(l => isLessonComplete(l.id)).length;
     return { completed, total: lessons.length };
   };
@@ -17,8 +57,8 @@ export function LearnView() {
   const getTotalProgress = () => {
     let completed = 0;
     let total = 0;
-    learnTopics.forEach(topic => {
-      const lessons = getLessonsByTopic(topic.id);
+    topics.forEach(topic => {
+      const lessons = lessonsByTopic[topic.id] || [];
       completed += lessons.filter(l => isLessonComplete(l.id)).length;
       total += lessons.length;
     });
@@ -66,7 +106,7 @@ export function LearnView() {
 
       {/* Topics Grid */}
       <div className="grid gap-4">
-        {learnTopics.map((topic) => {
+        {topics.map((topic) => {
           const progress = getTopicProgress(topic.id);
           const progressPercent = progress.total > 0 
             ? (progress.completed / progress.total) * 100 

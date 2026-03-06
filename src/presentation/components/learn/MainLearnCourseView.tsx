@@ -1,11 +1,11 @@
 "use client";
 
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { getTopicsForCourse } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { LearnCinemaView } from "./LearnCinemaView";
 import { LearnFocusView } from "./LearnFocusView";
 import { LearnModeSwitcher } from "./LearnModeSwitcher";
@@ -21,11 +21,61 @@ export function MainLearnCourseView({ courseId, courseType }: LearnCourseViewPro
   const { isLessonComplete } = useProgressStore();
   const { viewMode } = useLearnModeStore();
 
-  const course = getCourseBySlug(courseType);
-  const topics = getTopicsForCourse(courseType);
+  const presenter = useStaticLearnContentPresenter();
+  
+  const [data, setData] = useState<{
+    course: LearnCourse | null;
+    topics: LearnTopic[];
+    lessonsByTopic: Record<string, LearnLesson[]>;
+    loading: boolean;
+  }>({
+    course: null,
+    topics: [],
+    lessonsByTopic: {},
+    loading: true
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [course, topics] = await Promise.all([
+          presenter.getCourseBySlug(courseType),
+          presenter.getTopicsForCourse(courseType)
+        ]);
+        
+        const lessonsByTopic: Record<string, LearnLesson[]> = {};
+        if (topics) {
+          for (const topic of topics) {
+            lessonsByTopic[topic.id] = await presenter.getLessonsByTopic(topic.id);
+          }
+        }
+
+        setData({
+          course: course || null,
+          topics: topics || [],
+          lessonsByTopic,
+          loading: false
+        });
+      } catch(e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter, courseType]);
+
+  const { course, topics, lessonsByTopic, loading } = data;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   const getTopicProgress = (topicId: string) => {
-    const lessons = getLessonsByTopic(topicId);
+    const lessons = lessonsByTopic[topicId] || [];
     const completed = lessons.filter(l => isLessonComplete(l.id)).length;
     return { completed, total: lessons.length };
   };
@@ -34,7 +84,7 @@ export function MainLearnCourseView({ courseId, courseType }: LearnCourseViewPro
     let completed = 0;
     let total = 0;
     topics.forEach(topic => {
-      const lessons = getLessonsByTopic(topic.id);
+      const lessons = lessonsByTopic[topic.id] || [];
       completed += lessons.filter(l => isLessonComplete(l.id)).length;
       total += lessons.length;
     });

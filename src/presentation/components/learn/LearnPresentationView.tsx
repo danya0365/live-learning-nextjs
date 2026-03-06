@@ -1,8 +1,7 @@
 "use client";
 
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { LearnTopic, getTopicsForCourse } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -31,7 +30,20 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
   const { currentSlideIndex, setSlideIndex, nextSlide, prevSlide, setViewMode, reset } = useLearnModeStore();
   const { markLessonComplete, isLessonComplete } = useProgressStore();
 
-  const course = getCourseBySlug(courseSlug);
+  const presenter = useStaticLearnContentPresenter();
+  
+  const [data, setData] = useState<{
+    course: LearnCourse | null;
+    topics: LearnTopic[];
+    lessonsWithTopics: LessonWithTopic[];
+    loading: boolean;
+  }>({
+    course: null,
+    topics: [],
+    lessonsWithTopics: [],
+    loading: true
+  });
+
   const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
     javascript: "yellow",
     typescript: "blue",
@@ -47,34 +59,47 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
   // Refs for scrolling
   const lessonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
-  // Get topics dynamically based on course
-  const topics = useMemo(() => {
-    return getTopicsForCourse(courseSlug);
-  }, [courseSlug]);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const fetchCourse = await presenter.getCourseBySlug(courseSlug);
+        const fetchTopics = await presenter.getTopicsForCourse(courseSlug);
+        
+        const result: LessonWithTopic[] = [];
+        let globalIndex = 0;
+        let slideIndex = 0;
+        
+        for (const topic of fetchTopics) {
+          const topicLessons = await presenter.getLessonsByTopic(topic.id);
+          for (const lesson of topicLessons) {
+            result.push({ 
+              lesson, 
+              topic, 
+              globalIndex,
+              startSlideIndex: slideIndex
+            });
+            globalIndex++;
+            // Count slides for this lesson
+            const parts = lesson.content.split(/(?=##\s)/);
+            slideIndex += parts.filter(p => p.trim()).length;
+          }
+        }
 
-  // Get all lessons with their topics
-  const lessonsWithTopics = useMemo(() => {
-    const result: LessonWithTopic[] = [];
-    let globalIndex = 0;
-    let slideIndex = 0;
-    
-    topics.forEach(topic => {
-      const topicLessons = getLessonsByTopic(topic.id);
-      topicLessons.forEach(lesson => {
-        result.push({ 
-          lesson, 
-          topic, 
-          globalIndex,
-          startSlideIndex: slideIndex
+        setData({
+          course: fetchCourse || null,
+          topics: fetchTopics,
+          lessonsWithTopics: result,
+          loading: false
         });
-        globalIndex++;
-        // Count slides for this lesson
-        const parts = lesson.content.split(/(?=##\s)/);
-        slideIndex += parts.filter(p => p.trim()).length;
-      });
-    });
-    return result;
-  }, [topics]);
+      } catch (e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter, courseSlug]);
+
+  const { course, topics, lessonsWithTopics, loading } = data;
 
   // Parse content into slides
   const slides = useMemo(() => {

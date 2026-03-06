@@ -1,10 +1,9 @@
 "use client";
 
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { getTopicsForCourse } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnLesson } from "@/src/domain/types/learn-content";
 import { useBackgroundMusic } from "@/src/presentation/hooks/useBackgroundMusic";
 import { useTTS } from "@/src/presentation/hooks/useTTS";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -25,10 +24,42 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
   const tts = useTTS();
   const music = useBackgroundMusic();
   
+  const presenter = useStaticLearnContentPresenter();
+
+  const [data, setData] = useState<{
+    course: LearnCourse | null;
+    allLessons: LearnLesson[];
+    loading: boolean;
+  }>({
+    course: null,
+    allLessons: [],
+    loading: true
+  });
+  
   const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [autoAdvanceDelay] = useState(2); // seconds after TTS
 
-  const course = getCourseBySlug(courseSlug);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const course = await presenter.getCourseBySlug(courseSlug);
+        const topics = await presenter.getTopicsForCourse(courseSlug);
+        const lessons: LearnLesson[] = [];
+        for (const topic of topics) {
+          const topicLessons = await presenter.getLessonsByTopic(topic.id);
+          lessons.push(...topicLessons);
+        }
+        setData({ course: course || null, allLessons: lessons, loading: false });
+      } catch (e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter, courseSlug]);
+
+  const { course, allLessons, loading } = data;
+
   const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
     javascript: "yellow",
     typescript: "blue",
@@ -36,16 +67,6 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
     go: "cyan",
   };
   const brandColor = colorMap[courseSlug] || "yellow";
-
-  // Get all lessons dynamically based on course
-  const allLessons = useMemo(() => {
-    const topics = getTopicsForCourse(courseSlug);
-    const lessons: LearnLesson[] = [];
-    topics.forEach(topic => {
-      lessons.push(...getLessonsByTopic(topic.id));
-    });
-    return lessons;
-  }, [courseSlug]);
 
   // Parse content into slides
   const slides = useMemo(() => {
@@ -207,6 +228,17 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
   };
 
   const colors = colorClasses[brandColor] || colorClasses.yellow;
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p>กำลังเตรียมโหมดโรงภาพยนตร์...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">

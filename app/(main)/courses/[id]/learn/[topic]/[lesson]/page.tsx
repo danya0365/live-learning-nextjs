@@ -1,8 +1,6 @@
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { getTopicBySlug, getTopicsForCourse } from "@/src/data/master/learnTopics";
 import { LearnLessonView } from "@/src/presentation/components/learn/LearnLessonView";
 import { createServerCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/CourseDetailPresenterServerFactory';
+import { createServerStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/StaticLearnContentPresenterServerFactory";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -20,14 +18,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const courseSlug = viewModel.course.interactiveLabSlug;
-  const course = getCourseBySlug(courseSlug);
-  const topic = getTopicBySlug(topicSlug);
+  const learnPresenter = createServerStaticLearnContentPresenter();
+  const course = await learnPresenter.getCourseBySlug(courseSlug);
+  const topic = await learnPresenter.getTopicBySlug(topicSlug);
   
   if (!course || !topic) {
     return { title: "Not Found" };
   }
 
-  const lessons = getLessonsByTopic(topic.id);
+  const lessons = await learnPresenter.getLessonsByTopic(topic.id);
   const lesson = lessons.find(l => l.slug === lessonSlug);
   
   return {
@@ -47,21 +46,22 @@ export default async function LearnLessonPage({ params }: Props) {
   }
 
   const courseSlug = viewModel.course.interactiveLabSlug;
-  const course = getCourseBySlug(courseSlug);
-  const topic = getTopicBySlug(topicSlug);
+  const learnPresenter = createServerStaticLearnContentPresenter();
+  const course = await learnPresenter.getCourseBySlug(courseSlug);
+  const topic = await learnPresenter.getTopicBySlug(topicSlug);
   
   if (!course || !topic) {
     notFound();
   }
 
   // Validate that topic belongs to this course
-  const topics = getTopicsForCourse(courseSlug);
+  const topics = await learnPresenter.getTopicsForCourse(courseSlug);
   if (!topics.find(t => t.id === topic.id)) {
     notFound();
   }
 
   // Validate lesson exists
-  const lessons = getLessonsByTopic(topic.id);
+  const lessons = await learnPresenter.getLessonsByTopic(topic.id);
   const lesson = lessons.find(l => l.slug === lessonSlug);
   if (!lesson) {
     notFound();

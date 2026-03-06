@@ -1,18 +1,4 @@
-// Learn Courses Master Data
-// Defines available programming language courses
-
-export interface LearnCourse {
-  id: string;
-  slug: string;
-  title: string;
-  titleTh: string;
-  description: string;
-  descriptionTh: string;
-  icon: string;
-  color: string;
-  bgGradient: string;
-  order: number;
-}
+import { LearnCourse } from "@/src/domain/types/learn-content";
 
 export const learnCourses: LearnCourse[] = [
   {

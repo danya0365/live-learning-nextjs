@@ -1,19 +1,4 @@
-// Learn Topics Master Data
-// Similar structure to phases for the /learn page
-
-export interface LearnTopic {
-  id: string;
-  slug: string;
-  title: string;
-  titleTh: string;
-  description: string;
-  descriptionTh: string;
-  icon: string;
-  color: string;
-  order: number;
-  lessonCount: number;
-  courseSlug: string;
-}
+import { LearnTopic } from "@/src/domain/types/learn-content";
 
 export const learnTopics: LearnTopic[] = [
   {

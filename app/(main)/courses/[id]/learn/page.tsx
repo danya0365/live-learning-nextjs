@@ -1,6 +1,6 @@
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
 import { LearnCourseView } from "@/src/presentation/components/learn/LearnCourseView";
 import { createServerCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/CourseDetailPresenterServerFactory';
+import { createServerStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/StaticLearnContentPresenterServerFactory";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -24,7 +24,8 @@ export default async function LearnCoursePage({ params }: Props) {
   }
 
   const courseSlug = viewModel.course.interactiveLabSlug;
-  const course = getCourseBySlug(courseSlug);
+  const learnPresenter = createServerStaticLearnContentPresenter();
+  const course = await learnPresenter.getCourseBySlug(courseSlug);
   
   if (!course) {
     notFound();

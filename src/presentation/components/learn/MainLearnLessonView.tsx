@@ -1,9 +1,8 @@
 "use client";
 
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { getTopicBySlug } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
 import { CodeEditor } from "@/src/presentation/components/editor/CodeEditor";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -141,9 +140,46 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
   const [isCompleted, setIsCompleted] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  const course = getCourseBySlug(courseSlug);
-  const topic = getTopicBySlug(topicSlug);
-  const lessons = topic ? getLessonsByTopic(topic.id) : [];
+  const presenter = useStaticLearnContentPresenter();
+
+  const [data, setData] = useState<{
+    course: LearnCourse | null;
+    topic: LearnTopic | null;
+    lessons: LearnLesson[];
+    loading: boolean;
+  }>({
+    course: null,
+    topic: null,
+    lessons: [],
+    loading: true
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [course, topic] = await Promise.all([
+          presenter.getCourseBySlug(courseSlug),
+          presenter.getTopicBySlug(topicSlug)
+        ]);
+        
+        const lessons = topic ? await presenter.getLessonsByTopic(topic.id) : [];
+
+        setData({
+          course: course || null,
+          topic: topic || null,
+          lessons,
+          loading: false
+        });
+      } catch(e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter, courseSlug, topicSlug]);
+
+  const { course, topic, lessons, loading } = data;
+
   const lesson = lessons.find(l => l.slug === lessonSlug);
   const lessonIndex = lessons.findIndex(l => l.slug === lessonSlug);
   const prevLesson = lessonIndex > 0 ? lessons[lessonIndex - 1] : null;

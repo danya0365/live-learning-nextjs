@@ -1,10 +1,10 @@
 "use client";
 
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { getTopicBySlug } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface LearnTopicViewProps {
   courseId: string;
@@ -14,13 +14,56 @@ interface LearnTopicViewProps {
 
 export function MainLearnTopicView({ courseId, topicSlug, courseSlug }: LearnTopicViewProps) {
   const { isLessonComplete } = useProgressStore();
+  const presenter = useStaticLearnContentPresenter();
   
-  const course = getCourseBySlug(courseSlug);
-  const topic = getTopicBySlug(topicSlug);
-  const lessons = topic ? getLessonsByTopic(topic.id) : [];
+  const [data, setData] = useState<{
+    course: LearnCourse | null;
+    topic: LearnTopic | null;
+    lessons: LearnLesson[];
+    loading: boolean;
+  }>({
+    course: null,
+    topic: null,
+    lessons: [],
+    loading: true
+  });
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [course, topic] = await Promise.all([
+          presenter.getCourseBySlug(courseSlug),
+          presenter.getTopicBySlug(topicSlug)
+        ]);
+        
+        const lessons = topic ? await presenter.getLessonsByTopic(topic.id) : [];
+
+        setData({
+          course: course || null,
+          topic: topic || null,
+          lessons,
+          loading: false
+        });
+      } catch(e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter, courseSlug, topicSlug]);
+
+  const { course, topic, lessons, loading } = data;
 
   const basePath = `/courses/${courseId}/learn/${topicSlug}`;
   const backPath = `/courses/${courseId}/learn`;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   if (!topic || !course) {
     return (

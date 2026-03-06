@@ -1,12 +1,11 @@
 "use client";
 
-import { getCourseBySlug } from "@/src/data/master/learnCourses";
-import { LearnLesson, getLessonsByTopic } from "@/src/data/master/learnLessons";
-import { LearnTopic, getTopicsForCourse } from "@/src/data/master/learnTopics";
+import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
 import { CodeEditor } from "@/src/presentation/components/editor/CodeEditor";
+import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface LearnFocusViewProps {
   courseSlug: string;
@@ -146,7 +145,20 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
   const { setViewMode, reset, currentLessonIndex, setLessonIndex } = useLearnModeStore();
   const { markLessonComplete, isLessonComplete, totalPoints } = useProgressStore();
 
-  const course = getCourseBySlug(courseSlug);
+  const presenter = useStaticLearnContentPresenter();
+
+  const [data, setData] = useState<{
+    course: LearnCourse | null;
+    topics: LearnTopic[];
+    lessonsWithTopics: LessonWithTopic[];
+    loading: boolean;
+  }>({
+    course: null,
+    topics: [],
+    lessonsWithTopics: [],
+    loading: true
+  });
+
   const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
     javascript: "yellow",
     typescript: "blue",
@@ -166,25 +178,38 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
   const lessonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Get topics dynamically based on course
-  const topics = useMemo(() => {
-    return getTopicsForCourse(courseSlug);
-  }, [courseSlug]);
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const fetchCourse = await presenter.getCourseBySlug(courseSlug);
+        const fetchTopics = await presenter.getTopicsForCourse(courseSlug);
+        
+        const result: LessonWithTopic[] = [];
+        let globalIndex = 0;
+        
+        for (const topic of fetchTopics) {
+          const topicLessons = await presenter.getLessonsByTopic(topic.id);
+          for (const lesson of topicLessons) {
+            result.push({ lesson, topic, globalIndex });
+            globalIndex++;
+          }
+        }
 
-  // Get all lessons with their topics
-  const lessonsWithTopics = useMemo(() => {
-    const result: LessonWithTopic[] = [];
-    let globalIndex = 0;
-    
-    topics.forEach(topic => {
-      const topicLessons = getLessonsByTopic(topic.id);
-      topicLessons.forEach(lesson => {
-        result.push({ lesson, topic, globalIndex });
-        globalIndex++;
-      });
-    });
-    return result;
-  }, [topics]);
+        setData({
+          course: fetchCourse || null,
+          topics: fetchTopics,
+          lessonsWithTopics: result,
+          loading: false
+        });
+      } catch (e) {
+        console.error(e);
+        setData(prev => ({...prev, loading: false}));
+      }
+    }
+    loadData();
+  }, [presenter, courseSlug]);
+
+  const { course, topics, lessonsWithTopics, loading } = data;
 
   const currentLessonInfo = lessonsWithTopics[currentLessonIndex];
   const currentLesson = currentLessonInfo?.lesson;
@@ -404,6 +429,17 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
       )
     );
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p>กำลังเตรียมโหมดโฟกัส...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex bg-slate-900">
