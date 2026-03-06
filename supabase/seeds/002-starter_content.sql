@@ -218,3 +218,8 @@ VALUES
   )
 
 ON CONFLICT (id) DO NOTHING;
+
+-- Apply interactive lab flag to Next.js Fullstack Masterclass
+UPDATE public.courses
+SET has_interactive_lab = TRUE, interactive_lab_slug = 'nextjs'
+WHERE id = '40000000-0000-0000-0000-000000000102';

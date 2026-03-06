@@ -51,6 +51,18 @@ export const learnCourses: LearnCourse[] = [
     bgGradient: "from-cyan-600 to-teal-600",
     order: 3,
   },
+  {
+    id: "course-nextjs",
+    slug: "nextjs",
+    title: "Next.js 14",
+    titleTh: "Next.js 14 Fullstack",
+    description: "The React Framework for the Web",
+    descriptionTh: "App Router, Server Components และ Server Actions",
+    icon: "▲",
+    color: "slate",
+    bgGradient: "from-slate-800 to-black",
+    order: 4,
+  },
 ];
 
 export function getCourseBySlug(slug: string): LearnCourse | undefined {
@@ -74,6 +86,8 @@ export function getTopicFilterForCourse(courseSlug: string): (topicId: string) =
       return (topicId: string) => topicId.startsWith("topic-html");
     case "go":
       return (topicId: string) => topicId.startsWith("topic-go");
+    case "nextjs":
+      return (topicId: string) => topicId.startsWith("topic-next");
     default:
       return () => false;
   }

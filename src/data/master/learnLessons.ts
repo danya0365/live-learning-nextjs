@@ -3323,5 +3323,150 @@ func main() {
   },
 ];
 
-// Add Go lessons to the main array
-learnLessons.push(...goBasicsLessons, ...goConcurrencyLessons);
+const nextjsBasicsLessons: LearnLesson[] = [
+  {
+    id: "learn-next-basics-1",
+    topicId: "topic-next-basics",
+    slug: "app-router",
+    title: "App Router Interface",
+    titleTh: "สถาปัตยกรรม App Router",
+    description: "Understanding the /app directory structure",
+    order: 1,
+    duration: 15,
+    content: `
+# App Router
+
+Next.js 13+ นำเสนอ **App Router** ซึ่งเป็นระบบ Routing แบบใหม่ที่สร้างขึ้นบน React Server Components
+
+## โครงสร้างโฟลเดอร์ \`app/\`
+
+ทุกอย่างเริ่มต้นที่ \`app/page.tsx\`
+
+- \`page.tsx\`: หน้า UI ที่เข้าชมได้
+- \`layout.tsx\`: เค้าโครง UI ที่แชร์ร่วมกันในหลายๆ หน้า
+- \`loading.tsx\`: UI สำรองขณะกำลังโหลด (Suspense boundary)
+- \`error.tsx\`: การจัดการ Error แบบ Error Boundary
+
+## การสร้าง Route
+
+การสร้างโฟลเดอร์ใหม่ใน \`app\` เท่ากับการสร้าง route ใหม่
+
+เช่น \`app/dashboard/page.tsx\` สามารถเข้าถึงได้ผ่าน URL \`/dashboard\`
+`,
+    codeExample: `// app/page.tsx
+export default function HomePage() {
+  return (
+    <main>
+      <h1>Welcome to Next.js 14!</h1>
+      <p>นี่คือหน้าจอแรกสุดของเว็บไซต์</p>
+    </main>
+  );
+}`,
+    challenge: {
+      description: "สร้างหน้า AboutPage ที่แสดงหัวข้อว่า 'About Us'",
+      starterCode: `// สร้างคอมโพเนนต์ AboutPage
+export default function AboutPage() {
+  return (
+    <div>
+      {/* ใส่ h1 ตรงนี้ */}
+      
+    </div>
+  );
+}`,
+      expectedOutput: "About Us",
+      hints: ["ต้องมี <h1>About Us</h1>"]
+    },
+    quiz: [
+      {
+        question: "ไฟล์ใดใช้กำหนด UI สำรองระหว่างโหลดข้อมูล?",
+        options: ["page.tsx", "loading.tsx", "layout.tsx", "template.tsx"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "learn-next-basics-2",
+    topicId: "topic-next-basics",
+    slug: "server-components",
+    title: "Server Components",
+    titleTh: "Server Components",
+    description: "React Server Components vs Client Components",
+    order: 2,
+    duration: 20,
+    content: `
+# React Server Components (RSC)
+
+โดยค่าเริ่มต้น Component ทั้งหมดใน App Router จะเป็น **Server Components**
+
+## ข้อดีของ Server Components
+1. โหลดข้อมูล (Data Fetching) ตรงจาก Database ติดกับ Server ทำให้ Network Waterfall หายไป
+2. ลดขนาด JavaScript bundle (ส่งแค่ HTML กลับไปที่เบราว์เซอร์)
+3. ปลอดภัย ไม่หลุด Secret Key ไปฝั่ง Client แน่นอน
+
+## Client Components
+เมื่อต้องการความ Interactive (เช่น \`onClick\`, \`useState\`) ให้ใส่ \`'use client'\` ที่บรรทัดบนสุด
+`,
+    codeExample: `// Server Component (Default)
+export default async function Dashboard() {
+  // ดึงข้อมูลตรงๆ ได้เลย
+  // const data = await db.query('...');
+  
+  return <div>Welcome to Dashboard</div>;
+}`,
+    quiz: [
+      {
+        question: "วิธีการประกาศให้ Component กลายเป็น Client Component ต้องใช้อะไร?",
+        options: ["'use server'", "import { Client }", "'use client'", "export default client"],
+        correctAnswer: 2
+      }
+    ]
+  }
+];
+
+const nextjsDataLessons: LearnLesson[] = [
+  {
+    id: "learn-next-data-1",
+    topicId: "topic-next-data",
+    slug: "server-actions",
+    title: "Server Actions",
+    titleTh: "Server Actions",
+    description: "Mutating data securely on the server",
+    order: 1,
+    duration: 25,
+    content: `
+# Server Actions
+
+ฟีเจอร์แห่งปีที่ให้คุณรันโค้ดฝั่ง Server ได้โดยตรงจาก Client! ไม่ต้องสร้าง API Routes ยิบย่อยอีกต่อไป
+
+## วิธีใช้งาน
+
+เพียงเติม \`'use server'\` ไว้ในฟังก์ชัน:
+
+\`\`\`typescript
+async function createPost(formData: FormData) {
+  'use server'
+  // logic บันทึกฐานข้อมูล
+  const title = formData.get('title');
+  // ...
+}
+\`\`\`
+`,
+    codeExample: `// app/actions.ts
+'use server'
+
+export async function submitForm(data: string) {
+  console.log("Saving to DB:", data);
+  return { success: true };
+}`,
+    quiz: [
+      {
+        question: "คำสั่งใดใช้ประกาศฟังก์ชันให้ทำงานบนเซิร์ฟเวอร์แบบเฉพาะเจาะจง?",
+        options: ["'use api'", "'use server'", "export async", "@server"],
+        correctAnswer: 1
+      }
+    ]
+  }
+];
+
+// Add specific lessons to the main array
+learnLessons.push(...goBasicsLessons, ...goConcurrencyLessons, ...nextjsBasicsLessons, ...nextjsDataLessons);

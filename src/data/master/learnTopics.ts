@@ -149,6 +149,31 @@ export const learnTopics: LearnTopic[] = [
     order: 2,
     lessonCount: 2,
   },
+  // Next.js Topics
+  {
+    id: "topic-next-basics",
+    slug: "next-basics",
+    title: "Next.js Basics",
+    titleTh: "พื้นฐาน Next.js 14",
+    description: "App Router and Components",
+    descriptionTh: "โครงสร้าง App Router และ Server Components",
+    icon: "▲",
+    color: "from-slate-700 to-slate-900",
+    order: 1,
+    lessonCount: 2,
+  },
+  {
+    id: "topic-next-data",
+    slug: "next-data",
+    title: "Data Fetching",
+    titleTh: "การจัดการข้อมูล",
+    description: "Server Actions and API Routes",
+    descriptionTh: "Server Actions และ API Routes",
+    icon: "💾",
+    color: "from-blue-600 to-indigo-800",
+    order: 2,
+    lessonCount: 1,
+  },
 ];
 
 export function getTopicBySlug(slug: string): LearnTopic | undefined {
