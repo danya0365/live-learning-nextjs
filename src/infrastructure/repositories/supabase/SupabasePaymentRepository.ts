@@ -7,14 +7,14 @@
  */
 
 import {
-  CheckoutResult,
-  CreatePaymentData,
-  IPaymentRepository,
-  PaginatedResult,
-  Payment,
-  PaymentStats,
-  PaymentStatus,
-  UpdatePaymentData
+    CheckoutResult,
+    CreatePaymentData,
+    IPaymentRepository,
+    PaginatedResult,
+    Payment,
+    PaymentStats,
+    PaymentStatus,
+    UpdatePaymentData
 } from '@/src/application/repositories/IPaymentRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -174,7 +174,7 @@ export class SupabasePaymentRepository implements IPaymentRepository {
   private mapToDomain = (raw: PaymentRow): Payment => {
     return {
       id: raw.id,
-      bookingId: raw.booking_id,
+      bookingId: raw.booking_id || undefined,
       amount: Number(raw.amount),
       currency: raw.currency,
       paymentMethod: raw.payment_method,

@@ -26,7 +26,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 -- 2. COURSES (All linked to Super Admin)
 -- ============================================================================
-INSERT INTO public.courses (id, instructor_profile_id, category_id, title, slug, description, price, original_price, rating, total_students, total_reviews, total_hours, total_lessons, level, tags, is_live, is_featured, is_active)
+INSERT INTO public.courses (id, instructor_profile_id, category_id, title, slug, description, price, original_price, rating, total_students, total_reviews, total_hours, total_lessons, level, tags, is_live, is_featured, is_active, learning_outcomes, requirements, target_audience, syllabus, about_course, has_interactive_lab, interactive_lab_slug)
 VALUES
   -- Course 1: Web Dev
   (
@@ -38,7 +38,42 @@ VALUES
     'Master microservices, serverless, and clean architecture patterns.',
     3500, 5000, 4.95, 150, 42, 40, 60,
     'advanced', '{"Microservices", "Docker", "Kubernetes"}',
-    TRUE, TRUE, TRUE
+    TRUE, TRUE, TRUE,
+    '{"เข้าใจการออกแบบสถาปัตยกรรมระดับ Enterprise", "สามารถสร้างและจัดการ Microservices ได้", "ใช้งาน Docker และ Kubernetes ขั้นพื้นฐานได้", "ออกแบบระบบที่รองรับ High Traffic"}',
+    '{"พื้นฐานการเขียนโปรแกรม Web Development", "เข้าใจการทำงานของ API พื้นฐาน"}',
+    '{"นักพัฒนาซอฟต์แวร์ระดับกลาง", "ผู้ที่ต้องการต่อยอดทักษะสถาปัตยกรรมระบบ"}',
+    '[
+      {
+        "title": "Module 1: Introduction to Microservices",
+        "duration": "2h 30m",
+        "lessons": [
+          {"title": "ทำไมถึงต้องใช้ Microservices?", "duration": "45m"},
+          {"title": "Monolithic vs Microservices", "duration": "1h"},
+          {"title": "การออกแบบ Domain-Driven Design (DDD)", "duration": "45m"}
+        ]
+      },
+      {
+        "title": "Module 2: Containerization & Docker",
+        "duration": "4h",
+        "lessons": [
+          {"title": "พื้นฐานของ Docker", "duration": "1h"},
+          {"title": "การเขียน Dockerfile ให้มีประสิทธิภาพ", "duration": "1h 30m"},
+          {"title": "Docker Compose สำหรับ Local Development", "duration": "1h 30m"}
+        ]
+      },
+      {
+        "title": "Module 3: Orchestration with Kubernetes",
+        "duration": "5h 15m",
+        "lessons": [
+          {"title": "สถาปัตยกรรมของ Kubernetes", "duration": "1h 15m"},
+          {"title": "Deploying your first Pod", "duration": "1h 30m"},
+          {"title": "Services & Ingress Controllers", "duration": "2h"},
+          {"title": "Scaling & Self-healing", "duration": "30m"}
+        ]
+      }
+    ]'::jsonb,
+    'สถาปัตยกรรมระดับสูง (Advanced Architecture) คือกุญแจสำคัญที่ทำให้นักพัฒนาธรรมดากลายเป็นอัจฉริยะนักออกแบบระบบคอร์สนี้ถูกออกแบบมาเพื่อเจาะลึกทุกเรื่องที่คุณต้องรู้เกี่ยวกับการสร้างระบบที่สามารถทนทานต่อการใช้งานที่หนักหน่วง (High Traffic) และการขยายระบบอย่างไร้ขีดจำกัด (Scalability)',
+    TRUE, 'javascript'
   ),
   -- Course 2: AI
   (
@@ -50,7 +85,9 @@ VALUES
     'Understand AI concepts and build your first models.',
     1500, 2500, 4.80, 80, 15, 20, 30,
     'beginner', '{"AI", "Python", "Basics"}',
-    FALSE, TRUE, TRUE
+    FALSE, TRUE, TRUE,
+    '{}', '{}', '{}', '[]'::jsonb, '',
+    FALSE, NULL
   ),
   -- Course 3: UX/UI
   (
@@ -62,7 +99,9 @@ VALUES
     'Design beautiful interfaces with Figma and Adobe XD.',
     2000, 3000, 4.70, 60, 20, 25, 40,
     'intermediate', '{"UX", "UI", "Figma"}',
-    TRUE, FALSE, TRUE
+    TRUE, FALSE, TRUE,
+    '{}', '{}', '{}', '[]'::jsonb, '',
+    FALSE, NULL
   ),
   -- Course 4: Mobile (Flutter)
   (
@@ -74,7 +113,9 @@ VALUES
     'Build cross-platform apps for iOS and Android.',
     1800, 2800, 4.85, 90, 35, 30, 50,
     'intermediate', '{"Flutter", "Dart", "Mobile"}',
-    TRUE, TRUE, TRUE
+    TRUE, TRUE, TRUE,
+    '{}', '{}', '{}', '[]'::jsonb, '',
+    FALSE, NULL
   ),
   -- Course 5: Cybersecurity
   (
@@ -86,7 +127,9 @@ VALUES
     'Learn ethical hacking and network security.',
     2200, 3200, 4.90, 40, 10, 15, 25,
     'beginner', '{"Security", "Hacking", "Network"}',
-    FALSE, FALSE, TRUE
+    FALSE, FALSE, TRUE,
+    '{}', '{}', '{}', '[]'::jsonb, '',
+    FALSE, NULL
   ),
   -- Course 6: DevOps
   (
@@ -98,7 +141,9 @@ VALUES
     'Automate your deployment with Jenkins and GitHub Actions.',
     3000, 4500, 4.75, 55, 18, 28, 45,
     'advanced', '{"DevOps", "CI/CD", "Automation"}',
-    FALSE, FALSE, TRUE
+    FALSE, FALSE, TRUE,
+    '{}', '{}', '{}', '[]'::jsonb, '',
+    FALSE, NULL
   )
 ON CONFLICT (id) DO NOTHING;
 

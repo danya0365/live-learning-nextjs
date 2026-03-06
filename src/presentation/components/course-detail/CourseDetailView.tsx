@@ -143,6 +143,29 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             ))}
           </div>
 
+          {/* Interactive Lab CTA */}
+          {course.hasInteractiveLab && (
+            <div className="glass rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border border-primary/20 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
+              <div className="relative z-10 flex-1">
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                  <span className="text-2xl">✨</span> ระบบเรียนรู้แบบ Interactive
+                </h3>
+                <p className="text-text-secondary text-sm sm:text-base">
+                  คอร์สนี้มาพร้อมกับห้องปฏิบัติการจำลอง ให้คุณฝึกเขียนโค้ดและดูผลลัพธ์ได้ทันที
+                </p>
+              </div>
+              <div className="relative z-10 w-full sm:w-auto shrink-0">
+                <Link 
+                  href={`/courses/${course.id}/learn`}
+                  className="btn-game px-6 py-3 w-full sm:w-auto text-white rounded-xl font-bold text-center block shadow-[0_0_20px_rgba(255,107,0,0.3)] hover:shadow-[0_0_30px_rgba(255,107,0,0.5)] transition-shadow"
+                >
+                  🚀 เข้าสู่ Interactive Lab
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Instructor timeslots */}
           <div>
             <h2 className="text-xl font-bold text-text-primary mb-4">🕐 ตารางสอนของอาจารย์</h2>
@@ -200,6 +223,103 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
               </div>
             )}
           </div>
+
+          {/* About Course */}
+          {course.aboutCourse && (
+            <div>
+              <h2 className="text-xl font-bold text-text-primary mb-4">📖 เกี่ยวกับคอร์สนี้</h2>
+              <div className="glass rounded-2xl p-6 text-text-secondary leading-relaxed space-y-4">
+                {course.aboutCourse.split('\n').map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Learning Outcomes */}
+          {course.learningOutcomes && course.learningOutcomes.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-text-primary mb-4">🎯 สิ่งที่คุณจะได้เรียนรู้</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {course.learningOutcomes.map((outcome, i) => (
+                  <div key={i} className="flex items-start gap-3 glass rounded-xl p-4">
+                    <span className="text-success mt-0.5">✅</span>
+                    <span className="text-text-primary text-sm">{outcome}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Requirements & Target Audience */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {course.requirements && course.requirements.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-text-primary mb-4">⚠️ พื้นฐานที่ควรมี</h2>
+                <ul className="space-y-2">
+                  {course.requirements.map((req, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-text-secondary inline-flex w-full">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {course.targetAudience && course.targetAudience.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-text-primary mb-4">🧑‍💻 เหมาะสำหรับใคร</h2>
+                <ul className="space-y-2">
+                  {course.targetAudience.map((target, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-text-secondary inline-flex w-full">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>{target}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Syllabus */}
+          {course.syllabus && course.syllabus.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-text-primary mb-4">📋 เนื้อหาหลักสูตร</h2>
+              <div className="space-y-3">
+                {course.syllabus.map((module: any, i: number) => (
+                  <details key={i} className="group glass rounded-2xl overflow-hidden cursor-pointer" open={i === 0}>
+                    <summary className="flex items-center justify-between p-5 font-bold text-text-primary hover:bg-white/5 transition-colors list-none">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm">
+                          {i + 1}
+                        </span>
+                        <span>{module.title}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-text-muted font-normal">
+                        <span>{module.lessons?.length || 0} บทเรียน</span>
+                        <span>{module.duration}</span>
+                        <span className="text-primary group-open:rotate-180 transition-transform">▼</span>
+                      </div>
+                    </summary>
+                    <div className="p-5 pt-0 border-t border-white/5">
+                      <ul className="space-y-3 mt-4">
+                        {module.lessons?.map((lesson: any, j: number) => (
+                          <li key={j} className="flex items-start justify-between text-sm text-text-secondary group/lesson">
+                            <div className="flex items-start gap-3">
+                              <span className="mt-0.5 opacity-50">▶</span>
+                              <span className="group-hover/lesson:text-primary transition-colors">{lesson.title}</span>
+                            </div>
+                            <span className="text-xs text-text-muted">{lesson.duration}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Related courses */}
           {relatedCourses.length > 0 && (

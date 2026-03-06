@@ -11,9 +11,11 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          booked_hours: number
           course_id: string
           created_at: string | null
           end_time: string
+          enrollment_id: string | null
           id: string
           instructor_profile_id: string
           is_active: boolean
@@ -26,9 +28,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          booked_hours?: number
           course_id: string
           created_at?: string | null
           end_time: string
+          enrollment_id?: string | null
           id?: string
           instructor_profile_id: string
           is_active?: boolean
@@ -41,9 +45,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          booked_hours?: number
           course_id?: string
           created_at?: string | null
           end_time?: string
+          enrollment_id?: string | null
           id?: string
           instructor_profile_id?: string
           is_active?: boolean
@@ -61,6 +67,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
           {
@@ -266,20 +279,27 @@ export type Database = {
       }
       courses: {
         Row: {
+          about_course: string | null
           category_id: string | null
           created_at: string | null
           description: string | null
+          has_interactive_lab: boolean | null
           id: string
           instructor_profile_id: string | null
+          interactive_lab_slug: string | null
           is_active: boolean
           is_featured: boolean
           is_live: boolean
+          learning_outcomes: string[] | null
           level: string
           original_price: number | null
           price: number
           rating: number
+          requirements: string[] | null
           slug: string
+          syllabus: Json | null
           tags: string[] | null
+          target_audience: string[] | null
           thumbnail_url: string | null
           title: string
           total_hours: number
@@ -289,20 +309,27 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          about_course?: string | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
+          has_interactive_lab?: boolean | null
           id?: string
           instructor_profile_id?: string | null
+          interactive_lab_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
           is_live?: boolean
+          learning_outcomes?: string[] | null
           level?: string
           original_price?: number | null
           price?: number
           rating?: number
+          requirements?: string[] | null
           slug: string
+          syllabus?: Json | null
           tags?: string[] | null
+          target_audience?: string[] | null
           thumbnail_url?: string | null
           title: string
           total_hours?: number
@@ -312,20 +339,27 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          about_course?: string | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
+          has_interactive_lab?: boolean | null
           id?: string
           instructor_profile_id?: string | null
+          interactive_lab_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
           is_live?: boolean
+          learning_outcomes?: string[] | null
           level?: string
           original_price?: number | null
           price?: number
           rating?: number
+          requirements?: string[] | null
           slug?: string
+          syllabus?: Json | null
           tags?: string[] | null
+          target_audience?: string[] | null
           thumbnail_url?: string | null
           title?: string
           total_hours?: number
@@ -347,6 +381,63 @@ export type Database = {
             columns: ["instructor_profile_id"]
             isOneToOne: false
             referencedRelation: "instructor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollments: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          created_at: string | null
+          enrolled_at: string | null
+          id: string
+          is_active: boolean
+          status: Database["public"]["Enums"]["enrollment_status"]
+          student_profile_id: string
+          total_hours: number
+          updated_at: string | null
+          used_hours: number
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          created_at?: string | null
+          enrolled_at?: string | null
+          id?: string
+          is_active?: boolean
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          student_profile_id: string
+          total_hours?: number
+          updated_at?: string | null
+          used_hours?: number
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string | null
+          enrolled_at?: string | null
+          id?: string
+          is_active?: boolean
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          student_profile_id?: string
+          total_hours?: number
+          updated_at?: string | null
+          used_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -488,9 +579,10 @@ export type Database = {
       payments: {
         Row: {
           amount: number
-          booking_id: string
+          booking_id: string | null
           created_at: string | null
           currency: string
+          enrollment_id: string | null
           id: string
           payment_method: string
           status: string
@@ -499,9 +591,10 @@ export type Database = {
         }
         Insert: {
           amount: number
-          booking_id: string
+          booking_id?: string | null
           created_at?: string | null
           currency?: string
+          enrollment_id?: string | null
           id?: string
           payment_method: string
           status?: string
@@ -510,9 +603,10 @@ export type Database = {
         }
         Update: {
           amount?: number
-          booking_id?: string
+          booking_id?: string | null
           created_at?: string | null
           currency?: string
+          enrollment_id?: string | null
           id?: string
           payment_method?: string
           status?: string
@@ -525,6 +619,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
             referencedColumns: ["id"]
           },
         ]
@@ -793,6 +894,12 @@ export type Database = {
         | "in_progress"
         | "closed"
         | "cancelled"
+      enrollment_status:
+        | "pending"
+        | "active"
+        | "completed"
+        | "expired"
+        | "refunded"
       live_session_status: "scheduled" | "live" | "ended"
       profile_role: "student" | "instructor" | "admin"
     }
@@ -934,6 +1041,13 @@ export const Constants = {
         "in_progress",
         "closed",
         "cancelled",
+      ],
+      enrollment_status: [
+        "pending",
+        "active",
+        "completed",
+        "expired",
+        "refunded",
       ],
       live_session_status: ["scheduled", "live", "ended"],
       profile_role: ["student", "instructor", "admin"],

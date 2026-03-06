@@ -24,6 +24,13 @@ export interface Course {
   isLive: boolean;
   isActive: boolean;
   tags: string[];
+  learningOutcomes: string[];
+  requirements: string[];
+  targetAudience: string[];
+  syllabus: any[];
+  aboutCourse: string;
+  hasInteractiveLab: boolean;
+  interactiveLabSlug?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -8,12 +8,12 @@
  */
 
 import {
-  Course,
-  CourseStats,
-  CreateCourseData,
-  ICourseRepository,
-  PaginatedResult,
-  UpdateCourseData,
+    Course,
+    CourseStats,
+    CreateCourseData,
+    ICourseRepository,
+    PaginatedResult,
+    UpdateCourseData,
 } from '@/src/application/repositories/ICourseRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -329,6 +329,13 @@ export class SupabaseCourseRepository implements ICourseRepository {
       isLive: raw.is_live,
       isActive: raw.is_active,
       tags: raw.tags || [],
+      learningOutcomes: raw.learning_outcomes || [],
+      requirements: raw.requirements || [],
+      targetAudience: raw.target_audience || [],
+      syllabus: Array.isArray(raw.syllabus) ? raw.syllabus : [],
+      aboutCourse: raw.about_course || '',
+      hasInteractiveLab: raw.has_interactive_lab || false,
+      interactiveLabSlug: raw.interactive_lab_slug || undefined,
       createdAt: raw.created_at || new Date().toISOString(),
       updatedAt: raw.updated_at || new Date().toISOString(),
     };
