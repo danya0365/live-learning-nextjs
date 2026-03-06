@@ -1,21 +1,12 @@
 import {
-    ISettingsRepository,
-    UpdatePasswordData,
-    UpdateProfileData,
-    UserPreferences,
+  ISettingsRepository,
+  UpdatePasswordData,
+  UpdateProfileData,
+  UserPreferences,
 } from '@/src/application/repositories/ISettingsRepository';
 import { AuthUser } from '@/src/stores/authStore';
 
-// Mock initial preferences
-const MOCK_PREFS: Record<string, UserPreferences> = {
-  'user-001': {
-    userId: 'user-001',
-    language: 'th',
-    autoPlay: true,
-    showOnline: true,
-    notifications: { email: true, push: true, courseReminder: true, promotions: false },
-  },
-};
+import { MOCK_PREFS } from '@/src/data/mock/settings';
 
 export class MockSettingsRepository implements ISettingsRepository {
   async getPreferences(userId: string): Promise<UserPreferences> {

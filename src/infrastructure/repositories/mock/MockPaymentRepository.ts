@@ -14,30 +14,7 @@ import {
     UpdatePaymentData,
 } from '@/src/application/repositories/IPaymentRepository';
 
-const MOCK_PAYMENTS: Payment[] = [
-  {
-    id: 'pay-001',
-    bookingId: 'book-001',
-    amount: 1500,
-    currency: 'thb',
-    paymentMethod: 'stripe_checkout',
-    transactionId: 'txn_12345',
-    status: 'succeeded',
-    createdAt: '2026-01-01T10:00:00.000Z',
-    updatedAt: '2026-01-01T10:05:00.000Z',
-  },
-  {
-    id: 'pay-002',
-    bookingId: 'book-002',
-    amount: 2500,
-    currency: 'thb',
-    paymentMethod: 'stripe_checkout',
-    transactionId: 'txn_67890',
-    status: 'pending',
-    createdAt: '2026-02-15T12:00:00.000Z',
-    updatedAt: '2026-02-15T12:00:00.000Z',
-  },
-];
+import { MOCK_PAYMENTS } from '@/src/data/mock/payments';
 
 export class MockPaymentRepository implements IPaymentRepository {
   private items: Payment[] = [...MOCK_PAYMENTS];
