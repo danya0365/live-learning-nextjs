@@ -1,21 +1,15 @@
 /**
  * FAQPresenterServerFactory
  * Factory for creating FAQPresenter instances on the server side
- * ✅ Injects Mock or Real implementation
+ * ✅ Injects Static repository for production-ready static data
  */
 
-import { MockFAQRepository } from '@/src/infrastructure/repositories/mock/MockFAQRepository';
+import { StaticFAQRepository } from '@/src/infrastructure/repositories/static/StaticFAQRepository';
 import { FAQPresenter } from './FAQPresenter';
 
 export class FAQPresenterServerFactory {
   static create(): FAQPresenter {
-    // ✅ Use Mock Repository for development
-    const repository = new MockFAQRepository();
-    
-    // ⏳ TODO: Switch to Supabase
-    // const supabase = createServerSupabaseClient();
-    // const repository = new SupabaseFAQRepository(supabase);
-
+    const repository = new StaticFAQRepository();
     return new FAQPresenter(repository);
   }
 }

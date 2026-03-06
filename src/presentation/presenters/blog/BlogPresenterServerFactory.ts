@@ -1,9 +1,9 @@
-import { MockBlogRepository } from '@/src/infrastructure/repositories/mock/MockBlogRepository';
+import { StaticBlogRepository } from '@/src/infrastructure/repositories/static/StaticBlogRepository';
 import { BlogPresenter } from './BlogPresenter';
 
 export class BlogPresenterServerFactory {
   static create(): BlogPresenter {
-    const repository = new MockBlogRepository();
+    const repository = new StaticBlogRepository();
     return new BlogPresenter(repository);
   }
 }

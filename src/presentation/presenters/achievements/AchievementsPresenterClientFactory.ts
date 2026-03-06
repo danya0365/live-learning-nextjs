@@ -1,9 +1,8 @@
 'use client';
 
-import { MockAchievementRepository } from '@/src/infrastructure/repositories/mock/MockAchievementRepository';
+import { StaticAchievementRepository } from '@/src/infrastructure/repositories/static/StaticAchievementRepository';
 import { AchievementsPresenter } from './AchievementsPresenter';
 
 export function createClientAchievementsPresenter(): AchievementsPresenter {
-  // ⏳ Switch to ApiAchievementRepository when API routes are ready
-  return new AchievementsPresenter(new MockAchievementRepository());
+  return new AchievementsPresenter(new StaticAchievementRepository());
 }

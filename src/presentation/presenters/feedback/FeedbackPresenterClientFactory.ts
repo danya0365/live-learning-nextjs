@@ -1,11 +1,11 @@
 'use client';
 
-import { MockFeedbackRepository } from '@/src/infrastructure/repositories/mock/MockFeedbackRepository';
+import { StaticFeedbackRepository } from '@/src/infrastructure/repositories/static/StaticFeedbackRepository';
 import { FeedbackPresenter } from './FeedbackPresenter';
 
 export class FeedbackPresenterClientFactory {
   static create(): FeedbackPresenter {
-    const repository = new MockFeedbackRepository();
+    const repository = new StaticFeedbackRepository();
     return new FeedbackPresenter(repository);
   }
 }

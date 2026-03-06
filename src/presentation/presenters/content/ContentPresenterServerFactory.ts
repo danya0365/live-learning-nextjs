@@ -1,9 +1,9 @@
-import { MockContentRepository } from '@/src/infrastructure/repositories/mock/MockContentRepository';
+import { StaticContentRepository } from '@/src/infrastructure/repositories/static/StaticContentRepository';
 import { ContentPresenter } from './ContentPresenter';
 
 export class ContentPresenterServerFactory {
   static create(): ContentPresenter {
-    const repository = new MockContentRepository();
+    const repository = new StaticContentRepository();
     return new ContentPresenter(repository);
   }
 }
