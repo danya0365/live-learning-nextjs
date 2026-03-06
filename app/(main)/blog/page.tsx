@@ -5,7 +5,7 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerBlogPresenter();
+  const presenter = await createServerBlogPresenter();
   return presenter.generateMetadata();
 }
 
@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * Blog Page - Server Component
  */
 export default async function BlogPage() {
-  const presenter = createServerBlogPresenter();
+  const presenter = await createServerBlogPresenter();
 
   try {
     const viewModel = await presenter.getViewModel();

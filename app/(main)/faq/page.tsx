@@ -5,7 +5,7 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerFAQPresenter();
+  const presenter = await createServerFAQPresenter();
   return presenter.generateMetadata();
 }
 
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * Uses Clean Architecture pattern
  */
 export default async function FAQPage() {
-  const presenter = createServerFAQPresenter();
+  const presenter = await createServerFAQPresenter();
 
   try {
     const viewModel = await presenter.getViewModel();

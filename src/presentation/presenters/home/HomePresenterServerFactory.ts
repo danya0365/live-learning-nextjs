@@ -1,7 +1,7 @@
 /**
  * HomePresenterServerFactory
  * Factory for creating HomePresenter on the server side
- * ✅ Injects Mock repositories for development
+ * ✅ Injects Supabase repositories for production
  */
 
 

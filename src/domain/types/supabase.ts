@@ -9,6 +9,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievement_definitions: {
+        Row: {
+          category: Database["public"]["Enums"]["achievement_category"]
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          label: string
+          max_progress: number
+          sort_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["achievement_category"]
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          max_progress?: number
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["achievement_category"]
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          max_progress?: number
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author: string
+          body: string | null
+          category: string
+          created_at: string | null
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_published: boolean
+          published_at: string | null
+          read_time_minutes: number
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string
+          body?: string | null
+          category?: string
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_published?: boolean
+          published_at?: string | null
+          read_time_minutes?: number
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          body?: string | null
+          category?: string
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_published?: boolean
+          published_at?: string | null
+          read_time_minutes?: number
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booked_hours: number
@@ -277,6 +367,39 @@ export type Database = {
           },
         ]
       }
+      content_pages: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean
+          last_updated: string | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_updated?: string | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_updated?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           about_course: string | null
@@ -436,6 +559,125 @@ export type Database = {
           {
             foreignKeyName: "enrollments_student_profile_id_fkey"
             columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_date: string
+          event_time: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          location: string | null
+          sort_order: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_date: string
+          event_time: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location?: string | null
+          sort_order?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_date?: string
+          event_time?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          location?: string | null
+          sort_order?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          question: string
+          sort_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          question: string
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          question?: string
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          category: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_read: boolean
+          message: string
+          profile_id: string | null
+          topic: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          profile_id?: string | null
+          topic: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          profile_id?: string | null
+          topic?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -782,6 +1024,51 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          created_at: string | null
+          id: string
+          profile_id: string
+          progress: number
+          unlocked_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          achievement_id: string
+          created_at?: string | null
+          id?: string
+          profile_id: string
+          progress?: number
+          unlocked_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          achievement_id?: string
+          created_at?: string | null
+          id?: string
+          profile_id?: string
+          progress?: number
+          unlocked_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievement_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -883,6 +1170,7 @@ export type Database = {
       }
     }
     Enums: {
+      achievement_category: "learning" | "consistency" | "social" | "milestone"
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
       consultation_offer_status:
         | "pending"
@@ -1029,6 +1317,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      achievement_category: ["learning", "consistency", "social", "milestone"],
       booking_status: ["pending", "confirmed", "completed", "cancelled"],
       consultation_offer_status: [
         "pending",

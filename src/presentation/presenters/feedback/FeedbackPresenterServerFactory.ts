@@ -1,13 +1,15 @@
-import { StaticFeedbackRepository } from '@/src/infrastructure/repositories/static/StaticFeedbackRepository';
+import { SupabaseFeedbackRepository } from '@/src/infrastructure/repositories/supabase/SupabaseFeedbackRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { FeedbackPresenter } from './FeedbackPresenter';
 
 export class FeedbackPresenterServerFactory {
-  static create(): FeedbackPresenter {
-    const repository = new StaticFeedbackRepository();
+  static async create(): Promise<FeedbackPresenter> {
+    const supabase = await createServerSupabaseClient();
+    const repository = new SupabaseFeedbackRepository(supabase);
     return new FeedbackPresenter(repository);
   }
 }
 
-export function createServerFeedbackPresenter(): FeedbackPresenter {
+export async function createServerFeedbackPresenter(): Promise<FeedbackPresenter> {
   return FeedbackPresenterServerFactory.create();
 }

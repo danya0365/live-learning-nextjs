@@ -1,13 +1,15 @@
-import { StaticEventRepository } from '@/src/infrastructure/repositories/static/StaticEventRepository';
+import { SupabaseEventRepository } from '@/src/infrastructure/repositories/supabase/SupabaseEventRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { EventPresenter } from './EventPresenter';
 
 export class EventPresenterServerFactory {
-  static create(): EventPresenter {
-    const repository = new StaticEventRepository();
+  static async create(): Promise<EventPresenter> {
+    const supabase = await createServerSupabaseClient();
+    const repository = new SupabaseEventRepository(supabase);
     return new EventPresenter(repository);
   }
 }
 
-export function createServerEventPresenter(): EventPresenter {
+export async function createServerEventPresenter(): Promise<EventPresenter> {
   return EventPresenterServerFactory.create();
 }

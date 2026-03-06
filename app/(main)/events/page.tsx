@@ -5,7 +5,7 @@ import { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerEventPresenter();
+  const presenter = await createServerEventPresenter();
   return presenter.generateMetadata();
 }
 
@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * Events Page - Server Component
  */
 export default async function EventsPage() {
-  const presenter = createServerEventPresenter();
+  const presenter = await createServerEventPresenter();
 
   try {
     const viewModel = await presenter.getViewModel();

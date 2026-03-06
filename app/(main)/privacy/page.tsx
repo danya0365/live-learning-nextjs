@@ -6,14 +6,14 @@ import { notFound } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerContentPresenter();
+  const presenter = await createServerContentPresenter();
   const meta = await presenter.generateMetadata('privacy');
   if (!meta) return {};
   return meta;
 }
 
 export default async function PrivacyPage() {
-  const presenter = createServerContentPresenter();
+  const presenter = await createServerContentPresenter();
   
   try {
     const viewModel = await presenter.getViewModel('privacy');

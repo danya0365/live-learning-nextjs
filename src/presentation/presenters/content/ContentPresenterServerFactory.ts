@@ -1,13 +1,15 @@
-import { StaticContentRepository } from '@/src/infrastructure/repositories/static/StaticContentRepository';
+import { SupabaseContentRepository } from '@/src/infrastructure/repositories/supabase/SupabaseContentRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { ContentPresenter } from './ContentPresenter';
 
 export class ContentPresenterServerFactory {
-  static create(): ContentPresenter {
-    const repository = new StaticContentRepository();
+  static async create(): Promise<ContentPresenter> {
+    const supabase = await createServerSupabaseClient();
+    const repository = new SupabaseContentRepository(supabase);
     return new ContentPresenter(repository);
   }
 }
 
-export function createServerContentPresenter(): ContentPresenter {
+export async function createServerContentPresenter(): Promise<ContentPresenter> {
   return ContentPresenterServerFactory.create();
 }

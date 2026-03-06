@@ -3,7 +3,7 @@ import { createServerFeedbackPresenter } from '@/src/presentation/presenters/fee
 import { Metadata } from 'next';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const presenter = createServerFeedbackPresenter();
+  const presenter = await createServerFeedbackPresenter();
   return presenter.generateMetadata();
 }
 
