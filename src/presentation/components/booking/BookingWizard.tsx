@@ -54,10 +54,13 @@ export function BookingWizard() {
     selectedInstructor,
     selectedSlot,
     bookingAction,
-    isBooking,
-    bookingDone,
     loading,
-    levels
+    levels,
+    couponCode,
+    isApplyingCoupon,
+    couponError,
+    discountAmount,
+    finalPrice
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -150,6 +153,13 @@ export function BookingWizard() {
               isBooking={isBooking}
               bookingDone={bookingDone}
               levels={levels}
+              couponCode={couponCode}
+              isApplyingCoupon={isApplyingCoupon}
+              couponError={couponError}
+              discountAmount={discountAmount}
+              finalPrice={finalPrice}
+              setCouponCode={actions.setCouponCode}
+              applyCoupon={actions.applyCoupon}
               onConfirm={actions.handleConfirm}
               onBack={actions.goBack}
               onFinish={actions.handleFinish}
@@ -557,6 +567,13 @@ function StepConfirm({
   onFinish,
   onNewBooking,
   levels,
+  couponCode,
+  isApplyingCoupon,
+  couponError,
+  discountAmount,
+  finalPrice,
+  setCouponCode,
+  applyCoupon
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -569,6 +586,13 @@ function StepConfirm({
   onFinish: () => void;
   onNewBooking: () => void;
   levels: Level[];
+  couponCode: string;
+  isApplyingCoupon: boolean;
+  couponError: string | null;
+  discountAmount: number;
+  finalPrice: number | null;
+  setCouponCode: (c: string) => void;
+  applyCoupon: () => void;
 }) {
   if (bookingDone) {
     return (
@@ -715,13 +739,61 @@ function StepConfirm({
         </div>
       </div>
 
-      {/* Price */}
-      <div className="glass rounded-2xl p-4 border border-primary/20 bg-primary/5 mb-6">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-text-secondary">💰 ค่าเรียน</span>
-          <span className="text-xl font-extrabold text-primary">
-            ฿{course.price.toLocaleString()}
-          </span>
+      {/* Coupon Input */}
+      {!bookingDone && (
+        <div className="glass rounded-2xl p-4 border border-border/50 mb-6 bg-surface/30">
+          <p className="text-xs font-bold text-text-primary mb-3">🏷️ มีโค้ดส่วนลดไหม?</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="กรอกรหัสคูปอง"
+              disabled={isApplyingCoupon || discountAmount > 0}
+              className="flex-1 bg-surface border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:opacity-50"
+            />
+            <button
+              onClick={applyCoupon}
+              disabled={!couponCode || isApplyingCoupon || discountAmount > 0 || isBooking}
+              className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all disabled:opacity-50"
+            >
+              {isApplyingCoupon ? '⏳' : discountAmount > 0 ? '✅' : 'ใช้โค้ด'}
+            </button>
+          </div>
+          {couponError && <p className="text-[10px] text-error mt-2 ml-1">❌ {couponError}</p>}
+          {discountAmount > 0 && (
+            <div className="text-[10px] text-success mt-2 ml-1 flex items-center justify-between">
+              <span>✨ ประหยัดไปได้ ฿{discountAmount.toLocaleString()}</span>
+              <button 
+                onClick={() => setCouponCode('')} 
+                className="underline opacity-60 hover:opacity-100"
+              >
+                เปลี่ยนโค้ด
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Price Breakdown */}
+      <div className="glass rounded-2xl p-5 border border-primary/20 bg-primary/5 mb-6 shadow-lg shadow-primary/5">
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-text-secondary">
+            <span>ยอดชำระเบื้องต้น</span>
+            <span>฿{course.price.toLocaleString()}</span>
+          </div>
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-sm text-success font-medium">
+              <span>ส่วนลด</span>
+              <span>-฿{discountAmount.toLocaleString()}</span>
+            </div>
+          )}
+          <div className="pt-2 border-t border-primary/10 flex justify-between items-center">
+            <span className="font-bold text-text-primary">ยอดที่ต้องชำระ</span>
+            <span className="text-2xl font-black text-primary animate-fadeIn">
+              ฿{(finalPrice !== null ? finalPrice : course.price).toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -737,19 +809,19 @@ function StepConfirm({
           onClick={onConfirm}
           disabled={isBooking}
           className={`flex-1 px-4 py-3 rounded-xl text-white text-sm font-bold transition-all ${
-            action === 'new'
-              ? 'btn-game hover:scale-[1.02] active:scale-95'
-              : 'bg-warning hover:bg-warning/90 hover:scale-[1.02] active:scale-95'
-          } disabled:opacity-60 disabled:cursor-not-allowed`}
+            (finalPrice === 0 || (course.price - discountAmount === 0))
+              ? 'bg-success hover:bg-success/90 hover:scale-[1.02] active:scale-95'
+              : 'btn-game hover:scale-[1.02] active:scale-95'
+          } disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-primary/20`}
         >
           {isBooking ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin">⏳</span> กำลังดำเนินการ...
+              <span className="animate-spin text-lg">⏳</span> กำลังดำเนินการ...
             </span>
-          ) : action === 'new' ? (
-            '✅ ยืนยันจอง'
+          ) : (finalPrice === 0 || (course.price - discountAmount === 0)) ? (
+            '✅ ยืนยันจองฟรี'
           ) : (
-            '🤝 ยืนยันเข้าร่วม'
+            `💳 ชำระเงิน ฿${(finalPrice !== null ? finalPrice : course.price).toLocaleString()}`
           )}
         </button>
       </div>

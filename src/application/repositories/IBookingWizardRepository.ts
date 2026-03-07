@@ -39,6 +39,7 @@ export interface CreateWizardBookingData {
   slotId: string;
   date: string;
   action: 'new' | 'join';
+  couponCode?: string;
 }
 
 import { Booking } from './IBookingRepository';

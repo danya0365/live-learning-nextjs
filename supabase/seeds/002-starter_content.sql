@@ -307,3 +307,15 @@ VALUES
   ('50000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000001', 5, '20:00:00', '23:59:59', TRUE),
   ('50000000-0000-0000-0000-000000000006', '30000000-0000-0000-0000-000000000001', 6, '20:00:00', '23:59:59', TRUE)
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 5. COUPONS 
+-- ============================================================================
+INSERT INTO public.coupons (id, code, type, discount_value, max_discount_amount, min_purchase_amount, usage_limit, per_user_limit, is_active)
+VALUES
+  -- 1. FIRSTTIME (100% off, 1 per user, unlimited total)
+  ('60000000-0000-0000-0000-000000000001', 'FIRSTTIME', 'percentage', 100.00, NULL, 0.00, NULL, 1, TRUE),
+  
+  -- 2. WELCOME50 (50% off, max discount 1000, 1 per user, 100 total uses)
+  ('60000000-0000-0000-0000-000000000002', 'WELCOME50', 'percentage', 50.00, 1000.00, 500.00, 100, 1, TRUE)
+ON CONFLICT (code) DO NOTHING;

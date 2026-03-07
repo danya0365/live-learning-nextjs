@@ -156,13 +156,31 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
 
         if (!profile) throw new Error('Profile not found');
         
-        // Pass studentId as separate parameter (Option A)
-        // Note: SupabaseBookingRepository needs to be updated to accept instructor_availability_id instead of time_slot_id
-        return this.bookingRepo.create({
-            instructorId: data.instructorId,
-            courseId: data.courseId,
-            instructorAvailabilityId: data.slotId, // This is now actually an instructor_availability_id in the DB
-            scheduledDate: data.date
-        }, profile.id);
+        // 1. Execute Atomic Transaction via RPC
+        // This handles: Coupon Validation -> Payment -> Enrollment -> Booking
+        const { data: result, error: rpcError } = await this.supabase.rpc('process_wizard_transaction', {
+            p_course_id: data.courseId,
+            p_instructor_id: data.instructorId,
+            p_slot_id: data.slotId,
+            p_date: data.date,
+            p_coupon_code: data.couponCode || undefined,
+            p_payment_method: 'free' // Default for now
+        });
+
+        if (rpcError) {
+            console.error('RPC Error:', rpcError);
+            throw new Error(rpcError.message || 'Failed to process booking transaction');
+        }
+
+        const typedResult = result as any;
+
+        // 2. Fetch the newly created booking to return it
+        if (!typedResult.booking_id) {
+            // If No Booking ID provided, it might mean payment is pending (Total > 0)
+            // But for this current flow, we expect success or error
+            throw new Error('Booking could not be confirmed. Please check your payment.');
+        }
+
+        return await this.bookingRepo.getById(typedResult.booking_id) as Booking;
     }
 }

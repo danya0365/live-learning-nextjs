@@ -65,12 +65,17 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
     }
 
     async createBooking(data: CreateWizardBookingData): Promise<Booking> {
-        // 🔒 Server-Injected Identity: studentId is resolved server-side from session
-        return this.bookingRepo.create({
-            instructorId: data.instructorId,
-            courseId: data.courseId,
-            instructorAvailabilityId: data.slotId,
-            scheduledDate: data.date
+        const res = await fetch('/api/booking-wizard/bookings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
         });
+        
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to create wizard booking');
+        }
+        
+        return res.json();
     }
 }

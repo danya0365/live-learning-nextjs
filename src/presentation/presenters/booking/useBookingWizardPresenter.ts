@@ -17,9 +17,13 @@ export interface BookingWizardState {
   selectedSlot: WizardSlot | null;
   bookingAction: 'new' | 'join';
   isBooking: boolean;
-  bookingDone: boolean;
   loading: boolean;
   levels: Level[];
+  couponCode: string;
+  isApplyingCoupon: boolean;
+  couponError: string | null;
+  discountAmount: number;
+  finalPrice: number | null;
 }
 
 export interface BookingWizardActions {
@@ -30,6 +34,8 @@ export interface BookingWizardActions {
   goBack: () => void;
   handleFinish: () => void;
   handleNewBooking: () => void;
+  setCouponCode: (code: string) => void;
+  applyCoupon: () => Promise<void>;
 }
 
 export function useBookingWizardPresenter() {
@@ -52,6 +58,13 @@ export function useBookingWizardPresenter() {
   const [loading, setLoading] = useState(true);
   
   const [levels, setLevels] = useState<Level[]>([]);
+
+  // Coupon State
+  const [couponCode, setCouponCode] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
   // Initial Load
   useEffect(() => {
@@ -128,10 +141,10 @@ export function useBookingWizardPresenter() {
 
         await presenter.createBooking({
             courseId: courseIdPayload,
-            instructorId: selectedInstructor.id,
             slotId: selectedSlot.id, // This is the instructor_availability_id
             date: targetDate.toISOString(),
-            action: bookingAction
+            action: bookingAction,
+            couponCode: couponCode ? couponCode : undefined
         });
         
         setIsBooking(false);
@@ -152,15 +165,50 @@ export function useBookingWizardPresenter() {
     router.push('/my-bookings');
   }, [router]);
 
-  const handleNewBooking = useCallback(() => {
-    setStep('course');
-    setSelectedCourse(null);
-    setSelectedInstructor(null);
-    setSelectedSlot(null);
     setAvailableInstructors([]);
     setCalendarSlots([]);
     setBookingDone(false);
+    setCouponCode('');
+    setDiscountAmount(0);
+    setFinalPrice(null);
+    setCouponError(null);
   }, []);
+
+  const applyCoupon = useCallback(async () => {
+    if (!couponCode || !selectedCourse) return;
+    
+    setIsApplyingCoupon(true);
+    setCouponError(null);
+
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode,
+          purchaseAmount: selectedCourse.price
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.isValid) {
+        setCouponError(data.errorMessage || 'Invalid coupon code');
+        setDiscountAmount(0);
+        setFinalPrice(null);
+      } else {
+        setDiscountAmount(data.discountAmount);
+        setFinalPrice(data.finalPrice);
+        setCouponError(null);
+      }
+    } catch (e) {
+      setCouponError('Failed to validate coupon');
+      setDiscountAmount(0);
+      setFinalPrice(null);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  }, [couponCode, selectedCourse]);
 
   return {
     state: {
@@ -175,7 +223,12 @@ export function useBookingWizardPresenter() {
       isBooking,
       bookingDone,
       loading,
-      levels
+      levels,
+      couponCode,
+      isApplyingCoupon,
+      couponError,
+      discountAmount,
+      finalPrice
     },
     actions: {
       handleCourseSelect,
@@ -184,7 +237,9 @@ export function useBookingWizardPresenter() {
       handleConfirm,
       goBack,
       handleFinish,
-      handleNewBooking
+      handleNewBooking,
+      setCouponCode,
+      applyCoupon
     }
   };
 }

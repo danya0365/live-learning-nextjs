@@ -400,6 +400,106 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_usages: {
+        Row: {
+          coupon_id: string
+          created_at: string | null
+          discount_applied: number
+          id: string
+          payment_id: string
+          user_profile_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string | null
+          discount_applied: number
+          id?: string
+          payment_id: string
+          user_profile_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string | null
+          discount_applied?: number
+          id?: string
+          payment_id?: string
+          user_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usages_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usages_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usages_user_profile_id_fkey"
+            columns: ["user_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_discount_amount: number | null
+          min_purchase_amount: number | null
+          per_user_limit: number | null
+          type: string
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_discount_amount?: number | null
+          min_purchase_amount?: number | null
+          per_user_limit?: number | null
+          type: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_discount_amount?: number | null
+          min_purchase_amount?: number | null
+          per_user_limit?: number | null
+          type?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           about_course: string | null
@@ -1040,46 +1140,65 @@ export type Database = {
       payments: {
         Row: {
           amount: number
-          booking_id: string | null
+          coupon_id: string | null
+          course_id: string | null
           created_at: string | null
           currency: string
+          discount_amount: number | null
           enrollment_id: string | null
           id: string
+          original_amount: number
           payment_method: string
           status: string
           transaction_id: string | null
           updated_at: string | null
+          user_profile_id: string
         }
         Insert: {
           amount: number
-          booking_id?: string | null
+          coupon_id?: string | null
+          course_id?: string | null
           created_at?: string | null
           currency?: string
+          discount_amount?: number | null
           enrollment_id?: string | null
           id?: string
+          original_amount: number
           payment_method: string
           status?: string
           transaction_id?: string | null
           updated_at?: string | null
+          user_profile_id: string
         }
         Update: {
           amount?: number
-          booking_id?: string | null
+          coupon_id?: string | null
+          course_id?: string | null
           created_at?: string | null
           currency?: string
+          discount_amount?: number | null
           enrollment_id?: string | null
           id?: string
+          original_amount?: number
           payment_method?: string
           status?: string
           transaction_id?: string | null
           updated_at?: string | null
+          user_profile_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "payments_booking_id_fkey"
-            columns: ["booking_id"]
+            foreignKeyName: "payments_coupon_id_fkey"
+            columns: ["coupon_id"]
             isOneToOne: false
-            referencedRelation: "bookings"
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
           {
@@ -1087,6 +1206,13 @@ export type Database = {
             columns: ["enrollment_id"]
             isOneToOne: false
             referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_user_profile_id_fkey"
+            columns: ["user_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1325,6 +1451,17 @@ export type Database = {
       is_instructor_or_admin: { Args: never; Returns: boolean }
       is_service_role: { Args: never; Returns: boolean }
       migrate_profile_roles: { Args: never; Returns: undefined }
+      process_wizard_transaction: {
+        Args: {
+          p_coupon_code?: string
+          p_course_id: string
+          p_date: string
+          p_instructor_id: string
+          p_payment_method?: string
+          p_slot_id: string
+        }
+        Returns: Json
+      }
       set_profile_active: { Args: { profile_id: string }; Returns: boolean }
       set_profile_role: {
         Args: {
