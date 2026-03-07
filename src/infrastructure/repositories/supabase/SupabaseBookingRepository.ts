@@ -74,23 +74,6 @@ export class SupabaseBookingRepository implements IBookingRepository {
     return this.mapBooking(data);
   }
 
-  async getAll(): Promise<Booking[]> {
-    const { data, error } = await this.supabase
-      .from('bookings')
-      .select(`
-        *,
-        student:profiles!student_profile_id(*),
-        instructor:instructor_profiles!instructor_profile_id(
-             *,
-            profile:profiles(*)
-        ),
-        course:courses(*)
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error || !data) return [];
-    return data.map(this.mapBooking);
-  }
 
   async getPaginated(page: number, perPage: number): Promise<{ data: Booking[]; total: number; page: number; perPage: number }> {
     const from = (page - 1) * perPage;
@@ -315,5 +298,37 @@ export class SupabaseBookingRepository implements IBookingRepository {
       }
       
       return [];
+  }
+
+  async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
+    const startOfMonth = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endOfMonth = `${year}-${String(month).padStart(2, '0')}-31`; // Supabase handles this, but let's be safe or use dayjs if available.
+    // Actually, simple range query works:
+    
+    let query = this.supabase
+      .from('bookings')
+      .select(`
+        *,
+        student:profiles!student_profile_id(*),
+        instructor:instructor_profiles!instructor_profile_id(
+             *,
+            profile:profiles(*)
+        ),
+        course:courses(*)
+      `)
+      .gte('scheduled_date', startOfMonth)
+      .lte('scheduled_date', endOfMonth);
+
+    if (filters?.instructorId) {
+      query = query.eq('instructor_profile_id', filters.instructorId);
+    }
+    if (filters?.studentId) {
+      query = query.eq('student_profile_id', filters.studentId);
+    }
+
+    const { data, error } = await query.order('scheduled_date', { ascending: true });
+
+    if (error || !data) return [];
+    return data.map(this.mapBooking);
   }
 }

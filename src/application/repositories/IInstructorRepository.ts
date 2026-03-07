@@ -81,7 +81,8 @@ export interface IInstructorRepository {
   getReviews(instructorId: string): Promise<InstructorReview[]>;
   create(data: CreateInstructorData): Promise<Instructor>;
   update(id: string, data: UpdateInstructorData): Promise<Instructor>;
-  delete(id: string): Promise<boolean>;
+  deleteAvailability(id: string): Promise<boolean>;
+  addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<InstructorAvailability>;
   getStats(): Promise<InstructorStats>;
   getMe(): Promise<Instructor | null>;
 }

@@ -21,10 +21,6 @@ export class MockBookingRepository implements IBookingRepository {
     return this.items.find((item) => item.id === id) || null;
   }
 
-  async getAll(): Promise<Booking[]> {
-    await this.delay(100);
-    return [...this.items];
-  }
 
   async getPaginated(page: number, perPage: number) {
     await this.delay(100);
@@ -109,6 +105,17 @@ export class MockBookingRepository implements IBookingRepository {
     } else {
         return this.items.filter(item => item.instructorId === 'inst-001');
     }
+  }
+
+  async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
+    await this.delay(100);
+    return this.items.filter(item => {
+        const d = new Date(item.scheduledDate);
+        const matchesDate = d.getMonth() + 1 === month && d.getFullYear() === year;
+        const matchesInstructor = filters?.instructorId ? item.instructorId === filters.instructorId : true;
+        const matchesStudent = filters?.studentId ? item.studentId === filters.studentId : true;
+        return matchesDate && matchesInstructor && matchesStudent;
+    });
   }
 
   private delay(ms: number): Promise<void> {

@@ -117,6 +117,27 @@ export class MockInstructorRepository implements IInstructorRepository {
     return true;
   }
 
+  async deleteAvailability(id: string): Promise<boolean> {
+    await this.delay(100);
+    const index = this.availabilities.findIndex(a => a.id === id);
+    if (index === -1) return false;
+    this.availabilities.splice(index, 1);
+    return true;
+  }
+
+  async addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<InstructorAvailability> {
+    await this.delay(100);
+    const newSlot: InstructorAvailability = {
+      id: `slot-${Date.now()}`,
+      instructorId,
+      dayOfWeek,
+      startTime,
+      endTime
+    };
+    this.availabilities.push(newSlot);
+    return newSlot;
+  }
+
   async getStats(): Promise<InstructorStats> {
     await this.delay(100);
     const totalItems = this.items.length;

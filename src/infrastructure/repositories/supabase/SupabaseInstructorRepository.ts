@@ -305,6 +305,38 @@ export class SupabaseInstructorRepository implements IInstructorRepository {
     return !error;
   }
 
+  async deleteAvailability(id: string): Promise<boolean> {
+    const { error } = await this.supabase
+      .from('instructor_availabilities')
+      .delete()
+      .eq('id', id);
+    return !error;
+  }
+
+  async addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<InstructorAvailability> {
+    const { data, error } = await this.supabase
+      .from('instructor_availabilities')
+      .insert({
+        instructor_profile_id: instructorId,
+        day_of_week: dayOfWeek,
+        start_time: startTime,
+        end_time: endTime,
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      instructorId: data.instructor_profile_id,
+      dayOfWeek: data.day_of_week,
+      startTime: data.start_time,
+      endTime: data.end_time,
+    };
+  }
+
   // ============================================================
   // STATISTICS
   // ============================================================

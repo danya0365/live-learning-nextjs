@@ -8,11 +8,11 @@
 'use client';
 
 import {
-    Booking,
-    BookingStats,
-    CreateBookingPayload,
-    IBookingRepository,
-    UpdateBookingData
+  Booking,
+  BookingStats,
+  CreateBookingPayload,
+  IBookingRepository,
+  UpdateBookingData
 } from '@/src/application/repositories/IBookingRepository';
 
 export class ApiBookingRepository implements IBookingRepository {
@@ -25,12 +25,6 @@ export class ApiBookingRepository implements IBookingRepository {
     return res.json();
   }
 
-  async getAll(): Promise<Booking[]> {
-    const res = await fetch(this.baseUrl);
-    if (!res.ok) throw new Error('Failed to fetch bookings');
-    return res.json();
-  }
-
   async getPaginated(page: number, perPage: number): Promise<{ data: Booking[]; total: number; page: number; perPage: number }> {
     const res = await fetch(`${this.baseUrl}?page=${page}&perPage=${perPage}`);
     if (!res.ok) throw new Error('Failed to fetch paginated bookings');
@@ -38,15 +32,13 @@ export class ApiBookingRepository implements IBookingRepository {
   }
 
   async getByStudentId(studentId: string): Promise<Booking[]> {
-    // Uses the new secure endpoint
     const res = await fetch(`${this.baseUrl}/students`);
     if (!res.ok) throw new Error('Failed to fetch student bookings');
     return res.json();
   }
 
   async getByInstructorId(instructorId: string): Promise<Booking[]> {
-    // Uses the new secure endpoint
-    const res = await fetch(`${this.baseUrl}/instructors`);
+    const res = await fetch(`${this.baseUrl}?instructorId=${instructorId}`);
     if (!res.ok) throw new Error('Failed to fetch instructor bookings');
     return res.json();
   }
@@ -101,10 +93,19 @@ export class ApiBookingRepository implements IBookingRepository {
   }
 
   async getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]> {
-    // SECURE: Request by specific sub-route, no ID passed.
     const endpoint = role === 'student' ? '/students' : '/instructors';
     const res = await fetch(`${this.baseUrl}${endpoint}`);
     if (!res.ok) throw new Error(`Failed to fetch ${role} bookings`);
+    return res.json();
+  }
+
+  async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
+    const params = new URLSearchParams({ month: month.toString(), year: year.toString() });
+    if (filters?.instructorId) params.append('instructorId', filters.instructorId);
+    if (filters?.studentId) params.append('studentId', filters.studentId);
+
+    const res = await fetch(`${this.baseUrl}?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch bookings by month');
     return res.json();
   }
 }

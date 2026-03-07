@@ -110,6 +110,23 @@ export class ApiInstructorRepository implements IInstructorRepository {
     return res.ok;
   }
 
+  async deleteAvailability(id: string): Promise<boolean> {
+    const res = await fetch(`${this.baseUrl}/availabilities/${id}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
+  }
+
+  async addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<InstructorAvailability> {
+    const res = await fetch(`${this.baseUrl}/${instructorId}/availabilities`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dayOfWeek, startTime, endTime }),
+    });
+    if (!res.ok) throw new Error('Failed to add availability');
+    return res.json();
+  }
+
   async getStats(): Promise<InstructorStats> {
     const res = await fetch(`${this.baseUrl}/stats`);
      if (!res.ok) {

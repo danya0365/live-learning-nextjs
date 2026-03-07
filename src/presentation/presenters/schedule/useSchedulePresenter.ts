@@ -15,8 +15,11 @@ export interface SchedulePresenterActions {
   loadData: (filters?: Partial<ScheduleFilters>) => Promise<void>;
   setInstructor: (id: string | null) => void;
   setDay: (day: number | null) => void;
+  setMonth: (month: number, year: number) => void;
   toggleShowBookedOnly: () => void;
   toggleShowAvailableOnly: () => void;
+  addAvailability: (dayOfWeek: number, startTime: string, endTime: string) => Promise<boolean>;
+  deleteAvailability: (id: string) => Promise<boolean>;
 }
 
 export function useSchedulePresenter(
@@ -31,25 +34,27 @@ export function useSchedulePresenter(
   const [viewModel, setViewModel] = useState<ScheduleViewModel | null>(initialViewModel || null);
   const [loading, setLoading] = useState(!initialViewModel);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Partial<ScheduleFilters>>({});
+  const [filters, setFilters] = useState<Partial<ScheduleFilters>>(initialViewModel?.filters || {});
 
   const loadData = useCallback(async (f?: Partial<ScheduleFilters>) => {
     setLoading(true);
     setError(null);
     try {
-      const vm = await presenter.getViewModel(f);
-      if (isMountedRef.current) setViewModel(vm);
+      const mergedFilters = { ...filters, ...f };
+      const vm = await presenter.getViewModel(mergedFilters);
+      if (isMountedRef.current) {
+        setViewModel(vm);
+        setFilters(vm.filters);
+      }
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [presenter]);
+  }, [presenter, filters]);
 
   // Handle Initial Load & Instructor Context
   useEffect(() => {
-    if (initialViewModel) return;
-
     const init = async () => {
         let initialFilters: Partial<ScheduleFilters> = { ...filters };
 
@@ -58,7 +63,6 @@ export function useSchedulePresenter(
                 const instructorId = await presenter.getCurrentInstructorId();
                 if (instructorId) {
                     initialFilters.instructorId = instructorId;
-                    setFilters(prev => ({ ...prev, instructorId }));
                 }
             } catch (error) {
                 console.error('Failed to fetch instructor ID', error);
@@ -68,32 +72,52 @@ export function useSchedulePresenter(
         await loadData(initialFilters);
     };
 
-    init();
+    if (!initialViewModel) {
+      init();
+    }
   }, [isInstructor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setInstructor = useCallback((id: string | null) => {
-    const next = { ...filters, instructorId: id };
-    setFilters(next);
-    loadData(next);
-  }, [filters, loadData]);
+    loadData({ instructorId: id });
+  }, [loadData]);
 
   const setDay = useCallback((day: number | null) => {
-    const next = { ...filters, dayOfWeek: day };
-    setFilters(next);
-    loadData(next);
-  }, [filters, loadData]);
+    loadData({ dayOfWeek: day });
+  }, [loadData]);
+
+  const setMonth = useCallback((month: number, year: number) => {
+    loadData({ month, year });
+  }, [loadData]);
 
   const toggleShowBookedOnly = useCallback(() => {
-    const next = { ...filters, showBookedOnly: !filters.showBookedOnly, showAvailableOnly: false };
-    setFilters(next);
-    loadData(next);
+    loadData({ showBookedOnly: !filters.showBookedOnly, showAvailableOnly: false });
   }, [filters, loadData]);
 
   const toggleShowAvailableOnly = useCallback(() => {
-    const next = { ...filters, showAvailableOnly: !filters.showAvailableOnly, showBookedOnly: false };
-    setFilters(next);
-    loadData(next);
+    loadData({ showAvailableOnly: !filters.showAvailableOnly, showBookedOnly: false });
   }, [filters, loadData]);
+
+  const addAvailability = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
+    try {
+      const success = await presenter.addAvailability(dayOfWeek, startTime, endTime);
+      if (success) await loadData();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add availability');
+      return false;
+    }
+  }, [presenter, loadData]);
+
+  const deleteAvailability = useCallback(async (id: string) => {
+    try {
+      const success = await presenter.deleteAvailability(id);
+      if (success) await loadData();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete availability');
+      return false;
+    }
+  }, [presenter, loadData]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -102,6 +126,15 @@ export function useSchedulePresenter(
 
   return [
     { viewModel, loading, error },
-    { loadData, setInstructor, setDay, toggleShowBookedOnly, toggleShowAvailableOnly },
+    { 
+      loadData, 
+      setInstructor, 
+      setDay, 
+      setMonth, 
+      toggleShowBookedOnly, 
+      toggleShowAvailableOnly,
+      addAvailability,
+      deleteAvailability
+    },
   ];
 }

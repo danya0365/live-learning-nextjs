@@ -58,7 +58,6 @@ export interface UpdateBookingData {
 
 export interface IBookingRepository {
   getById(id: string): Promise<Booking | null>;
-  getAll(): Promise<Booking[]>;
   getPaginated(page: number, perPage: number): Promise<{ data: Booking[]; total: number; page: number; perPage: number }>;
   getByStudentId(studentId: string): Promise<Booking[]>;
   getByInstructorId(instructorId: string): Promise<Booking[]>;
@@ -68,4 +67,5 @@ export interface IBookingRepository {
   delete(id: string): Promise<boolean>;
   getStats(): Promise<BookingStats>;
   getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]>;
+  getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]>;
 }
