@@ -1,23 +1,13 @@
 'use client';
 
 import { ChatMessage, LiveRoom, Participant } from '@/src/application/repositories/ILiveRoomRepository';
+import { createClient as createSupabaseClient } from '@/src/infrastructure/supabase/client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClientLiveRoomPresenter } from './LiveRoomPresenterClientFactory';
 
-const AUTO_MESSAGES = [
-  { user: 'น้องแพร', avatar: '👩‍🎓', text: 'อาจารย์ขอถามเรื่อง useEffect ค่ะ' },
-  { user: 'อ.สมชาย', avatar: '👨‍🏫', text: 'ได้เลยครับ เดี๋ยวอธิบายให้', isInstructor: true },
-  { user: 'กอล์ฟ', avatar: '🧑', text: 'dependency array ใส่อะไรได้บ้างครับ?' },
-  { user: 'อ.สมชาย', avatar: '👨‍🏫', text: 'ใส่ได้ทั้ง state, props, และตัวแปรภายนอกครับ', isInstructor: true },
-  { user: 'เบลล์', avatar: '👧', text: 'เข้าใจแล้วค่ะ ขอบคุณค่ะ 🙏' },
-  { user: 'ไบร์ท', avatar: '🧑‍🦱', text: 'cleanup function ใช้ตอนไหนครับ?' },
-  { user: 'อ.สมชาย', avatar: '👨‍🏫', text: 'ใช้ตอน unmount หรือก่อนที่ effect จะรันใหม่ครับ เช่น cancel subscription', isInstructor: true },
-  { user: 'มายด์', avatar: '👩', text: 'ถ้าลืมใส่ dependency จะเป็นยังไงคะ?' },
-  { user: 'อ.สมชาย', avatar: '👨‍🏫', text: 'ถ้าใส่ [] ว่างจะรันแค่ครั้งเดียว ถ้าไม่ใส่เลยจะรันทุก render ครับ ⚠️', isInstructor: true },
-];
-
 export function useLiveRoomPresenter(roomId: string) {
   const presenter = useMemo(() => createClientLiveRoomPresenter(), []);
+  const supabase = useMemo(() => createSupabaseClient(), []);
 
   // State
   const [room, setRoom] = useState<LiveRoom | null>(null);
@@ -39,25 +29,113 @@ export function useLiveRoomPresenter(roomId: string) {
   const [isReacting, setIsReacting] = useState('');
 
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const autoMsgIndex = useRef(0);
 
-  // Load Data
+  // Load Initial Data
   useEffect(() => {
     async function init() {
       setLoading(true);
-      const vm = await presenter.getRoomViewModel(roomId);
-      if (vm) {
-        setRoom(vm.room);
-        setMessages(vm.messages);
-        setParticipants(vm.participants);
-        setViewerCount(vm.participants.length);
-      } else {
-        setError('Room not found');
+      try {
+        const vm = await presenter.getRoomViewModel(roomId);
+        if (vm) {
+          setRoom(vm.room);
+          setMessages(vm.messages);
+          setParticipants(vm.participants);
+          setViewerCount(vm.participants.length);
+        } else {
+          setError('Room not found');
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     init();
   }, [presenter, roomId]);
+
+  // Realtime Subscription (Chat & Presence)
+  useEffect(() => {
+    if (!room?.id) return;
+
+    const channel = supabase.channel(`room:${room.id}`);
+
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'live_chat_messages',
+          filter: `live_session_id=eq.${room.id}`,
+        },
+        async (payload) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', payload.new.profile_id)
+            .single();
+
+          const newMsg: ChatMessage = {
+            id: payload.new.id,
+            user: profile?.full_name || 'Anonymous',
+            avatar: profile?.avatar_url || '',
+            text: payload.new.text,
+            time: new Date(payload.new.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isInstructor: payload.new.is_instructor,
+          };
+
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+        }
+      )
+      .on('presence', { event: 'sync' }, () => {
+        const newState = channel.presenceState();
+        const onlineParticipants: Participant[] = [];
+        
+        Object.values(newState).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            onlineParticipants.push({
+              id: p.profile_id,
+              name: p.name,
+              avatar: p.avatar,
+              isInstructor: p.isInstructor
+            });
+          });
+        });
+        
+        // De-duplicate by profile_id
+        const uniqueParticipants = Array.from(new Map(onlineParticipants.map(item => [item.id, item])).values());
+        setParticipants(uniqueParticipants);
+        setViewerCount(uniqueParticipants.length);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          // Get current user profile to track presence
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+
+            await channel.track({
+              profile_id: user.id,
+              name: profile?.full_name || 'Anonymous',
+              avatar: profile?.avatar_url || '',
+              online_at: new Date().toISOString(),
+              isInstructor: room.instructor === profile?.full_name // Simple check for demo
+            });
+          }
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, room?.id, room?.instructor]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -70,37 +148,6 @@ export function useLiveRoomPresenter(roomId: string) {
     return () => clearInterval(timer);
   }, []);
 
-  // Simulated auto messages
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (autoMsgIndex.current < AUTO_MESSAGES.length) {
-        const msg = AUTO_MESSAGES[autoMsgIndex.current];
-        const now = new Date();
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `auto-${Date.now()}`,
-            user: msg.user,
-            avatar: msg.avatar,
-            text: msg.text,
-            time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
-            isInstructor: msg.isInstructor,
-          },
-        ]);
-        autoMsgIndex.current++;
-      }
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Random viewer count changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setViewerCount((v) => Math.max(0, v + (Math.random() > 0.5 ? 1 : -1)));
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
   const formatTime = useCallback((seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -110,10 +157,17 @@ export function useLiveRoomPresenter(roomId: string) {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
-    const msg = await presenter.sendMessage(roomId, newMessage);
-    setMessages((prev) => [...prev, msg]);
-    setNewMessage('');
+    if (!newMessage.trim() || !room?.id) return;
+    try {
+      const msg = await presenter.sendMessage(room.id, newMessage);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+      setNewMessage('');
+    } catch (err: any) {
+      console.error('Failed to send message:', err);
+    }
   };
 
   const handleReaction = (emoji: string) => {

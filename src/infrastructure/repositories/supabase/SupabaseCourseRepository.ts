@@ -207,7 +207,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
         total_students: 0,
         total_reviews: 0,
         total_lessons: 0,
-        is_live: false,
+        is_live_feature: false,
         is_featured: false,
         is_active: true,
       })
@@ -326,7 +326,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       instructorId: raw.instructor_profile_id || '',
       instructorName: profile?.full_name || 'Unknown Instructor',
       instructorAvatar: profile?.avatar_url || '/images/placeholder-avatar.jpg',
-      isLive: raw.is_live,
+      isLive: raw.is_live_feature,
       isActive: raw.is_active,
       tags: raw.tags || [],
       learningOutcomes: raw.learning_outcomes || [],

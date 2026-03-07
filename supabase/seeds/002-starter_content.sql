@@ -28,7 +28,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ============================================================================
 -- 2. STARTER COURSES
 -- ============================================================================
-INSERT INTO public.courses (id, instructor_profile_id, category_id, title, slug, description, price, original_price, rating, total_students, total_reviews, total_hours, total_lessons, level, tags, is_live, is_featured, is_active)
+INSERT INTO public.courses (id, instructor_profile_id, category_id, title, slug, description, price, original_price, rating, total_students, total_reviews, total_hours, total_lessons, level, tags,  is_live_feature, is_featured, is_active)
 VALUES
 
   -- ==========================================================================

@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS public.courses (
   tags TEXT[] DEFAULT '{}',
   
   -- Status
-  is_live BOOLEAN NOT NULL DEFAULT FALSE,
+  is_live_feature BOOLEAN NOT NULL DEFAULT FALSE,
   is_featured BOOLEAN NOT NULL DEFAULT FALSE,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   

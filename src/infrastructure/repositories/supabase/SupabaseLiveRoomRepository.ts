@@ -57,12 +57,7 @@ export class SupabaseLiveRoomRepository implements ILiveRoomRepository {
     // getParticipants -> Return empty [] or fix schema later.
 
     async getRoom(roomId: string): Promise<LiveRoom | null> {
-        // roomId here seems to be courseId in the Mock ('course-001'), 
-        // but ideally it should be live_session.id or live_session.course_id?
-        // Mock data uses 'course-001' as key.
-        // Let's assume roomId = courseId for now as per Mock behavior, 
-        // or check if there is an active live session for this course.
-        
+        // Fetch session by course_id (Legacy) or session id
         const { data, error } = await this.supabase
             .from('live_sessions')
             .select(`
@@ -76,25 +71,18 @@ export class SupabaseLiveRoomRepository implements ILiveRoomRepository {
                     profile:profiles(*)
                 )
             `)
-            .eq('course_id', roomId) // Assuming roomId passed is courseId as per legacy
-            .eq('status', 'live') // Only active rooms?
+            .or(`course_id.eq.${roomId},id.eq.${roomId}`)
+            .eq('status', 'live')
             .single();
             
-        if (error || !data) {
-            // Try fetching by actual id if not found by course_id?
-            // Or just return null.
-            return null;
-        }
+        if (error || !data) return null;
         
         const instructorProfile = data.instructor?.profile;
         const category = data.course?.category;
-        
-        // Map color from category? Mock hardcoded colors.
-        // Let's assume category has color or default.
         const color = category?.color || 'from-blue-500 to-purple-600';
 
         return {
-            id: data.course_id, // Keeping consistency with input if it was courseId
+            id: data.id, // Return actual session ID
             title: data.title,
             instructor: instructorProfile?.full_name || 'Unknown Instructor',
             instructorAvatar: instructorProfile?.avatar_url || '',
@@ -106,28 +94,80 @@ export class SupabaseLiveRoomRepository implements ILiveRoomRepository {
     }
 
     async getMessages(roomId: string): Promise<ChatMessage[]> {
-        // No table yet. Return empty or mock? 
-        // If I return empty, chat will be blank.
-        // Let's return empty array as "Persistence not implemented yet".
-        return [];
+        const { data, error } = await this.supabase
+            .from('live_chat_messages')
+            .select(`
+                *,
+                profile:profiles(*)
+            `)
+            .eq('live_session_id', roomId)
+            .order('created_at', { ascending: true });
+
+        if (error || !data) return [];
+
+        return data.map(msg => ({
+            id: msg.id,
+            user: msg.profile?.full_name || 'Anonymous',
+            avatar: msg.profile?.avatar_url || '',
+            text: msg.text,
+            time: new Date(msg.created_at!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isInstructor: msg.is_instructor!
+        }));
     }
 
     async getParticipants(roomId: string): Promise<Participant[]> {
-        // No table yet.
-        return [];
+        const { data, error } = await this.supabase
+            .from('live_session_participants')
+            .select(`
+                *,
+                profile:profiles(*)
+            `)
+            .eq('live_session_id', roomId)
+            .is('left_at', null);
+
+        if (error || !data) return [];
+
+        return data.map(p => ({
+            id: p.profile_id,
+            name: p.profile?.full_name || 'Anonymous',
+            avatar: p.profile?.avatar_url || ''
+        }));
     }
 
     async sendMessage(roomId: string, text: string): Promise<ChatMessage> {
-        // Since no persistence, we can't save.
-        // We just return the echoed message.
-        // This is effectively a "Success" acknowledgment.
-        // Realtime broadcast should happen outside or via Postgres trigger if table existed.
+        // Get current profile
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (!user) throw new Error('Unauthorized');
+
+        const { data: profile } = await this.supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        const { data: msg, error } = await this.supabase
+            .from('live_chat_messages')
+            .insert({
+                live_session_id: roomId,
+                profile_id: user.id,
+                text,
+                is_instructor: false // Logic to check if profile is instructor for this session could be added
+            })
+            .select(`
+                *,
+                profile:profiles(*)
+            `)
+            .single();
+
+        if (error || !msg) throw new Error('Failed to send message');
+
         return {
-            id: Date.now().toString(),
-            user: 'Me',
-            avatar: '',
-            text,
-            time: new Date().toISOString() // Format? HH:mm
+            id: msg.id,
+            user: msg.profile?.full_name || 'Me',
+            avatar: msg.profile?.avatar_url || '',
+            text: msg.text,
+            time: new Date(msg.created_at!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isInstructor: msg.is_instructor!
         };
     }
 }

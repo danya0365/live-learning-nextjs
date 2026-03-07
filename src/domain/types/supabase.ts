@@ -412,7 +412,7 @@ export type Database = {
           interactive_lab_slug: string | null
           is_active: boolean
           is_featured: boolean
-          is_live: boolean
+          is_live_feature: boolean
           learning_outcomes: string[] | null
           level: string
           original_price: number | null
@@ -442,7 +442,7 @@ export type Database = {
           interactive_lab_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
-          is_live?: boolean
+          is_live_feature?: boolean
           learning_outcomes?: string[] | null
           level?: string
           original_price?: number | null
@@ -472,7 +472,7 @@ export type Database = {
           interactive_lab_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
-          is_live?: boolean
+          is_live_feature?: boolean
           learning_outcomes?: string[] | null
           level?: string
           original_price?: number | null
@@ -741,6 +741,87 @@ export type Database = {
             foreignKeyName: "instructor_profiles_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_instructor: boolean | null
+          live_session_id: string
+          profile_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_instructor?: boolean | null
+          live_session_id: string
+          profile_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_instructor?: boolean | null
+          live_session_id?: string
+          profile_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_messages_live_session_id_fkey"
+            columns: ["live_session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_chat_messages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_session_participants: {
+        Row: {
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          live_session_id: string
+          profile_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          live_session_id: string
+          profile_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          live_session_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_session_participants_live_session_id_fkey"
+            columns: ["live_session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_session_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },

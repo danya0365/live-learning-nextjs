@@ -3,6 +3,7 @@
 import { ApiBookingRepository } from '@/src/infrastructure/repositories/api/ApiBookingRepository';
 import { ApiCourseRepository } from '@/src/infrastructure/repositories/api/ApiCourseRepository';
 import { ApiInstructorRepository } from '@/src/infrastructure/repositories/api/ApiInstructorRepository';
+import { ApiLiveSessionRepository } from '@/src/infrastructure/repositories/api/ApiLiveSessionRepository';
 import { LiveSessionsPresenter } from './LiveSessionsPresenter';
 
 export function createClientLiveSessionsPresenter(): LiveSessionsPresenter {
@@ -10,5 +11,6 @@ export function createClientLiveSessionsPresenter(): LiveSessionsPresenter {
     new ApiCourseRepository(),
     new ApiInstructorRepository(),
     new ApiBookingRepository(),
+    new ApiLiveSessionRepository(),
   );
 }

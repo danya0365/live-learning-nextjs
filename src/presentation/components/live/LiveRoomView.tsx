@@ -1,8 +1,21 @@
 'use client';
 
 import { useLiveRoomPresenter } from '@/src/presentation/presenters/live/useLiveRoomPresenter';
+import {
+  LocalVideoTrack,
+  RemoteVideoTrack,
+  useJoin,
+  useLocalCameraTrack,
+  useLocalMicrophoneTrack,
+  usePublish,
+  useRemoteUsers
+} from 'agora-rtc-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+// Agora App ID - Should be in .env.local
+const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || '7a87e83464f84f0fb8e4986641b656b2'; // Placeholder for demo
 
 interface LiveRoomViewProps {
   roomId: string;
@@ -15,6 +28,28 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
     room, messages, participants, loading, error, newMessage, isMuted, isVideoOn,
     isHandRaised, showChat, showParticipants, viewerCount, elapsedTime, showLeaveModal, isReacting, chatEndRef
   } = state;
+
+  // TODO: Implement Agora RTC setup
+  const [joined, setJoined] = useState(false);
+
+  // Join the channel
+  useJoin(
+    {
+      appid: AGORA_APP_ID,
+      channel: roomId,
+      token: null, // Should fetch from API for production
+    },
+    joined
+  );
+
+  // Local Tracks
+  const { localMicrophoneTrack } = useLocalMicrophoneTrack(!isMuted);
+  const { localCameraTrack } = useLocalCameraTrack(isVideoOn);
+  
+  usePublish([localMicrophoneTrack, localCameraTrack]);
+
+  // Remote Tracks
+  const remoteUsers = useRemoteUsers();
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-text-primary">กำลังเข้าห้องเรียน...</div>;
@@ -33,6 +68,11 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
         </div>
       </div>
     );
+  }
+
+  // Auto-join when room is ready
+  if (!joined && room) {
+    setJoined(true);
   }
 
   function handleLeave() {
@@ -80,74 +120,66 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
       <div className="flex-1 flex overflow-hidden">
         {/* Video area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Main video */}
-          <div className="flex-1 relative overflow-hidden">
-            <div className={`absolute inset-0 bg-gradient-to-br ${room.color} flex items-center justify-center`}>
-              {/* Simulated video content */}
-              <div className="text-center text-white/90 pointer-events-none select-none">
-                <div className="text-8xl mb-6 animate-float">{room.instructorAvatar}</div>
-                <h2 className="text-2xl font-bold mb-1">{room.instructor}</h2>
-                <p className="text-sm text-white/60 mb-3">กำลังสอนสด...</p>
-                <div className="flex justify-center gap-2 flex-wrap">
-                  {room.tags.map((tag) => (
-                    <span key={tag} className="px-3 py-1 rounded-full bg-white/10 text-xs backdrop-blur-sm">
-                      {tag}
-                    </span>
-                  ))}
+          {/* Main video area */}
+          <div className="flex-1 relative overflow-hidden bg-black">
+            {remoteUsers.length > 0 ? (
+              <div className="w-full h-full flex flex-wrap items-center justify-center gap-2 p-4">
+                {remoteUsers.map((user) => (
+                  <div key={user.uid} className="relative aspect-video flex-1 min-w-[300px] max-w-full rounded-xl overflow-hidden bg-surface border border-white/10">
+                    <RemoteVideoTrack track={user.videoTrack as any} play className="w-full h-full object-cover" />
+                    <div className="absolute bottom-3 left-3 px-2 py-1 rounded-md bg-black/50 text-[10px] text-white backdrop-blur-sm">
+                      {user.uid === '1' ? 'อาจารย์ (Instructor)' : `นักเรียน (${user.uid})`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`absolute inset-0 bg-gradient-to-br ${room.color} flex items-center justify-center`}>
+                <div className="text-center text-white/90 pointer-events-none select-none">
+                  <div className="text-8xl mb-6 animate-float">{room.instructorAvatar}</div>
+                  <h2 className="text-2xl font-bold mb-1">{room.instructor}</h2>
+                  <p className="text-sm text-white/60 mb-3">กำลังเริ่มการสอนสด...</p>
+                  <div className="flex justify-center gap-2 flex-wrap">
+                    {room.tags.map((tag) => (
+                      <span key={tag} className="px-3 py-1 rounded-full bg-white/10 text-xs backdrop-blur-sm">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-
-              {/* Code overlay — simulated screen share */}
-              <div className="absolute bottom-6 left-6 right-6 sm:left-auto sm:right-6 sm:w-80 glass rounded-xl p-4 text-left border border-white/10 shadow-2xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                  <span className="text-[10px] text-white/50 ml-1">App.tsx</span>
-                </div>
-                <pre className="text-[11px] text-green-300 font-mono leading-relaxed overflow-hidden">
-{`useEffect(() => {
-  const data = fetchAPI();
-  setItems(data);
-  
-  return () => {
-    // cleanup 🧹
-    cancel(data);
-  };
-}, []);`}
-                </pre>
-              </div>
-            </div>
+            )}
 
             {/* Reaction animation */}
             {isReacting && (
-              <div className="absolute bottom-20 right-10 text-6xl animate-bounce-soft pointer-events-none">
+              <div className="absolute bottom-20 right-10 text-6xl animate-bounce-soft pointer-events-none z-20">
                 {isReacting}
               </div>
             )}
 
             {/* Self-view camera */}
-            <div className={`absolute top-4 right-4 w-32 h-24 rounded-xl shadow-xl overflow-hidden border-2 ${isVideoOn ? 'border-primary/50' : 'border-border/50'}`}>
+            <div className={`absolute top-4 right-4 w-40 h-28 rounded-xl shadow-2xl overflow-hidden border-2 z-20 transition-all ${isVideoOn ? 'border-primary' : 'border-border/50'}`}>
               {isVideoOn ? (
-                <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                  <span className="text-3xl">🧑‍💻</span>
-                </div>
+                <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gray-900 flex items-center justify-center flex-col gap-1">
-                  <span className="text-xl">📷</span>
-                  <span className="text-[9px] text-gray-400">กล้องปิด</span>
+                  <span className="text-3xl">🧑‍💻</span>
+                  <span className="text-[10px] text-gray-400 mt-1">กล้องปิด</span>
                 </div>
               )}
+              <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/50 text-[9px] text-white">
+                คุณ (You)
+              </div>
             </div>
           </div>
 
           {/* Bottom controls */}
-          <div className="flex-shrink-0 h-16 glass border-t border-border/50 flex items-center justify-center gap-2 sm:gap-3 px-4">
+          <div className="flex-shrink-0 h-16 glass border-t border-border/50 flex items-center justify-center gap-2 sm:gap-3 px-4 z-10">
             {/* Mic */}
             <button
               onClick={() => actions.setIsMuted(!isMuted)}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 ${
-                isMuted ? 'bg-error/20 text-error' : 'bg-success/20 text-success'
+                isMuted ? 'bg-error text-white' : 'bg-success/20 text-success border border-success/30'
               }`}
               title={isMuted ? 'เปิดไมค์' : 'ปิดไมค์'}
             >
@@ -158,7 +190,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             <button
               onClick={() => actions.setIsVideoOn(!isVideoOn)}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 ${
-                !isVideoOn ? 'bg-error/20 text-error' : 'bg-success/20 text-success'
+                !isVideoOn ? 'bg-error text-white' : 'bg-success/20 text-success border border-success/30'
               }`}
               title={isVideoOn ? 'ปิดกล้อง' : 'เปิดกล้อง'}
             >
@@ -169,7 +201,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             <button
               onClick={() => actions.setIsHandRaised(!isHandRaised)}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 ${
-                isHandRaised ? 'bg-warning/20 text-warning animate-bounce-soft' : 'bg-surface text-text-secondary'
+                isHandRaised ? 'bg-warning text-white animate-bounce-soft' : 'bg-surface text-text-secondary border border-border/50'
               }`}
               title={isHandRaised ? 'เอามือลง' : 'ยกมือ'}
             >
@@ -185,7 +217,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
                 <button
                   key={emoji}
                   onClick={() => actions.handleReaction(emoji)}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-surface hover:bg-surface/80 hover:scale-125 transition-all"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-lg bg-surface hover:bg-surface/80 hover:scale-125 transition-all border border-border/30"
                   title="ส่งรีแอคชัน"
                 >
                   {emoji}
@@ -199,7 +231,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             <button
               onClick={() => { actions.setShowChat(!showChat); actions.setShowParticipants(false); }}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 ${
-                showChat ? 'bg-primary/20 text-primary' : 'bg-surface text-text-secondary'
+                showChat ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface text-text-secondary border border-border/50'
               }`}
               title="แชท"
             >
@@ -209,7 +241,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             <button
               onClick={() => { actions.setShowParticipants(!showParticipants); actions.setShowChat(false); }}
               className={`w-12 h-12 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 ${
-                showParticipants ? 'bg-primary/20 text-primary' : 'bg-surface text-text-secondary'
+                showParticipants ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface text-text-secondary border border-border/50'
               }`}
               title="ผู้เข้าร่วม"
             >
@@ -219,7 +251,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             {/* Leave */}
             <button
               onClick={() => actions.setShowLeaveModal(true)}
-              className="w-12 h-12 rounded-full flex items-center justify-center text-lg bg-error/20 text-error hover:bg-error/30 hover:scale-110 transition-all"
+              className="w-12 h-12 rounded-full flex items-center justify-center text-lg bg-error/90 text-white hover:bg-error hover:scale-110 transition-all shadow-lg shadow-error/20"
               title="ออกจากห้อง"
             >
               📞
@@ -258,20 +290,26 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             {showChat && (
               <>
                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  {messages.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                      <div className="text-4xl mb-3 opacity-20">💬</div>
+                      <p className="text-xs text-text-muted">ยังไม่มีข้อความ... เริ่มคุยกันเลย!</p>
+                    </div>
+                  )}
                   {messages.map((msg) => (
                     <div key={msg.id} className="flex gap-2 animate-fadeIn">
-                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-surface flex items-center justify-center text-sm">
-                        {msg.avatar}
+                      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-surface-variant flex items-center justify-center text-sm border border-border/30">
+                        {msg.avatar || '👤'}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className={`text-xs font-bold ${msg.isInstructor ? 'text-primary' : 'text-text-primary'}`}>
+                          <span className={`text-xs font-bold truncate max-w-[120px] ${msg.isInstructor ? 'text-primary' : 'text-text-primary'}`}>
                             {msg.user}
                           </span>
                           {msg.isInstructor && (
-                            <span className="px-1 py-0.5 rounded bg-primary/10 text-[9px] font-bold text-primary">อาจารย์</span>
+                            <span className="px-1 py-0.5 rounded bg-primary/10 text-[9px] font-bold text-primary flex-shrink-0">อาจารย์</span>
                           )}
-                          <span className="text-[10px] text-text-muted">{msg.time}</span>
+                          <span className="text-[9px] text-text-muted flex-shrink-0">{msg.time}</span>
                         </div>
                         <p className="text-sm text-text-secondary leading-snug break-words">{msg.text}</p>
                       </div>
@@ -293,7 +331,7 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
                     <button
                       type="submit"
                       disabled={!newMessage.trim()}
-                      className="px-3 py-2 rounded-xl btn-game text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform"
+                      className="w-10 h-10 rounded-xl btn-game text-white text-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform shadow-lg shadow-primary/20"
                     >
                       📤
                     </button>
@@ -306,12 +344,12 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
             {showParticipants && (
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {participants.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-surface/50 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-lg">
-                      {p.avatar}
+                  <div key={p.id} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-surface/50 transition-colors border border-transparent hover:border-border/30">
+                    <div className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-lg border border-border/30">
+                      {p.avatar || '👤'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${p.isInstructor ? 'text-primary' : 'text-text-primary'}`}>
+                      <p className={`text-sm font-medium truncate ${p.isInstructor ? 'text-primary' : 'text-text-primary'}`}>
                         {p.name}
                       </p>
                       {p.isInstructor && (
@@ -334,9 +372,9 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
 
       {/* Leave modal */}
       {showLeaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-fadeIn">
           <div className="glass rounded-2xl p-8 border border-border/50 shadow-2xl max-w-sm w-full mx-4 text-center">
-            <div className="text-5xl mb-4">🚪</div>
+            <div className="text-5xl mb-4 text-error">🚪</div>
             <h2 className="text-xl font-bold text-text-primary mb-2">ออกจากห้องเรียน?</h2>
             <p className="text-text-secondary text-sm mb-6">คุณแน่ใจว่าต้องการออกจากห้องเรียนสดนี้?</p>
             <div className="flex gap-3">
