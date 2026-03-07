@@ -59,7 +59,6 @@ CREATE INDEX IF NOT EXISTS idx_instructor_profiles_is_active ON public.instructo
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.courses (
   id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  instructor_profile_id UUID REFERENCES public.instructor_profiles(id) ON DELETE SET NULL,
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
   
   title TEXT NOT NULL,
@@ -93,16 +92,30 @@ CREATE TABLE IF NOT EXISTS public.courses (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_courses_instructor_profile_id ON public.courses(instructor_profile_id);
 CREATE INDEX IF NOT EXISTS idx_courses_category_id ON public.courses(category_id);
 CREATE INDEX IF NOT EXISTS idx_courses_slug ON public.courses(slug);
 CREATE INDEX IF NOT EXISTS idx_courses_is_active ON public.courses(is_active);
 CREATE INDEX IF NOT EXISTS idx_courses_is_featured ON public.courses(is_featured);
 
 -- ============================================================================
--- 4. TIME SLOTS (instructor availability)
+-- 3B. INSTRUCTOR_COURSES (many-to-many: อาจารย์เลือกคอร์สที่จะสอน)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS public.time_slots (
+CREATE TABLE IF NOT EXISTS public.instructor_courses (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  instructor_profile_id UUID REFERENCES public.instructor_profiles(id) ON DELETE CASCADE NOT NULL,
+  course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE NOT NULL,
+  is_primary BOOLEAN NOT NULL DEFAULT FALSE,  -- อาจารย์หลักของคอร์ส
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(instructor_profile_id, course_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_instructor_courses_instructor ON public.instructor_courses(instructor_profile_id);
+CREATE INDEX IF NOT EXISTS idx_instructor_courses_course ON public.instructor_courses(course_id);
+
+-- ============================================================================
+-- 4. INSTRUCTOR AVAILABILITIES (instructor schedule templates)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.instructor_availabilities (
   id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
   instructor_profile_id UUID REFERENCES public.instructor_profiles(id) ON DELETE CASCADE NOT NULL,
   
@@ -110,17 +123,13 @@ CREATE TABLE IF NOT EXISTS public.time_slots (
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
   
-  -- Booking status
-  is_booked BOOLEAN NOT NULL DEFAULT FALSE,
-  booked_course_id UUID REFERENCES public.courses(id) ON DELETE SET NULL,
-  
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_time_slots_instructor ON public.time_slots(instructor_profile_id);
-CREATE INDEX IF NOT EXISTS idx_time_slots_day ON public.time_slots(day_of_week);
+CREATE INDEX IF NOT EXISTS idx_instructor_availabilities_instructor ON public.instructor_availabilities(instructor_profile_id);
+CREATE INDEX IF NOT EXISTS idx_instructor_availabilities_day ON public.instructor_availabilities(day_of_week);
 
 -- ============================================================================
 -- 5. ENROLLMENTS (student purchases a course)
@@ -165,7 +174,7 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   instructor_profile_id UUID REFERENCES public.instructor_profiles(id) ON DELETE CASCADE NOT NULL,
   course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE NOT NULL,
   enrollment_id UUID REFERENCES public.enrollments(id) ON DELETE SET NULL,
-  time_slot_id UUID REFERENCES public.time_slots(id) ON DELETE SET NULL,
+  instructor_availability_id UUID REFERENCES public.instructor_availabilities(id) ON DELETE SET NULL,
   
   scheduled_date DATE NOT NULL,
   start_time TIME NOT NULL,
@@ -188,6 +197,30 @@ CREATE INDEX IF NOT EXISTS idx_bookings_course ON public.bookings(course_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_enrollment ON public.bookings(enrollment_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON public.bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON public.bookings(scheduled_date);
+
+-- ============================================================================
+-- 6B. INSTRUCTOR_REVIEWS (นักเรียนให้คะแนนอาจารย์)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.instructor_reviews (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  instructor_profile_id UUID REFERENCES public.instructor_profiles(id) ON DELETE CASCADE NOT NULL,
+  student_profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  course_id UUID REFERENCES public.courses(id) ON DELETE SET NULL,
+  booking_id UUID REFERENCES public.bookings(id) ON DELETE SET NULL,
+  
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT DEFAULT '',
+  
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- 1 review per student per booking
+  UNIQUE(student_profile_id, booking_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_instructor_reviews_instructor ON public.instructor_reviews(instructor_profile_id);
+CREATE INDEX IF NOT EXISTS idx_instructor_reviews_student ON public.instructor_reviews(student_profile_id);
 
 -- ============================================================================
 -- 6. LIVE SESSIONS
@@ -239,8 +272,8 @@ CREATE TRIGGER update_courses_updated_at
   BEFORE UPDATE ON public.courses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_time_slots_updated_at
-  BEFORE UPDATE ON public.time_slots
+CREATE TRIGGER update_instructor_availabilities_updated_at
+  BEFORE UPDATE ON public.instructor_availabilities
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_enrollments_updated_at
@@ -255,13 +288,19 @@ CREATE TRIGGER update_live_sessions_updated_at
   BEFORE UPDATE ON public.live_sessions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_instructor_reviews_updated_at
+  BEFORE UPDATE ON public.instructor_reviews
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- ============================================================================
 -- RLS: Enable Row Level Security
 -- ============================================================================
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.instructor_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.time_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.instructor_courses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.instructor_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.instructor_availabilities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.live_sessions ENABLE ROW LEVEL SECURITY;
@@ -293,34 +332,21 @@ CREATE POLICY "Admins can manage instructor profiles"
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
 
--- Courses: public read, instructor (own) + admin write
+-- Courses: public read, admin write (courses are not owned by any instructor)
 CREATE POLICY "Courses are viewable by everyone"
   ON public.courses FOR SELECT USING (true);
-
-CREATE POLICY "Instructors can manage their own courses"
-  ON public.courses FOR ALL
-  USING (
-    instructor_profile_id IN (
-      SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()
-    )
-  )
-  WITH CHECK (
-    instructor_profile_id IN (
-      SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()
-    )
-  );
 
 CREATE POLICY "Admins can manage all courses"
   ON public.courses FOR ALL
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
 
--- Time slots: public read, instructor (own) + admin write
-CREATE POLICY "Time slots are viewable by everyone"
-  ON public.time_slots FOR SELECT USING (true);
+-- Instructor-Courses junction: public read, instructors manage own, admin manages all
+CREATE POLICY "Instructor courses are viewable by everyone"
+  ON public.instructor_courses FOR SELECT USING (true);
 
-CREATE POLICY "Instructors can manage their own time slots"
-  ON public.time_slots FOR ALL
+CREATE POLICY "Instructors can manage their own course assignments"
+  ON public.instructor_courses FOR ALL
   USING (
     instructor_profile_id IN (
       SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()
@@ -332,8 +358,51 @@ CREATE POLICY "Instructors can manage their own time slots"
     )
   );
 
-CREATE POLICY "Admins can manage all time slots"
-  ON public.time_slots FOR ALL
+CREATE POLICY "Admins can manage all instructor course assignments"
+  ON public.instructor_courses FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- Instructor Reviews: public read, students create/update own, admin manages all
+CREATE POLICY "Instructor reviews are viewable by everyone"
+  ON public.instructor_reviews FOR SELECT USING (true);
+
+CREATE POLICY "Students can create reviews"
+  ON public.instructor_reviews FOR INSERT
+  WITH CHECK (
+    auth.role() = 'authenticated'
+    AND student_profile_id = public.get_active_profile_id()
+  );
+
+CREATE POLICY "Students can update their own reviews"
+  ON public.instructor_reviews FOR UPDATE
+  USING (student_profile_id = public.get_active_profile_id())
+  WITH CHECK (student_profile_id = public.get_active_profile_id());
+
+CREATE POLICY "Admins can manage all reviews"
+  ON public.instructor_reviews FOR ALL
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
+
+-- Instructor availabilities: public read, instructor (own) + admin write
+CREATE POLICY "Instructor availabilities are viewable by everyone"
+  ON public.instructor_availabilities FOR SELECT USING (true);
+
+CREATE POLICY "Instructors can manage their own availabilities"
+  ON public.instructor_availabilities FOR ALL
+  USING (
+    instructor_profile_id IN (
+      SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()
+    )
+  )
+  WITH CHECK (
+    instructor_profile_id IN (
+      SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()
+    )
+  );
+
+CREATE POLICY "Admins can manage all availabilities"
+  ON public.instructor_availabilities FOR ALL
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
 
@@ -346,8 +415,8 @@ CREATE POLICY "Instructors can view enrollments for their courses"
   ON public.enrollments FOR SELECT
   USING (
     course_id IN (
-      SELECT c.id FROM public.courses c
-      JOIN public.instructor_profiles ip ON c.instructor_profile_id = ip.id
+      SELECT ic.course_id FROM public.instructor_courses ic
+      JOIN public.instructor_profiles ip ON ic.instructor_profile_id = ip.id
       WHERE ip.profile_id = public.get_active_profile_id()
     )
   );

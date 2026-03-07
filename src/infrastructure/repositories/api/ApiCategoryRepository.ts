@@ -6,11 +6,11 @@
  */
 
 import {
-    Category,
-    CategoryStats,
-    CreateCategoryData,
-    ICategoryRepository,
-    UpdateCategoryData,
+  Category,
+  CategoryStats,
+  CreateCategoryData,
+  ICategoryRepository,
+  UpdateCategoryData,
 } from '@/src/application/repositories/ICategoryRepository';
 
 export class ApiCategoryRepository implements ICategoryRepository {

@@ -48,7 +48,8 @@ USING (
     EXISTS (
         SELECT 1 FROM public.enrollments e
         JOIN public.courses c ON e.course_id = c.id
-        JOIN public.instructor_profiles ip ON c.instructor_profile_id = ip.id
+        JOIN public.instructor_courses ic ON ic.course_id = c.id
+        JOIN public.instructor_profiles ip ON ic.instructor_profile_id = ip.id
         WHERE e.id = payments.enrollment_id
         AND ip.profile_id = public.get_active_profile_id()
     )

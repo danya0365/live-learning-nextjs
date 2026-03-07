@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseInstructorRepository(supabase);
   
-  const slots = await repository.getTimeSlots(id);
+  const slots = await repository.getAvailabilities(id);
   
   return NextResponse.json(slots);
 }

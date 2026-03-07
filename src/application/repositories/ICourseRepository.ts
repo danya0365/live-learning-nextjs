@@ -18,10 +18,8 @@ export interface Course {
   price: number;
   rating: number;
   totalStudents: number;
-  instructorId: string;
-  instructorName: string;
-  instructorAvatar: string;
-  isLive: boolean;
+  instructorCount: number;
+  isLiveFeature: boolean;
   isActive: boolean;
   tags: string[];
   learningOutcomes: string[];
@@ -51,7 +49,6 @@ export interface CreateCourseData {
   level: CourseLevel;
   durationMinutes: number;
   price: number;
-  instructorId: string;
   tags?: string[];
 }
 

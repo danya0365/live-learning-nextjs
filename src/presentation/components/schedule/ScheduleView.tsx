@@ -248,16 +248,10 @@ function TimeSlotCard({ slot }: { slot: ScheduleTimeSlot }) {
       </div>
 
       {/* Booked course info */}
-      {slot.isBooked && slot.bookedCourseName && (
+      {slot.isBooked && (
         <div className="mt-3 p-3 rounded-xl bg-warning/5 border border-warning/20">
-          <p className="text-xs text-text-muted mb-1">กำลังสอนคอร์ส:</p>
-          <p className="text-sm font-semibold text-text-primary">{slot.bookedCourseName}</p>
-          <button
-            onClick={() => router.push(`/live/${slot.id}`)}
-            className="mt-2 text-xs text-primary font-medium hover:underline"
-          >
-            🎥 เข้าห้องเรียน →
-          </button>
+          <p className="text-xs text-text-muted mb-1">สถานะ</p>
+          <p className="text-sm font-semibold text-text-primary">ถูกจองแล้ว</p>
         </div>
       )}
 

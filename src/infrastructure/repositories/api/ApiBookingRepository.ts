@@ -8,11 +8,11 @@
 'use client';
 
 import {
-  Booking,
-  BookingStats,
-  CreateBookingPayload,
-  IBookingRepository,
-  UpdateBookingData
+    Booking,
+    BookingStats,
+    CreateBookingPayload,
+    IBookingRepository,
+    UpdateBookingData
 } from '@/src/application/repositories/IBookingRepository';
 
 export class ApiBookingRepository implements IBookingRepository {
@@ -38,13 +38,15 @@ export class ApiBookingRepository implements IBookingRepository {
   }
 
   async getByStudentId(studentId: string): Promise<Booking[]> {
-    const res = await fetch(`${this.baseUrl}?studentId=${studentId}`);
+    // Uses the new secure endpoint
+    const res = await fetch(`${this.baseUrl}/students`);
     if (!res.ok) throw new Error('Failed to fetch student bookings');
     return res.json();
   }
 
   async getByInstructorId(instructorId: string): Promise<Booking[]> {
-    const res = await fetch(`${this.baseUrl}?instructorId=${instructorId}`);
+    // Uses the new secure endpoint
+    const res = await fetch(`${this.baseUrl}/instructors`);
     if (!res.ok) throw new Error('Failed to fetch instructor bookings');
     return res.json();
   }

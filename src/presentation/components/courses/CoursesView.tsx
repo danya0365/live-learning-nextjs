@@ -187,13 +187,9 @@ function CourseCard({ course, index }: { course: CoursesViewModel['courses'][0];
             {tagIcon(course.tags[0])}
           </span>
         </div>
-        {course.isLive && (
-          <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-md bg-error/90 text-white text-xs font-bold">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
-            </span>
-            LIVE
+        {course.isLiveFeature && (
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/90 text-white text-[10px] font-bold shadow-lg backdrop-blur-sm">
+            <span>📡 คลาสเรียนสด</span>
           </div>
         )}
         <div className="absolute top-3 right-3 px-2 py-1 rounded-md glass text-xs font-medium text-white">
@@ -215,7 +211,7 @@ function CourseCard({ course, index }: { course: CoursesViewModel['courses'][0];
 
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-sm">👨‍🏫</div>
-          <span className="text-sm text-text-secondary truncate">{course.instructorName}</span>
+          <span className="text-sm text-text-secondary truncate">อาจารย์ {course.instructorCount} คน</span>
         </div>
 
         <div className="flex items-center gap-4 text-xs text-text-muted mb-4">

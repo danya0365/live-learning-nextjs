@@ -102,13 +102,9 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-8xl opacity-60">{course.tags[0] === 'React' ? '⚛️' : course.tags[0] === 'Python' ? '🐍' : course.tags[0] === 'UX' ? '🎨' : course.tags[0] === 'Flutter' ? '📱' : '📚'}</span>
             </div>
-            {course.isLive && (
-              <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-error/90 text-white text-sm font-bold">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-                </span>
-                LIVE NOW
+            {course.isLiveFeature && (
+              <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/90 text-white text-sm font-bold shadow-lg backdrop-blur-sm">
+                <span>📡 คลาสเรียนสด</span>
               </div>
             )}
             <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg glass text-white text-sm font-medium">
@@ -178,24 +174,17 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                 {instructorTimeSlots.map((slot) => (
                   <div
                     key={slot.id}
-                    className={`glass rounded-xl p-4 border-l-4 ${slot.isBooked ? 'border-l-warning' : 'border-l-success'} hover:scale-[1.01] transition-transform`}
+                    className="glass rounded-xl p-4 border-l-4 border-l-success hover:scale-[1.01] transition-transform"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-text-primary text-sm">
                         วัน{DAY_NAMES[slot.dayOfWeek]}
                       </span>
-                      {slot.isBooked ? (
-                        <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-xs font-bold">📌 จองแล้ว</span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-bold">✅ ว่าง</span>
-                      )}
+                      <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-bold">✅ ว่าง</span>
                     </div>
                     <div className="text-lg font-bold text-text-primary">{slot.startTime} - {slot.endTime}</div>
-                    {slot.isBooked && slot.bookedCourseName && (
-                      <p className="text-xs text-text-muted mt-1">กำลังสอน: {slot.bookedCourseName}</p>
-                    )}
-                    {!slot.isBooked && (
-                      isEnrolled && hasRemainingHours ? (
+                    
+                    {isEnrolled && hasRemainingHours ? (
                         <button
                           onClick={() => handleOpenBooking(slot.id)}
                           className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
@@ -217,7 +206,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                           🔒 ต้องลงทะเบียนก่อนจอง
                         </button>
                       )
-                    )}
+                    }
                   </div>
                 ))}
               </div>
@@ -409,7 +398,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
               </button>
             )}
 
-            {course.isLive && isEnrolled && (
+            {course.isLiveFeature && isEnrolled && (
               <button
                 onClick={() => router.push(`/live/${course.id}`)}
                 className="w-full py-3 rounded-xl border-2 border-error text-error font-bold hover:bg-error/10 transition-colors"

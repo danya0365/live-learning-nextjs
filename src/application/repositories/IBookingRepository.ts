@@ -15,7 +15,7 @@ export interface Booking {
   courseId: string;
   courseName: string;
   enrollmentId?: string;
-  timeSlotId: string;
+  instructorAvailabilityId: string;
   scheduledDate: string;
   startTime: string;
   endTime: string;
@@ -41,7 +41,7 @@ export interface CreateBookingData {
   instructorId: string;
   courseId: string;
   enrollmentId?: string;
-  timeSlotId: string;
+  instructorAvailabilityId: string;
   scheduledDate: string;
 }
 

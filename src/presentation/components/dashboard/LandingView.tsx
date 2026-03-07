@@ -62,7 +62,7 @@ export function LandingView({ popularCourses = [] }: LandingViewProps) {
                     {course.title}
                   </h3>
                   <p className="text-text-muted text-xs">
-                    {course.instructorName} • ⭐ {course.rating}
+                    👨‍🏫 {course.instructorCount} คน • ⭐ {course.rating}
                   </p>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className="text-[10px] font-medium text-text-muted bg-surface px-1.5 py-0.5 rounded">

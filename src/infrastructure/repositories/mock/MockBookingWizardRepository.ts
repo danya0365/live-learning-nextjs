@@ -1,10 +1,10 @@
 import { Booking } from '@/src/application/repositories/IBookingRepository';
 import {
-  CreateWizardBookingData,
-  IBookingWizardRepository,
-  WizardCourse,
-  WizardInstructor,
-  WizardSlot,
+    CreateWizardBookingData,
+    IBookingWizardRepository,
+    WizardCourse,
+    WizardInstructor,
+    WizardSlot,
 } from '@/src/application/repositories/IBookingWizardRepository';
 import { ALL_COURSES, ALL_INSTRUCTORS, ALL_SLOTS } from '@/src/data/mock/booking-wizard';
 
@@ -41,7 +41,7 @@ export class MockBookingWizardRepository implements IBookingWizardRepository {
       instructorName: instructor?.name || '',
       courseId: data.courseId,
       courseName: course?.title || '',
-      timeSlotId: data.slotId,
+      instructorAvailabilityId: data.slotId,
       scheduledDate: data.date,
       startTime: slot?.startTime || '',
       endTime: slot?.endTime || '',

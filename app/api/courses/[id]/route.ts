@@ -40,8 +40,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           return NextResponse.json({ error: 'Course not found' }, { status: 404 });
       }
 
-      if (existing.instructorId !== instructor.id) {
-          return NextResponse.json({ error: 'Unauthorized: You can only update your own courses' }, { status: 403 });
+      // Check ownership through instructor_courses junction table
+      const instructorCourses = await repository.getByInstructorId(instructor.id);
+      const isOwner = instructorCourses.some(c => c.id === id);
+      if (!isOwner) {
+          return NextResponse.json({ error: 'Unauthorized: You can only update courses you teach' }, { status: 403 });
       }
 
       const updated = await repository.update(id, body);
@@ -70,8 +73,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
           return NextResponse.json({ error: 'Course not found' }, { status: 404 });
       }
 
-      if (existing.instructorId !== instructor.id) {
-          return NextResponse.json({ error: 'Unauthorized: You can only delete your own courses' }, { status: 403 });
+      const instructorCourses = await repository.getByInstructorId(instructor.id);
+      const isOwner = instructorCourses.some(c => c.id === id);
+      if (!isOwner) {
+          return NextResponse.json({ error: 'Unauthorized: You can only delete courses you teach' }, { status: 403 });
       }
       
       const success = await repository.delete(id);

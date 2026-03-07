@@ -8,15 +8,16 @@ import {
     CreateInstructorData,
     IInstructorRepository,
     Instructor,
+    InstructorAvailability,
+    InstructorReview,
     InstructorStats,
-    TimeSlot,
     UpdateInstructorData,
 } from '@/src/application/repositories/IInstructorRepository';
-import { MOCK_INSTRUCTORS, MOCK_TIME_SLOTS } from '@/src/data/mock/instructors';
+import { MOCK_AVAILABILITIES, MOCK_INSTRUCTORS } from '@/src/data/mock/instructors';
 
 export class MockInstructorRepository implements IInstructorRepository {
   private items: Instructor[] = [...MOCK_INSTRUCTORS];
-  private timeSlots: TimeSlot[] = [...MOCK_TIME_SLOTS];
+  private availabilities: InstructorAvailability[] = [...MOCK_AVAILABILITIES];
 
   async getById(id: string): Promise<Instructor | null> {
     await this.delay(100);
@@ -53,9 +54,27 @@ export class MockInstructorRepository implements IInstructorRepository {
       .slice(0, limit);
   }
 
-  async getTimeSlots(instructorId: string): Promise<TimeSlot[]> {
+  async getAvailabilities(instructorId: string): Promise<InstructorAvailability[]> {
     await this.delay(100);
-    return this.timeSlots.filter((slot) => slot.instructorId === instructorId);
+    return this.availabilities.filter((slot) => slot.instructorId === instructorId);
+  }
+
+  async getCourseInstructors(_courseId: string): Promise<Instructor[]> {
+    await this.delay(100);
+    return this.items.slice(0, 1); // Return first instructor as mock
+  }
+
+  async addCourseToInstructor(_instructorId: string, _courseId: string): Promise<void> {
+    await this.delay(100);
+  }
+
+  async removeCourseFromInstructor(_instructorId: string, _courseId: string): Promise<void> {
+    await this.delay(100);
+  }
+
+  async getReviews(_instructorId: string): Promise<InstructorReview[]> {
+    await this.delay(100);
+    return [];
   }
 
   async create(data: CreateInstructorData): Promise<Instructor> {

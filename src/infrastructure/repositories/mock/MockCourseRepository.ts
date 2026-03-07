@@ -5,12 +5,12 @@
  */
 
 import {
-  Course,
-  CourseStats,
-  CreateCourseData,
-  ICourseRepository,
-  PaginatedResult,
-  UpdateCourseData,
+    Course,
+    CourseStats,
+    CreateCourseData,
+    ICourseRepository,
+    PaginatedResult,
+    UpdateCourseData,
 } from '@/src/application/repositories/ICourseRepository';
 import { MOCK_COURSES } from '@/src/data/mock/courses';
 
@@ -44,9 +44,9 @@ export class MockCourseRepository implements ICourseRepository {
     return this.items.filter((item) => item.categoryId === categoryId);
   }
 
-  async getByInstructorId(instructorId: string): Promise<Course[]> {
+  async getByInstructorId(_instructorId: string): Promise<Course[]> {
     await this.delay(100);
-    return this.items.filter((item) => item.instructorId === instructorId);
+    return []; // In the new model, this requires a junction table query
   }
 
   async getFeatured(): Promise<Course[]> {
@@ -62,14 +62,12 @@ export class MockCourseRepository implements ICourseRepository {
     const newItem: Course = {
       id: `course-${Date.now()}`,
       ...data,
-      instructorId: data.instructorId || 'inst-001',
       thumbnail: data.thumbnail || '',
       categoryName: '',
       rating: 0,
       totalStudents: 0,
-      instructorName: '',
-      instructorAvatar: '',
-      isLive: false,
+      instructorCount: 0,
+      isLiveFeature: false,
       isActive: true,
       tags: data.tags || [],
       learningOutcomes: [],

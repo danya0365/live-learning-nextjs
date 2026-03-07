@@ -12,7 +12,7 @@ import {
 } from '@/src/application/repositories/ICourseRepository';
 import {
     IInstructorRepository,
-    TimeSlot
+    InstructorAvailability
 } from '@/src/application/repositories/IInstructorRepository';
 import { type Metadata } from 'next';
 
@@ -27,9 +27,10 @@ export interface ScheduleInstructor {
   hourlyRate: number;
 }
 
-export interface ScheduleTimeSlot extends TimeSlot {
+export interface ScheduleTimeSlot extends InstructorAvailability {
   instructorName: string;
   dayName: string;
+  isBooked: boolean; // Add this back for UI purposes
 }
 
 export interface ScheduleFilters {
@@ -61,11 +62,12 @@ export class SchedulePresenter {
     // Gather all timeslots for all instructors
     // Gather all timeslots for all instructors concurrently
     const timeSlotsPromises = allInstructors.map(async (inst) => {
-      const slots = await this.instructorRepository.getTimeSlots(inst.id);
+      const slots = await this.instructorRepository.getAvailabilities(inst.id);
       return slots.map((slot) => ({
         ...slot,
         instructorName: inst.name,
         dayName: DAY_NAMES[slot.dayOfWeek],
+        isBooked: false, // Default to false for UI, real logic needs DB
       }));
     });
 

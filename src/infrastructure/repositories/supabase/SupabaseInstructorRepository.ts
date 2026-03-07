@@ -10,8 +10,9 @@ import {
     CreateInstructorData,
     IInstructorRepository,
     Instructor,
+    InstructorAvailability,
+    InstructorReview,
     InstructorStats,
-    TimeSlot,
     UpdateInstructorData,
 } from '@/src/application/repositories/IInstructorRepository';
 import { Database } from '@/src/domain/types/supabase';
@@ -21,7 +22,10 @@ type InstructorRow = Database['public']['Tables']['instructor_profiles']['Row'] 
   profiles: Database['public']['Tables']['profiles']['Row'];
 };
 
-type TimeSlotRow = Database['public']['Tables']['time_slots']['Row'] & {
+type InstructorAvailabilityRow = Database['public']['Tables']['instructor_availabilities']['Row'];
+
+type ReviewRow = Database['public']['Tables']['instructor_reviews']['Row'] & {
+  profiles?: Database['public']['Tables']['profiles']['Row'] | null;
   courses?: Database['public']['Tables']['courses']['Row'] | null;
 };
 
@@ -125,38 +129,111 @@ export class SupabaseInstructorRepository implements IInstructorRepository {
     return (data as unknown as InstructorRow[]).map(this.mapToDomain);
   }
 
-  async getTimeSlots(instructorId: string): Promise<TimeSlot[]> {
+  async getAvailabilities(instructorId: string): Promise<InstructorAvailability[]> {
     const { data, error } = await this.supabase
-      .from('time_slots')
-      .select(`
-        *,
-        courses (title)
-      `)
+      .from('instructor_availabilities')
+      .select('*')
       .eq('instructor_profile_id', instructorId)
       .eq('is_active', true)
       .order('day_of_week')
       .order('start_time');
 
     if (error) {
-      console.error('Error fetching time slots:', error);
+      console.error('Error fetching instructor availabilities:', error);
       return [];
     }
 
-    return (data as unknown as TimeSlotRow[]).map((row) => ({
+    return (data as unknown as InstructorAvailabilityRow[]).map((row) => ({
       id: row.id,
       instructorId: row.instructor_profile_id,
       dayOfWeek: row.day_of_week,
       startTime: row.start_time,
       endTime: row.end_time,
-      isBooked: row.is_booked,
-      bookedCourseId: row.booked_course_id || undefined,
-      bookedCourseName: row.courses?.title || undefined,
+    }));
+  }
+
+  async getCourseInstructors(courseId: string): Promise<Instructor[]> {
+    const { data, error } = await this.supabase
+      .from('instructor_courses')
+      .select(`
+        instructor_profiles!inner (
+          *,
+          profiles (*)
+        )
+      `)
+      .eq('course_id', courseId)
+      .order('is_primary', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching course instructors:', error);
+      return [];
+    }
+
+    // Map extracted nested relations
+    return data
+      .map((row: any) => row.instructor_profiles)
+      .filter(Boolean)
+      .map((ip: any) => this.mapToDomain(ip as unknown as InstructorRow));
+  }
+
+  async getReviews(instructorId: string): Promise<InstructorReview[]> {
+    const { data, error } = await this.supabase
+      .from('instructor_reviews')
+      .select(`
+        *,
+        profiles (*),
+        courses (title)
+      `)
+      .eq('instructor_profile_id', instructorId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching instructor reviews:', error);
+      return [];
+    }
+
+    return (data as unknown as ReviewRow[]).map(row => ({
+      id: row.id,
+      instructorId: row.instructor_profile_id,
+      studentName: row.profiles?.full_name || 'Anonymous',
+      studentAvatar: row.profiles?.avatar_url || '/images/placeholder-avatar.jpg',
+      courseTitle: row.courses?.title || 'General',
+      rating: row.rating,
+      comment: row.comment || '',
+      createdAt: row.created_at || new Date().toISOString()
     }));
   }
 
   // ============================================================
   // WRITE OPERATIONS
   // ============================================================
+
+  async addCourseToInstructor(instructorId: string, courseId: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('instructor_courses')
+      .insert({
+        instructor_profile_id: instructorId,
+        course_id: courseId,
+        is_primary: false,
+      })
+      .select()
+      .single();
+
+    if (error && error.code !== '23505') { // Ignore unique violation
+      throw error;
+    }
+  }
+
+  async removeCourseFromInstructor(instructorId: string, courseId: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('instructor_courses')
+      .delete()
+      .eq('instructor_profile_id', instructorId)
+      .eq('course_id', courseId);
+
+    if (error) throw error;
+  }
 
   async create(data: CreateInstructorData): Promise<Instructor> {
     // Note: This needs a profile_id. In a real scenario, we'd creating this from a user profile context.

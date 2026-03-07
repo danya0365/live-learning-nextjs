@@ -1,4 +1,4 @@
-import { Instructor, TimeSlot } from '@/src/application/repositories/IInstructorRepository';
+import { Instructor, InstructorAvailability } from '@/src/application/repositories/IInstructorRepository';
 
 export const MOCK_INSTRUCTORS: Instructor[] = [
   {
@@ -83,24 +83,24 @@ export const MOCK_INSTRUCTORS: Instructor[] = [
   },
 ];
 
-export const MOCK_TIME_SLOTS: TimeSlot[] = [
+export const MOCK_AVAILABILITIES: InstructorAvailability[] = [
   // อ.สมชาย - Mon, Wed, Fri mornings
-  { id: 'ts-001', instructorId: 'inst-001', dayOfWeek: 1, startTime: '09:00', endTime: '11:00', isBooked: false },
-  { id: 'ts-002', instructorId: 'inst-001', dayOfWeek: 1, startTime: '13:00', endTime: '15:00', isBooked: true, bookedCourseId: 'course-001', bookedCourseName: 'พื้นฐาน React.js สำหรับผู้เริ่มต้น' },
-  { id: 'ts-003', instructorId: 'inst-001', dayOfWeek: 3, startTime: '09:00', endTime: '11:00', isBooked: false },
-  { id: 'ts-004', instructorId: 'inst-001', dayOfWeek: 5, startTime: '14:00', endTime: '16:00', isBooked: true, bookedCourseId: 'course-004', bookedCourseName: 'Node.js & Express Backend' },
+  { id: 'ts-001', instructorId: 'inst-001', dayOfWeek: 1, startTime: '09:00', endTime: '11:00' },
+  { id: 'ts-002', instructorId: 'inst-001', dayOfWeek: 1, startTime: '13:00', endTime: '15:00' },
+  { id: 'ts-003', instructorId: 'inst-001', dayOfWeek: 3, startTime: '09:00', endTime: '11:00' },
+  { id: 'ts-004', instructorId: 'inst-001', dayOfWeek: 5, startTime: '14:00', endTime: '16:00' },
   // ดร.นภา - Tue, Thu
-  { id: 'ts-005', instructorId: 'inst-002', dayOfWeek: 2, startTime: '10:00', endTime: '12:00', isBooked: true, bookedCourseId: 'course-002', bookedCourseName: 'Python AI & Machine Learning' },
-  { id: 'ts-006', instructorId: 'inst-002', dayOfWeek: 4, startTime: '10:00', endTime: '12:00', isBooked: false },
-  { id: 'ts-007', instructorId: 'inst-002', dayOfWeek: 4, startTime: '14:00', endTime: '16:00', isBooked: false },
+  { id: 'ts-005', instructorId: 'inst-002', dayOfWeek: 2, startTime: '10:00', endTime: '12:00' },
+  { id: 'ts-006', instructorId: 'inst-002', dayOfWeek: 4, startTime: '10:00', endTime: '12:00' },
+  { id: 'ts-007', instructorId: 'inst-002', dayOfWeek: 4, startTime: '14:00', endTime: '16:00' },
   // อ.พิมพ์ลดา - Mon, Wed, Sat
-  { id: 'ts-008', instructorId: 'inst-003', dayOfWeek: 1, startTime: '10:00', endTime: '12:00', isBooked: true, bookedCourseId: 'course-003', bookedCourseName: 'UX/UI Design Masterclass' },
-  { id: 'ts-010', instructorId: 'inst-003', dayOfWeek: 6, startTime: '09:00', endTime: '12:00', isBooked: false },
+  { id: 'ts-008', instructorId: 'inst-003', dayOfWeek: 1, startTime: '10:00', endTime: '12:00' },
+  { id: 'ts-010', instructorId: 'inst-003', dayOfWeek: 6, startTime: '09:00', endTime: '12:00' },
   // อ.ธนกร - Tue, Thu, Sat
-  { id: 'ts-011', instructorId: 'inst-004', dayOfWeek: 2, startTime: '18:00', endTime: '20:00', isBooked: true, bookedCourseId: 'course-005', bookedCourseName: 'Flutter Mobile App Development' },
-  { id: 'ts-012', instructorId: 'inst-004', dayOfWeek: 4, startTime: '18:00', endTime: '20:00', isBooked: false },
-  { id: 'ts-013', instructorId: 'inst-004', dayOfWeek: 6, startTime: '10:00', endTime: '12:00', isBooked: false },
+  { id: 'ts-011', instructorId: 'inst-004', dayOfWeek: 2, startTime: '18:00', endTime: '20:00' },
+  { id: 'ts-012', instructorId: 'inst-004', dayOfWeek: 4, startTime: '18:00', endTime: '20:00' },
+  { id: 'ts-013', instructorId: 'inst-004', dayOfWeek: 6, startTime: '10:00', endTime: '12:00' },
   // อ.วีรภัทร - Sat, Sun
-  { id: 'ts-014', instructorId: 'inst-005', dayOfWeek: 6, startTime: '09:00', endTime: '12:00', isBooked: true, bookedCourseId: 'course-006', bookedCourseName: 'Cybersecurity Fundamentals' },
-  { id: 'ts-015', instructorId: 'inst-005', dayOfWeek: 0, startTime: '13:00', endTime: '16:00', isBooked: false },
+  { id: 'ts-014', instructorId: 'inst-005', dayOfWeek: 6, startTime: '09:00', endTime: '12:00' },
+  { id: 'ts-015', instructorId: 'inst-005', dayOfWeek: 0, startTime: '13:00', endTime: '16:00' },
 ];

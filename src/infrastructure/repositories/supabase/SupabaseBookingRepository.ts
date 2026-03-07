@@ -43,7 +43,7 @@ export class SupabaseBookingRepository implements IBookingRepository {
       courseId: row.course_id,
       courseName: course?.title || 'Unknown Course',
       enrollmentId: row.enrollment_id || undefined,
-      timeSlotId: row.time_slot_id || '',
+      instructorAvailabilityId: row.instructor_availability_id || '',
       scheduledDate: row.scheduled_date,
       startTime: row.start_time,
       endTime: row.end_time,
@@ -184,9 +184,9 @@ export class SupabaseBookingRepository implements IBookingRepository {
      const resolvedStudentId = studentId || '';
 
      const { data: slot } = await this.supabase
-        .from('time_slots')
+        .from('instructor_availabilities')
         .select('*')
-        .eq('id', data.timeSlotId)
+        .eq('id', data.instructorAvailabilityId)
         .single();
         
      const startTime = slot ? slot.start_time : '09:00:00';
@@ -198,7 +198,7 @@ export class SupabaseBookingRepository implements IBookingRepository {
           student_profile_id: resolvedStudentId,
           instructor_profile_id: data.instructorId,
           course_id: data.courseId,
-          time_slot_id: data.timeSlotId,
+          instructor_availability_id: data.instructorAvailabilityId, // mapped from CreateBookingPayload.instructorAvailabilityId
           scheduled_date: data.scheduledDate,
           start_time: startTime,
           end_time: endTime,

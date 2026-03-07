@@ -107,6 +107,7 @@ export type Database = {
           end_time: string
           enrollment_id: string | null
           id: string
+          instructor_availability_id: string | null
           instructor_profile_id: string
           is_active: boolean
           notes: string | null
@@ -114,7 +115,6 @@ export type Database = {
           start_time: string
           status: Database["public"]["Enums"]["booking_status"]
           student_profile_id: string
-          time_slot_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -124,6 +124,7 @@ export type Database = {
           end_time: string
           enrollment_id?: string | null
           id?: string
+          instructor_availability_id?: string | null
           instructor_profile_id: string
           is_active?: boolean
           notes?: string | null
@@ -131,7 +132,6 @@ export type Database = {
           start_time: string
           status?: Database["public"]["Enums"]["booking_status"]
           student_profile_id: string
-          time_slot_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -141,6 +141,7 @@ export type Database = {
           end_time?: string
           enrollment_id?: string | null
           id?: string
+          instructor_availability_id?: string | null
           instructor_profile_id?: string
           is_active?: boolean
           notes?: string | null
@@ -148,7 +149,6 @@ export type Database = {
           start_time?: string
           status?: Database["public"]["Enums"]["booking_status"]
           student_profile_id?: string
-          time_slot_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -167,6 +167,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_instructor_availability_id_fkey"
+            columns: ["instructor_availability_id"]
+            isOneToOne: false
+            referencedRelation: "instructor_availabilities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_instructor_profile_id_fkey"
             columns: ["instructor_profile_id"]
             isOneToOne: false
@@ -178,13 +185,6 @@ export type Database = {
             columns: ["student_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_time_slot_id_fkey"
-            columns: ["time_slot_id"]
-            isOneToOne: false
-            referencedRelation: "time_slots"
             referencedColumns: ["id"]
           },
         ]
@@ -408,7 +408,6 @@ export type Database = {
           description: string | null
           has_interactive_lab: boolean | null
           id: string
-          instructor_profile_id: string | null
           interactive_lab_slug: string | null
           is_active: boolean
           is_featured: boolean
@@ -438,7 +437,6 @@ export type Database = {
           description?: string | null
           has_interactive_lab?: boolean | null
           id?: string
-          instructor_profile_id?: string | null
           interactive_lab_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
@@ -468,7 +466,6 @@ export type Database = {
           description?: string | null
           has_interactive_lab?: boolean | null
           id?: string
-          instructor_profile_id?: string | null
           interactive_lab_slug?: string | null
           is_active?: boolean
           is_featured?: boolean
@@ -497,13 +494,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "courses_instructor_profile_id_fkey"
-            columns: ["instructor_profile_id"]
-            isOneToOne: false
-            referencedRelation: "instructor_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -684,6 +674,86 @@ export type Database = {
           },
         ]
       }
+      instructor_availabilities: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          instructor_profile_id: string
+          is_active: boolean
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          instructor_profile_id: string
+          is_active?: boolean
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          instructor_profile_id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_availabilities_instructor_profile_id_fkey"
+            columns: ["instructor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "instructor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructor_courses: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          instructor_profile_id: string
+          is_primary: boolean
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          instructor_profile_id: string
+          is_primary?: boolean
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          instructor_profile_id?: string
+          is_primary?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_courses_instructor_profile_id_fkey"
+            columns: ["instructor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "instructor_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instructor_profiles: {
         Row: {
           bio: string | null
@@ -741,6 +811,74 @@ export type Database = {
             foreignKeyName: "instructor_profiles_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructor_reviews: {
+        Row: {
+          booking_id: string | null
+          comment: string | null
+          course_id: string | null
+          created_at: string | null
+          id: string
+          instructor_profile_id: string
+          is_active: boolean
+          rating: number
+          student_profile_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          comment?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          instructor_profile_id: string
+          is_active?: boolean
+          rating: number
+          student_profile_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          comment?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          instructor_profile_id?: string
+          is_active?: boolean
+          rating?: number
+          student_profile_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_reviews_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_reviews_instructor_profile_id_fkey"
+            columns: ["instructor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "instructor_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_reviews_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1050,60 +1188,6 @@ export type Database = {
           verification_status?: string
         }
         Relationships: []
-      }
-      time_slots: {
-        Row: {
-          booked_course_id: string | null
-          created_at: string | null
-          day_of_week: number
-          end_time: string
-          id: string
-          instructor_profile_id: string
-          is_active: boolean
-          is_booked: boolean
-          start_time: string
-          updated_at: string | null
-        }
-        Insert: {
-          booked_course_id?: string | null
-          created_at?: string | null
-          day_of_week: number
-          end_time: string
-          id?: string
-          instructor_profile_id: string
-          is_active?: boolean
-          is_booked?: boolean
-          start_time: string
-          updated_at?: string | null
-        }
-        Update: {
-          booked_course_id?: string | null
-          created_at?: string | null
-          day_of_week?: number
-          end_time?: string
-          id?: string
-          instructor_profile_id?: string
-          is_active?: boolean
-          is_booked?: boolean
-          start_time?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "time_slots_booked_course_id_fkey"
-            columns: ["booked_course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "time_slots_instructor_profile_id_fkey"
-            columns: ["instructor_profile_id"]
-            isOneToOne: false
-            referencedRelation: "instructor_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_achievements: {
         Row: {

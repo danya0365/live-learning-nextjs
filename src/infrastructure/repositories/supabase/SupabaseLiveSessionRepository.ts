@@ -4,10 +4,9 @@ import { LiveSession as DomainLiveSession } from '@/src/presentation/presenters/
 import { SupabaseClient } from '@supabase/supabase-js';
 
 type LiveSessionRow = Database['public']['Tables']['live_sessions']['Row'] & {
-  course: Database['public']['Tables']['courses']['Row'] & {
-    instructor_profiles: Database['public']['Tables']['instructor_profiles']['Row'] & {
-      profiles: Database['public']['Tables']['profiles']['Row'];
-    };
+  course: Database['public']['Tables']['courses']['Row'];
+  instructor_profile: Database['public']['Tables']['instructor_profiles']['Row'] & {
+    profiles: Database['public']['Tables']['profiles']['Row'];
   };
 };
 
@@ -19,12 +18,10 @@ export class SupabaseLiveSessionRepository implements ILiveSessionRepository {
       .from('live_sessions')
       .select(`
         *,
-        course:courses!course_id(
+        course:courses!course_id(*),
+        instructor_profile:instructor_profiles!instructor_profile_id(
           *,
-          instructor_profiles(
-            *,
-            profiles(*)
-          )
+          profiles(*)
         )
       `)
       .eq('status', 'live')
@@ -37,7 +34,7 @@ export class SupabaseLiveSessionRepository implements ILiveSessionRepository {
 
     return (data as unknown as LiveSessionRow[]).map((row) => {
       const courseRow = row.course;
-      const instructorProfile = courseRow.instructor_profiles;
+      const instructorProfile = row.instructor_profile;
       const profile = instructorProfile?.profiles;
 
       return {
@@ -47,16 +44,14 @@ export class SupabaseLiveSessionRepository implements ILiveSessionRepository {
           description: courseRow.description || '',
           thumbnail: courseRow.thumbnail_url || '/images/placeholder-course.jpg',
           categoryId: courseRow.category_id || '',
-          categoryName: 'Unknown Category', // Categories would need another join if needed
+          categoryName: 'Unknown Category',
           level: (courseRow.level as any) || 'beginner',
           durationMinutes: (courseRow.total_hours || 0) * 60,
           price: courseRow.price,
           rating: Number(courseRow.rating) || 0,
           totalStudents: courseRow.total_students || 0,
-          instructorId: courseRow.instructor_profile_id || '',
-          instructorName: profile?.full_name || 'Unknown Instructor',
-          instructorAvatar: profile?.avatar_url || '/images/placeholder-avatar.jpg',
-          isLive: true, // It is live because we filtered by status='live'
+          instructorCount: 1,
+          isLive: true,
           isActive: courseRow.is_active,
           tags: courseRow.tags || [],
           createdAt: courseRow.created_at || '',
@@ -68,7 +63,7 @@ export class SupabaseLiveSessionRepository implements ILiveSessionRepository {
           avatar: profile?.avatar_url || '/images/placeholder-avatar.jpg',
           isOnline: instructorProfile?.is_online || false,
         } as any,
-        booking: null, // Bookings are not directly tied to public live sessions in the same way
+        booking: null,
         viewerCount: row.viewer_count || 0,
       };
     });

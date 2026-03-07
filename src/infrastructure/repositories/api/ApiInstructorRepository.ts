@@ -9,8 +9,9 @@ import {
     CreateInstructorData,
     IInstructorRepository,
     Instructor,
+    InstructorAvailability,
+    InstructorReview,
     InstructorStats,
-    TimeSlot,
     UpdateInstructorData,
 } from '@/src/application/repositories/IInstructorRepository';
 
@@ -48,10 +49,38 @@ export class ApiInstructorRepository implements IInstructorRepository {
       return res.json();
   }
 
-  async getTimeSlots(instructorId: string): Promise<TimeSlot[]> {
+  async getAvailabilities(instructorId: string): Promise<InstructorAvailability[]> {
       const res = await fetch(`${this.baseUrl}/${instructorId}/timeslots`);
       if (!res.ok) throw new Error('Failed to fetch time slots');
       return res.json();
+  }
+
+  async getCourseInstructors(courseId: string): Promise<Instructor[]> {
+    const res = await fetch(`${this.baseUrl}?courseId=${courseId}`);
+    if (!res.ok) throw new Error('Failed to fetch course instructors');
+    return res.json();
+  }
+
+  async addCourseToInstructor(instructorId: string, courseId: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/${instructorId}/courses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId }),
+    });
+    if (!res.ok) throw new Error('Failed to add course to instructor');
+  }
+
+  async removeCourseFromInstructor(instructorId: string, courseId: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/${instructorId}/courses/${courseId}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to remove course from instructor');
+  }
+
+  async getReviews(instructorId: string): Promise<InstructorReview[]> {
+    const res = await fetch(`${this.baseUrl}/${instructorId}/reviews`);
+    if (!res.ok) return [];
+    return res.json();
   }
 
   async create(data: CreateInstructorData): Promise<Instructor> {

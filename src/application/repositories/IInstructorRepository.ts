@@ -4,15 +4,12 @@
  * Following Clean Architecture - Application layer
  */
 
-export interface TimeSlot {
+export interface InstructorAvailability {
   id: string;
   instructorId: string;
   dayOfWeek: number; // 0=Sun, 1=Mon, ..., 6=Sat
   startTime: string; // "HH:mm"
   endTime: string;   // "HH:mm"
-  isBooked: boolean;
-  bookedCourseId?: string;
-  bookedCourseName?: string;
 }
 
 export interface Instructor {
@@ -38,6 +35,17 @@ export interface InstructorStats {
   inactiveItems: number;
   onlineNow: number;
   averageRating: number;
+}
+
+export interface InstructorReview {
+  id: string;
+  instructorId: string;
+  studentName: string;
+  studentAvatar: string;
+  courseTitle: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
 }
 
 export interface CreateInstructorData {
@@ -66,7 +74,11 @@ export interface IInstructorRepository {
   getPaginated(page: number, perPage: number): Promise<{ data: Instructor[]; total: number; page: number; perPage: number }>;
   getAvailable(): Promise<Instructor[]>;
   getTopRated(limit: number): Promise<Instructor[]>;
-  getTimeSlots(instructorId: string): Promise<TimeSlot[]>;
+  getAvailabilities(instructorId: string): Promise<InstructorAvailability[]>;
+  getCourseInstructors(courseId: string): Promise<Instructor[]>;
+  addCourseToInstructor(instructorId: string, courseId: string): Promise<void>;
+  removeCourseFromInstructor(instructorId: string, courseId: string): Promise<void>;
+  getReviews(instructorId: string): Promise<InstructorReview[]>;
   create(data: CreateInstructorData): Promise<Instructor>;
   update(id: string, data: UpdateInstructorData): Promise<Instructor>;
   delete(id: string): Promise<boolean>;

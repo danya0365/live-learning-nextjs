@@ -14,14 +14,14 @@ import {
 import {
     IInstructorRepository,
     Instructor,
-    TimeSlot,
+    InstructorAvailability,
 } from '@/src/application/repositories/IInstructorRepository';
 import { type Metadata } from 'next';
 
 export interface CourseDetailViewModel {
   course: Course;
   instructor: Instructor;
-  instructorTimeSlots: TimeSlot[];
+  instructorTimeSlots: InstructorAvailability[];
   relatedCourses: Course[];
   enrollment: Enrollment | null;       // null = not enrolled
   remainingHours: number;              // 0 if not enrolled
@@ -38,14 +38,16 @@ export class CourseDetailPresenter {
     const course = await this.courseRepository.getById(courseId);
     if (!course) return null;
 
-    const [instructor, timeSlots, allCourses, enrollment] = await Promise.all([
-      this.instructorRepository.getById(course.instructorId),
-      this.instructorRepository.getTimeSlots(course.instructorId),
+    const [instructors, allCourses, enrollment] = await Promise.all([
+      this.instructorRepository.getCourseInstructors(courseId),
       this.courseRepository.getByCategory(course.categoryId),
       this.enrollmentRepository.checkEnrollment(courseId),
     ]);
 
+    const instructor = instructors[0]; // Primary instructor
     if (!instructor) return null;
+
+    const timeSlots = await this.instructorRepository.getAvailabilities(instructor.id);
 
     const relatedCourses = allCourses
       .filter((c) => c.id !== course.id)

@@ -9,12 +9,12 @@
 'use client';
 
 import {
-  Course,
-  CourseStats,
-  CreateCourseData,
-  ICourseRepository,
-  PaginatedResult,
-  UpdateCourseData,
+    Course,
+    CourseStats,
+    CreateCourseData,
+    ICourseRepository,
+    PaginatedResult,
+    UpdateCourseData,
 } from '@/src/application/repositories/ICourseRepository';
 
 export class ApiCourseRepository implements ICourseRepository {
@@ -61,11 +61,10 @@ export class ApiCourseRepository implements ICourseRepository {
 
 
   async create(data: CreateCourseData): Promise<Course> {
-    const { instructorId, ...payload } = data;
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Failed to create course');
     return res.json();

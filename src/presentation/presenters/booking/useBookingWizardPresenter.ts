@@ -112,11 +112,25 @@ export function useBookingWizardPresenter() {
     setIsBooking(true);
     // Create booking via API
     try {
+        // Calculate the actual calendar date from the dayOfWeek
+        const now = new Date();
+        const currentDay = now.getDay();
+        let diff = selectedSlot.dayOfWeek - currentDay;
+        // If the day has already passed this week, schedule for next week
+        if (diff <= 0) diff += 7;
+        const targetDate = new Date(now);
+        targetDate.setDate(now.getDate() + diff);
+        
+        // If joining an existing class, book the course that is actively being taught
+        const courseIdPayload = bookingAction === 'join' && selectedSlot.bookedCourseId
+             ? selectedSlot.bookedCourseId
+             : selectedCourse.id;
+
         await presenter.createBooking({
-            courseId: selectedCourse.id,
+            courseId: courseIdPayload,
             instructorId: selectedInstructor.id,
-            slotId: selectedSlot.id,
-            date: new Date().toISOString(),
+            slotId: selectedSlot.id, // This is the instructor_availability_id
+            date: targetDate.toISOString(),
             action: bookingAction
         });
         

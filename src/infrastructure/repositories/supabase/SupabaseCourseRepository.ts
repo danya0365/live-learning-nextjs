@@ -8,12 +8,12 @@
  */
 
 import {
-    Course,
-    CourseStats,
-    CreateCourseData,
-    ICourseRepository,
-    PaginatedResult,
-    UpdateCourseData,
+  Course,
+  CourseStats,
+  CreateCourseData,
+  ICourseRepository,
+  PaginatedResult,
+  UpdateCourseData,
 } from '@/src/application/repositories/ICourseRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -21,9 +21,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 // Type alias for the database row
 type CourseRow = Database['public']['Tables']['courses']['Row'] & {
   categories?: Database['public']['Tables']['categories']['Row'];
-  instructor_profiles?: Database['public']['Tables']['instructor_profiles']['Row'] & {
-    profiles?: Database['public']['Tables']['profiles']['Row'];
-  };
+  instructor_courses?: { id: string }[];
 };
 
 export class SupabaseCourseRepository implements ICourseRepository {
@@ -39,10 +37,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `)
       .eq('id', id)
       .single();
@@ -59,10 +54,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `)
       .order('created_at', { ascending: false });
 
@@ -83,10 +75,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `, { count: 'exact' })
       .range(start, end)
       .order('created_at', { ascending: false });
@@ -107,10 +96,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `)
       .eq('category_id', categoryId)
       .order('created_at', { ascending: false });
@@ -129,12 +115,9 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses!inner ( id, instructor_profile_id )
       `)
-      .eq('instructor_profile_id', instructorId)
+      .eq('instructor_courses.instructor_profile_id', instructorId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -151,10 +134,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `)
       .eq('is_featured', true)
       .eq('is_active', true)
@@ -199,7 +179,6 @@ export class SupabaseCourseRepository implements ICourseRepository {
         level: data.level,
         total_hours: Math.floor(data.durationMinutes / 60) || 1, // Fallback conversion
         price: data.price,
-        instructor_profile_id: data.instructorId,
         tags: data.tags || [],
         slug: data.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
         // Default values
@@ -213,11 +192,9 @@ export class SupabaseCourseRepository implements ICourseRepository {
       })
       .select(`
         *,
+        *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `)
       .single();
 
@@ -243,10 +220,7 @@ export class SupabaseCourseRepository implements ICourseRepository {
       .select(`
         *,
         categories (*),
-        instructor_profiles (
-          *,
-          profiles (*)
-        )
+        instructor_courses ( id )
       `)
       .single();
 
@@ -307,8 +281,6 @@ export class SupabaseCourseRepository implements ICourseRepository {
    */
   private mapToDomain = (raw: CourseRow): Course => {
     // Safely access nested optional properties
-    const instructorProfile = raw.instructor_profiles;
-    const profile = instructorProfile?.profiles;
     const category = raw.categories;
 
     return {
@@ -323,10 +295,8 @@ export class SupabaseCourseRepository implements ICourseRepository {
       price: raw.price,
       rating: raw.rating || 0,
       totalStudents: raw.total_students || 0,
-      instructorId: raw.instructor_profile_id || '',
-      instructorName: profile?.full_name || 'Unknown Instructor',
-      instructorAvatar: profile?.avatar_url || '/images/placeholder-avatar.jpg',
-      isLive: raw.is_live_feature,
+      instructorCount: raw.instructor_courses?.length || 0,
+      isLiveFeature: raw.is_live_feature,
       isActive: raw.is_active,
       tags: raw.tags || [],
       learningOutcomes: raw.learning_outcomes || [],

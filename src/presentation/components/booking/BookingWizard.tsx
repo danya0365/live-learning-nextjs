@@ -427,19 +427,37 @@ function StepCalendar({
         <p className="text-text-secondary text-sm">คลิกช่องเพื่อจองหรือเข้าร่วม</p>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mb-6 text-xs">
+      {slots.length === 0 ? (
+        <div className="glass rounded-2xl p-8 border border-warning/30 bg-warning/5 text-center my-8 animate-fadeIn">
+          <div className="text-5xl mb-4">🗓️</div>
+          <h3 className="text-xl font-bold text-text-primary mb-2">
+            ยังไม่มีตารางสอน
+          </h3>
+          <p className="text-text-secondary text-sm max-w-sm mx-auto mb-6">
+            อ๊ะ! ดูเหมือนว่าอาจารย์ท่านนี้ยังไม่ได้เปิดช่วงเวลาสอนในขณะนี้ กรุณาเลือกอาจารย์ท่านอื่น หรือกลับมาตรวจสอบใหม่ภายหลังครับ
+          </p>
+          <button
+            onClick={onBack}
+            className="px-6 py-2.5 rounded-xl btn-game text-white text-sm font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+          >
+            ← เลือกอาจารย์ท่านอื่น
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Legend */}
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-6 text-xs">
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-success/20 border border-success/50" />
           <span className="text-text-secondary">ว่าง — จองใหม่</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-warning/20 border border-warning/50" />
-          <span className="text-text-secondary">มีคนจอง — เข้าร่วม</span>
+          <span className="text-text-secondary">คอร์สเดียวกัน — เข้าร่วม</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-surface border border-border" />
-          <span className="text-text-secondary">ไม่มีคลาส</span>
+          <span className="text-text-secondary">ติดสอนคลาสอื่น / ไม่มีคลาส</span>
         </div>
       </div>
 
@@ -465,48 +483,61 @@ function StepCalendar({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {daySlots.map((slot) => (
+                  {daySlots.map((slot) => {
+                    const isAvailable = slot.status === 'available';
+                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id;
+                    const isUnavailable = slot.status === 'booked' && slot.bookedCourseId !== course.id;
+                    
+                    return (
                     <button
                       key={slot.id}
-                      onClick={() => onSelect(slot)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${
-                        slot.status === 'available'
-                          ? 'bg-success/10 border-success/40 hover:bg-success/20 hover:shadow-md hover:shadow-success/10'
-                          : 'bg-warning/10 border-warning/40 hover:bg-warning/20 hover:shadow-md hover:shadow-warning/10'
+                      onClick={() => !isUnavailable && onSelect(slot)}
+                      disabled={isUnavailable}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all ${
+                        isAvailable
+                          ? 'bg-success/10 border-success/40 hover:bg-success/20 hover:shadow-md hover:shadow-success/10 hover:scale-[1.02] cursor-pointer'
+                          : isJoinable
+                          ? 'bg-warning/10 border-warning/40 hover:bg-warning/20 hover:shadow-md hover:shadow-warning/10 hover:scale-[1.02] cursor-pointer'
+                          : 'bg-surface/50 border-border/30 opacity-70 cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm ${slot.status === 'available' ? 'text-success' : 'text-warning'}`}>
-                              {slot.status === 'available' ? '🟢' : '🟡'}
+                            <span className={`text-sm ${isAvailable ? 'text-success' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              {isAvailable ? '🟢' : isJoinable ? '🟡' : '🔴'}
                             </span>
-                            <span className="text-sm font-bold text-text-primary">
+                            <span className={`text-sm font-bold ${isUnavailable ? 'text-text-muted' : 'text-text-primary'}`}>
                               {slot.startTime} — {slot.endTime}
                             </span>
                           </div>
                           {slot.status === 'booked' && slot.bookedCourseName && (
-                            <p className="text-[10px] text-warning ml-5 mt-0.5">
+                            <p className={`text-[10px] ml-5 mt-0.5 ${isJoinable ? 'text-warning' : 'text-text-muted'}`}>
                               📌 {slot.bookedCourseName}
                             </p>
                           )}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          slot.status === 'available'
+                          isAvailable
                             ? 'bg-success/20 text-success'
-                            : 'bg-warning/20 text-warning'
+                            : isJoinable
+                            ? 'bg-warning/20 text-warning'
+                            : 'bg-surface text-text-muted'
                         }`}>
-                          {slot.status === 'available' ? 'จองใหม่' : 'เข้าร่วม'}
+                          {isAvailable ? 'จองใหม่' : isJoinable ? 'เข้าร่วม' : 'ไม่ว่าง'}
                         </span>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           );
         })}
       </div>
+        </>
+      )}
     </div>
   );
 }
@@ -564,7 +595,9 @@ function StepConfirm({
               <span className="text-lg">📚</span>
               <div>
                 <p className="text-[10px] text-text-muted">คอร์ส</p>
-                <p className="text-sm font-bold text-text-primary">{course.title}</p>
+                <p className="text-sm font-bold text-text-primary">
+                  {action === 'join' && slot.bookedCourseName ? slot.bookedCourseName : course.title}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -635,9 +668,12 @@ function StepConfirm({
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg shrink-0">📚</div>
           <div>
             <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium">คอร์ส</p>
-            <p className="font-bold text-text-primary">{course.title}</p>
+            <p className="font-bold text-text-primary">
+              {action === 'join' && slot.bookedCourseName ? slot.bookedCourseName : course.title}
+            </p>
             <p className="text-xs text-text-muted mt-0.5">
-              {(levels.find(l => l.value === course.level) || levels[0])?.label} • {course.categoryName}
+              {(levels.find(l => l.value === course.level) || levels[0])?.label} 
+              {action !== 'join' && ` • ${course.categoryName}`}
             </p>
           </div>
         </div>

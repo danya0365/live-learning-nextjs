@@ -10,14 +10,14 @@ import {
 import {
     IInstructorRepository,
     Instructor,
-    TimeSlot,
+    InstructorAvailability,
 } from '@/src/application/repositories/IInstructorRepository';
 import { type Metadata } from 'next';
 
 export interface InstructorDetailViewModel {
   instructor: Instructor;
   courses: Course[];
-  timeSlots: TimeSlot[];
+  timeSlots: InstructorAvailability[];
   availableSlots: number;
   bookedSlots: number;
 }
@@ -34,15 +34,15 @@ export class InstructorDetailPresenter {
 
     const [courses, timeSlots] = await Promise.all([
       this.courseRepository.getByInstructorId(instructorId),
-      this.instructorRepository.getTimeSlots(instructorId),
+      this.instructorRepository.getAvailabilities(instructorId),
     ]);
 
     return {
       instructor,
       courses,
       timeSlots,
-      availableSlots: timeSlots.filter((s) => !s.isBooked).length,
-      bookedSlots: timeSlots.filter((s) => s.isBooked).length,
+      availableSlots: timeSlots.length,
+      bookedSlots: 0,
     };
   }
 
