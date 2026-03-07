@@ -7,10 +7,10 @@
  */
 
 import {
-  ISettingsRepository,
-  UpdatePasswordData,
-  UpdateProfileData,
-  UserPreferences
+    ISettingsRepository,
+    UpdatePasswordData,
+    UpdateProfileData,
+    UserPreferences
 } from '@/src/application/repositories/ISettingsRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { AuthUser } from '@/src/stores/authStore';
@@ -27,23 +27,14 @@ export class SupabaseSettingsRepository implements ISettingsRepository {
       .single();
 
     if (error || !data) {
-        // Return defaults if not found
-        return {
-            userId,
-            language: 'th',
-            autoPlay: false,
-            showOnline: true,
-            notifications: {
-                email: true,
-                push: true,
-                courseReminder: true,
-                promotions: false
-            }
-        };
+        return this.getDefaultPreferences(userId);
     }
 
-    // Merge with defaults to ensure structure
-    const defaults = {
+    return { ...this.getDefaultPreferences(userId), ...(data.preferences as any) };
+  }
+
+  private getDefaultPreferences(userId: string): UserPreferences {
+    return {
         userId,
         language: 'th',
         autoPlay: false,
@@ -55,8 +46,6 @@ export class SupabaseSettingsRepository implements ISettingsRepository {
             promotions: false
         }
     };
-
-    return { ...defaults, ...(data.preferences as any) };
   }
 
   async updateProfile(data: UpdateProfileData): Promise<AuthUser> {
@@ -75,22 +64,25 @@ export class SupabaseSettingsRepository implements ISettingsRepository {
     if (error) throw error;
     if (!updated) throw new Error('User not found');
     
-    // Get user email
+    // Get user email & metadata (Required for mapping to AuthUser domain)
     const { data: { user } } = await this.supabase.auth.getUser();
-    
+
     return {
         id: updated.id,
         email: user?.email || '',
         name: updated.full_name || '',
         avatar: updated.avatar_url || '',
-        role: 'student', // Placeholder, ideally fetch role
+        role: 'student', // Default role; controller is responsible for context-aware roles
         level: 'Member',
         joinDate: updated.created_at || new Date().toISOString(),
         emailVerified: !!user?.email_confirmed_at
     };
   }
 
-  async updatePassword(data: UpdatePasswordData): Promise<boolean> {
+  async updatePassword(data: { userId: string } & UpdatePasswordData): Promise<boolean> {
+    // Note: Password update is a special case in Supabase Auth that typically 
+    // applies to the current session user. The userId is provided for interface 
+    // consistency but actual enforcement is done by Supabase Auth security rules.
     const { error } = await this.supabase.auth.updateUser({
         password: data.new
     });

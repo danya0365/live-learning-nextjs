@@ -1,5 +1,6 @@
 
 import { CreateConsultationOfferPayload } from "@/src/application/repositories/IConsultationRepository";
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { SupabaseConsultationRepository } from "@/src/infrastructure/repositories/supabase/SupabaseConsultationRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,8 +28,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const instructorRepo = new SupabaseInstructorRepository(supabase);
 
   try {
+    const authRepo = new SupabaseAuthRepository(supabase);
+    const profile = await authRepo.getProfile();
+
+    if (!profile) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // SECURE: Verify user is an instructor
-    const instructor = await instructorRepo.getMe();
+    const instructor = await instructorRepo.getByProfileId(profile.id);
     if (!instructor) {
         return NextResponse.json({ error: 'Unauthorized: Only instructors can create offers' }, { status: 403 });
     }

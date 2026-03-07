@@ -29,19 +29,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // 2. Is Instructor?
-    const instructor = await instructorRepo.getMe();
-    // Assuming we have a way to check if this instructor owns the course/booking
-    // Logic: result.courseId -> Course -> instructorId === instructor.id
-    // Or if Booking has instructorId (let's hope so, checking IBookingRepository)
-    // If not, we fetch Query or Course. For now, assume strict Student ownership if unclear, 
-    // OR fetch course to verify. 
-    // Wait, let's look at defining file first. If I miss it, I might break instructor view.
-    // SAFE DEFAULT: For now allow if Student. 
+    const instructor = await instructorRepo.getByProfileId(profile.id);
+    if (instructor && result.instructorId === instructor.id) {
+        return NextResponse.json(result);
+    }
     
-    // Better: Allow if profile.role === 'admin' too.
-    
-    // Actually, let's implement the Instructor check properly if possible.
-    // If result has instructorId, great.
+    // 3. Is Admin?
+    if (profile.role === 'admin') {
+        return NextResponse.json(result);
+    }
     
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   } catch (error: any) {

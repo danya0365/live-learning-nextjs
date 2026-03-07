@@ -118,12 +118,11 @@ export function useStudentHomePresenter(
     let isCancelled = false;
 
     const fetchStudentData = async () => {
-      if (!user) return;
+      if (!user?.profileId) return;
       
       setLoading(true);
       try {
-        // Fix: No need to pass ID to Client/Presenter
-        const data = await presenter.getStudentDashboardData();
+        const data = await presenter.getStudentDashboardData(user.profileId);
         
         if (!isCancelled) {
           setBookings(data.bookings);
@@ -145,7 +144,7 @@ export function useStudentHomePresenter(
     return () => {
       isCancelled = true;
     };
-  }, [user, presenter]);
+  }, [user?.profileId, presenter]);
 
   return { bookings, loading, error };
 }
@@ -177,12 +176,11 @@ export function useInstructorHomePresenter(
     let isCancelled = false;
 
     const fetchInstructorData = async () => {
-      if (!user) return;
+      if (!user?.profileId) return;
       
       setLoading(true);
       try {
-        // Fix: No need to pass ID, server infers from session
-        const data = await presenter.getInstructorDashboardData();
+        const data = await presenter.getInstructorDashboardData(user.profileId);
         
         if (!isCancelled) {
           setSchedule(data.schedule);

@@ -29,7 +29,7 @@ export class InstructorsPresenter {
   constructor(private readonly instructorRepository: IInstructorRepository) {}
 
   async getViewModel(filters?: Partial<InstructorsFilters>): Promise<InstructorsViewModel> {
-    const allInstructors = await this.instructorRepository.getAll();
+    const { data: allInstructors } = await this.instructorRepository.getPaginated(1, 100);
 
     const activeFilters: InstructorsFilters = {
       search: filters?.search ?? '',

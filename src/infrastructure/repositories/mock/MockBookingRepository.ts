@@ -97,15 +97,6 @@ export class MockBookingRepository implements IBookingRepository {
     };
   }
 
-  async getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]> {
-    await this.delay(100);
-    // Return mock data for the default demo users
-    if (role === 'student') {
-        return this.items.filter(item => item.studentId === 'student-001');
-    } else {
-        return this.items.filter(item => item.instructorId === 'inst-001');
-    }
-  }
 
   async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
     await this.delay(100);

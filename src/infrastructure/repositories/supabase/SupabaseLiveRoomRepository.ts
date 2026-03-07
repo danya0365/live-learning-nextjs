@@ -134,24 +134,14 @@ export class SupabaseLiveRoomRepository implements ILiveRoomRepository {
         }));
     }
 
-    async sendMessage(roomId: string, text: string): Promise<ChatMessage> {
-        // Get current profile
-        const { data: { user } } = await this.supabase.auth.getUser();
-        if (!user) throw new Error('Unauthorized');
-
-        const { data: profile } = await this.supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
+    async sendMessage(roomId: string, profileId: string, text: string, isInstructor: boolean): Promise<ChatMessage> {
         const { data: msg, error } = await this.supabase
             .from('live_chat_messages')
             .insert({
                 live_session_id: roomId,
-                profile_id: user.id,
+                profile_id: profileId,
                 text,
-                is_instructor: false // Logic to check if profile is instructor for this session could be added
+                is_instructor: isInstructor
             })
             .select(`
                 *,

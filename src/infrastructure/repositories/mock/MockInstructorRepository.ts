@@ -153,9 +153,9 @@ export class MockInstructorRepository implements IInstructorRepository {
     };
   }
 
-  async getMe(): Promise<Instructor | null> {
+  async getByProfileId(profileId: string): Promise<Instructor | null> {
     await this.delay(100);
-    // Mock getting the first instructor as "me"
+    // In mock, we can just return one or use the profileId to find if we had a mapping
     return this.items[0] || null;
   }
 

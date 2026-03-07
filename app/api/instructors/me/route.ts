@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Get the specific instructor profile linked to this profile
-    const instructor = await instructorRepo.getMe(); // getMe handles auth user -> profile -> instructor link
+    const instructor = await instructorRepo.getByProfileId(profile.id);
 
     if (!instructor) {
         return NextResponse.json({ error: 'Instructor profile not found' }, { status: 404 });

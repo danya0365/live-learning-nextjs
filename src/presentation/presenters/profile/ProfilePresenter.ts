@@ -63,10 +63,9 @@ export class ProfilePresenter {
     };
 
     // Fetch role-specific booking data
-    // Use getForCurrentUser to leverage secure session-based endpoints
     const bookings = isInstructor
-      ? await this.bookingRepository.getForCurrentUser('instructor')
-      : await this.bookingRepository.getForCurrentUser('student');
+      ? await this.bookingRepository.getByInstructorId(userId)
+      : await this.bookingRepository.getByStudentId(userId);
 
     const recentBookings = bookings
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())

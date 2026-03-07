@@ -29,5 +29,5 @@ export interface ILiveRoomRepository {
   getRoom(roomId: string): Promise<LiveRoom | null>;
   getMessages(roomId: string): Promise<ChatMessage[]>;
   getParticipants(roomId: string): Promise<Participant[]>;
-  sendMessage(roomId: string, text: string): Promise<ChatMessage>;
+  sendMessage(roomId: string, profileId: string, text: string, isInstructor: boolean): Promise<ChatMessage>;
 }

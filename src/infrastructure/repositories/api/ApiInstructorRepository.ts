@@ -141,10 +141,10 @@ export class ApiInstructorRepository implements IInstructorRepository {
     return res.json();
   }
 
-  async getMe(): Promise<Instructor | null> {
-    const res = await fetch(`${this.baseUrl}/me`);
+  async getByProfileId(profileId: string): Promise<Instructor | null> {
+    const res = await fetch(`${this.baseUrl}/profile/${profileId}`);
     if (res.status === 404 || res.status === 401) return null;
-    if (!res.ok) throw new Error('Failed to fetch current instructor');
+    if (!res.ok) throw new Error('Failed to fetch instructor by profile ID');
     return res.json();
   }
 }

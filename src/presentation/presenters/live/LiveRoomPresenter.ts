@@ -15,7 +15,7 @@ export class LiveRoomPresenter {
     return { room, messages, participants };
   }
 
-  async sendMessage(roomId: string, text: string): Promise<ChatMessage> {
-    return this.repo.sendMessage(roomId, text);
+  async sendMessage(roomId: string, profileId: string, text: string, isInstructor: boolean): Promise<ChatMessage> {
+    return this.repo.sendMessage(roomId, profileId, text, isInstructor);
   }
 }

@@ -92,12 +92,6 @@ export class ApiBookingRepository implements IBookingRepository {
     return res.json();
   }
 
-  async getForCurrentUser(role: 'student' | 'instructor'): Promise<Booking[]> {
-    const endpoint = role === 'student' ? '/students' : '/instructors';
-    const res = await fetch(`${this.baseUrl}${endpoint}`);
-    if (!res.ok) throw new Error(`Failed to fetch ${role} bookings`);
-    return res.json();
-  }
 
   async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
     const params = new URLSearchParams({ month: month.toString(), year: year.toString() });

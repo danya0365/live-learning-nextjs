@@ -151,11 +151,18 @@ export function useLiveRoomPresenter(roomId: string) {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }, []);
 
+  const { user: storeUser } = useAuthStore();
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !room?.id) return;
+    if (!newMessage.trim() || !room?.id || !storeUser) return;
     try {
-      const msg = await presenter.sendMessage(room.id, newMessage);
+      const msg = await presenter.sendMessage(
+        room.id, 
+        storeUser.profileId || storeUser.id, 
+        newMessage, 
+        storeUser.role === 'instructor'
+      );
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];

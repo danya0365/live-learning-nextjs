@@ -1,4 +1,5 @@
 
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { SupabaseLiveRoomRepository } from "@/src/infrastructure/repositories/supabase/SupabaseLiveRoomRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,8 +23,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const repository = new SupabaseLiveRoomRepository(supabase);
   
   try {
+    const authRepo = new SupabaseAuthRepository(supabase);
+    const profile = await authRepo.getProfile();
+    
+    if (!profile) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { text } = await request.json();
-    const message = await repository.sendMessage(id, text);
+    const message = await repository.sendMessage(
+        id, 
+        profile.id, 
+        text, 
+        profile.role === 'instructor'
+    );
     return NextResponse.json(message);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

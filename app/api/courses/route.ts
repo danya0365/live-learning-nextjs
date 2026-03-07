@@ -1,5 +1,7 @@
 
+import { SupabaseAuthRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAuthRepository';
 import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
+import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -42,16 +44,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const repository = new SupabaseCourseRepository(supabase);
+    const authRepo = new SupabaseAuthRepository(supabase);
     const instructorRepo = new SupabaseInstructorRepository(supabase);
+    const profile = await authRepo.getProfile();
     
+    if (!profile) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // SECURE: Verify user is an instructor
-    const currentInstructor = await instructorRepo.getMe();
+    const currentInstructor = await instructorRepo.getByProfileId(profile.id);
     
     if (!currentInstructor) {
         return NextResponse.json({ error: 'Unauthorized: You must be a registered instructor to create courses' }, { status: 403 });

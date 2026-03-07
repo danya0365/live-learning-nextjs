@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const myInstructor = await instructorRepo.getMe();
+    const myInstructor = await instructorRepo.getByProfileId(profile.id);
     if (!myInstructor) {
         return NextResponse.json({ error: 'Unauthorized: No instructor profile found' }, { status: 403 });
     }

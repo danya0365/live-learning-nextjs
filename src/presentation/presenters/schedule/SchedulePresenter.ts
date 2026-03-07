@@ -1,12 +1,12 @@
 import {
-    IBookingRepository
+  IBookingRepository
 } from '@/src/application/repositories/IBookingRepository';
 import {
-    ICourseRepository
+  ICourseRepository
 } from '@/src/application/repositories/ICourseRepository';
 import {
-    IInstructorRepository,
-    InstructorAvailability
+  IInstructorRepository,
+  InstructorAvailability
 } from '@/src/application/repositories/IInstructorRepository';
 import dayjs from 'dayjs';
 import { type Metadata } from 'next';
@@ -58,7 +58,7 @@ export class SchedulePresenter {
   ) {}
 
   async getViewModel(filters?: Partial<ScheduleFilters>): Promise<ScheduleViewModel> {
-    const allInstructors = await this.instructorRepository.getAll();
+    const { data: allInstructors } = await this.instructorRepository.getPaginated(1, 100);
     const now = dayjs();
     
     const activeFilters: ScheduleFilters = {
@@ -171,10 +171,7 @@ export class SchedulePresenter {
     return result;
   }
 
-  async addAvailability(dayOfWeek: number, startTime: string, endTime: string): Promise<boolean> {
-    const instructorId = await this.getCurrentInstructorId();
-    if (!instructorId) return false;
-    
+  async addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<boolean> {
     await this.instructorRepository.addAvailability(instructorId, dayOfWeek, startTime, endTime);
     return true;
   }
@@ -188,10 +185,5 @@ export class SchedulePresenter {
       title: 'ตารางเรียน — Live Learning',
       description: 'ดูตารางเวลาสอนของอาจารย์ จองเวลาเรียนสดออนไลน์ หรือเข้าร่วมคลาสที่มีอยู่',
     };
-  }
-
-  async getCurrentInstructorId(): Promise<string | null> {
-    const me = await this.instructorRepository.getMe();
-    return me?.id || null;
   }
 }

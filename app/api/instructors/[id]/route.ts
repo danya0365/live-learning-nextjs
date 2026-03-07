@@ -1,4 +1,5 @@
 
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -26,8 +27,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const repository = new SupabaseInstructorRepository(supabase);
   
   try {
+      const authRepo = new SupabaseAuthRepository(supabase);
+      const profile = await authRepo.getProfile();
+
+      if (!profile) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       // SECURE: Permissions check
-      const currentInstructor = await repository.getMe();
+      const currentInstructor = await repository.getByProfileId(profile.id);
       
       if (!currentInstructor || currentInstructor.id !== id) {
           return NextResponse.json({ error: 'Unauthorized: You can only update your own profile' }, { status: 403 });
@@ -46,8 +54,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const supabase = await createServerSupabaseClient();
   const repository = new SupabaseInstructorRepository(supabase);
   
+  const authRepo = new SupabaseAuthRepository(supabase);
+  const profile = await authRepo.getProfile();
+
+  if (!profile) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // SECURE: Permissions check
-  const currentInstructor = await repository.getMe();
+  const currentInstructor = await repository.getByProfileId(profile.id);
   
   if (!currentInstructor || currentInstructor.id !== id) {
       return NextResponse.json({ error: 'Unauthorized: You can only delete your own profile' }, { status: 403 });

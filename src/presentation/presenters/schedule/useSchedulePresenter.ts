@@ -58,15 +58,8 @@ export function useSchedulePresenter(
     const init = async () => {
         let initialFilters: Partial<ScheduleFilters> = { ...filters };
 
-        if (isInstructor) {
-            try {
-                const instructorId = await presenter.getCurrentInstructorId();
-                if (instructorId) {
-                    initialFilters.instructorId = instructorId;
-                }
-            } catch (error) {
-                console.error('Failed to fetch instructor ID', error);
-            }
+        if (isInstructor && user?.profileId) {
+            initialFilters.instructorId = user.profileId;
         }
 
         await loadData(initialFilters);
@@ -75,7 +68,7 @@ export function useSchedulePresenter(
     if (!initialViewModel) {
       init();
     }
-  }, [isInstructor]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isInstructor, user?.profileId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setInstructor = useCallback((id: string | null) => {
     loadData({ instructorId: id });
@@ -98,15 +91,16 @@ export function useSchedulePresenter(
   }, [filters, loadData]);
 
   const addAvailability = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
+    if (!user?.profileId) return false;
     try {
-      const success = await presenter.addAvailability(dayOfWeek, startTime, endTime);
+      const success = await presenter.addAvailability(user.profileId, dayOfWeek, startTime, endTime);
       if (success) await loadData();
       return success;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add availability');
       return false;
     }
-  }, [presenter, loadData]);
+  }, [presenter, loadData, user?.profileId]);
 
   const deleteAvailability = useCallback(async (id: string) => {
     try {

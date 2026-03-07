@@ -27,8 +27,8 @@ export interface UserPreferences {
 }
 
 export interface ISettingsRepository {
-  getPreferences(userId?: string): Promise<UserPreferences>;
+  getPreferences(userId: string): Promise<UserPreferences>;
   updateProfile(data: UpdateProfileData): Promise<AuthUser>;
-  updatePassword(data: UpdatePasswordData): Promise<boolean>;
+  updatePassword(data: { userId: string } & UpdatePasswordData): Promise<boolean>;
   updatePreferences(data: UserPreferences): Promise<UserPreferences>;
 }

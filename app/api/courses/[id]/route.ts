@@ -1,4 +1,5 @@
 
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { SupabaseCourseRepository } from "@/src/infrastructure/repositories/supabase/SupabaseCourseRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -29,8 +30,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const instructorRepo = new SupabaseInstructorRepository(supabase);
   
   try {
+      const authRepo = new SupabaseAuthRepository(supabase);
+      const profile = await authRepo.getProfile();
+
+      if (!profile) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       // SECURE: Verify ownership
-      const instructor = await instructorRepo.getMe();
+      const instructor = await instructorRepo.getByProfileId(profile.id);
       if (!instructor) {
           return NextResponse.json({ error: 'Unauthorized: Only instructors can update courses' }, { status: 403 });
       }
@@ -62,8 +70,15 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const instructorRepo = new SupabaseInstructorRepository(supabase);
   
   try {
+      const authRepo = new SupabaseAuthRepository(supabase);
+      const profile = await authRepo.getProfile();
+
+      if (!profile) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       // SECURE: Verify ownership
-      const instructor = await instructorRepo.getMe();
+      const instructor = await instructorRepo.getByProfileId(profile.id);
       if (!instructor) {
           return NextResponse.json({ error: 'Unauthorized: Only instructors can delete courses' }, { status: 403 });
       }
