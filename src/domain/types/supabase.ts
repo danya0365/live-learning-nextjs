@@ -1369,6 +1369,16 @@ export type Database = {
         Args: { avatar_url?: string; full_name?: string; username: string }
         Returns: string
       }
+      fulfill_stripe_payment: {
+        Args: {
+          p_instructor_id: string
+          p_payment_id: string
+          p_scheduled_date: string
+          p_slot_id: string
+          p_transaction_id: string
+        }
+        Returns: Json
+      }
       get_active_profile: {
         Args: never
         Returns: {

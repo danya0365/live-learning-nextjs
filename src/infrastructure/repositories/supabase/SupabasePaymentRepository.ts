@@ -62,16 +62,6 @@ export class SupabasePaymentRepository implements IPaymentRepository {
     return data.map(this.mapToDomain);
   }
 
-  async getByBookingId(bookingId: string): Promise<Payment | null> {
-    const { data, error } = await this.supabase
-      .from('payments')
-      .select('*')
-      .eq('booking_id', bookingId)
-      .single();
-
-    if (error || !data) return null;
-    return this.mapToDomain(data);
-  }
 
   async getPaginated(page: number, perPage: number): Promise<PaginatedResult<Payment>> {
     const start = (page - 1) * perPage;
@@ -101,7 +91,6 @@ export class SupabasePaymentRepository implements IPaymentRepository {
       transaction_id: data.transactionId,
       status: data.status || 'pending',
     };
-    if (data.bookingId) insertPayload.booking_id = data.bookingId;
     if (data.enrollmentId) insertPayload.enrollment_id = data.enrollmentId;
 
     const { data: created, error } = await this.supabase
@@ -174,7 +163,6 @@ export class SupabasePaymentRepository implements IPaymentRepository {
   private mapToDomain = (raw: PaymentRow): Payment => {
     return {
       id: raw.id,
-      bookingId: raw.booking_id || undefined,
       amount: Number(raw.amount),
       currency: raw.currency,
       paymentMethod: raw.payment_method,

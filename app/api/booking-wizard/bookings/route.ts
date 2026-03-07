@@ -1,5 +1,7 @@
 import { CreateWizardBookingData } from '@/src/application/repositories/IBookingWizardRepository';
+import { StripeRepository } from '@/src/infrastructure/repositories/stripe/StripeRepository';
 import { SupabaseBookingWizardRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingWizardRepository';
+import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -19,10 +21,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
+    // 1. Core Logic: Process metadata and create pending/free record
     const wizardRepo = new SupabaseBookingWizardRepository(supabase);
-    // This executes the transaction: calculate price, validate coupon, create payment, create booking
     const result = await wizardRepo.createBooking(body);
 
+    // 2. Stripe Logic: If Price > 0, generate checkout session
+    if (result.status === 'awaiting_payment' && result.paymentId) {
+      const courseRepo = new SupabaseCourseRepository(supabase);
+      const course = await courseRepo.getById(body.courseId);
+      
+      const stripeRepo = new StripeRepository(process.env.STRIPE_SECRET_KEY || '');
+      const origin = req.nextUrl.origin;
+
+      const session = await stripeRepo.createCheckoutSession({
+        paymentId: result.paymentId,
+        courseTitle: course?.title || 'Course Booking',
+        amount: result.finalPrice,
+        currency: 'thb',
+        customerEmail: user.email,
+        successUrl: `${origin}/book/success?payment_id=${result.paymentId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${origin}/book?error=payment_cancelled`,
+        metadata: {
+          instructorId: body.instructorId,
+          slotId: body.slotId,
+          scheduledDate: body.date,
+          courseId: body.courseId
+        }
+      });
+
+      return NextResponse.json({
+        ...result,
+        checkoutUrl: session.url
+      }, { status: 201 });
+    }
+
+    // 3. Free Booking: Return success immediately
     return NextResponse.json(result, { status: 201 });
 
   } catch (error: any) {

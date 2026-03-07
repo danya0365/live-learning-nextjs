@@ -5,7 +5,7 @@
  */
 
 export interface CheckoutSessionParams {
-  bookingId: string;
+  paymentId: string;
   courseTitle: string;
   amount: number;
   currency: string;

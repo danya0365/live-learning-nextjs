@@ -43,20 +43,20 @@ export class StripePresenter {
   }
 
   private async handleCheckoutSessionCompleted(session: StripeSession) {
-    const bookingId = session.client_reference_id;
+    const paymentId = session.client_reference_id;
     const transactionId = session.id;
 
-    if (!bookingId) {
-      console.warn('Booking ID missing in session client_reference_id');
+    if (!paymentId) {
+      console.warn('Payment ID missing in session client_reference_id');
       return;
     }
 
-    console.log(`Payment succeeded for booking: ${bookingId}`);
+    console.log(`Payment succeeded for ID: ${paymentId}`);
 
     // Maximum attempts to find payment (in case of race condition where webhook arrives before local DB insert completes)
     // Note: In real world, we might want a better retry mechanism or queue. 
     // For now, we just try to fetch.
-    const payment = await this.paymentRepo.getByBookingId(bookingId);
+    const payment = await this.paymentRepo.getById(paymentId);
 
     if (payment) {
         await this.paymentRepo.update(payment.id, {
@@ -64,15 +64,7 @@ export class StripePresenter {
             transactionId: transactionId
         });
     } else {
-        // If payment record not found, we might want to create it or log error.
-        // Given the flow, PaymentPresenter creates it before redirecting to Stripe.
-        // So it should exist.
-        console.error(`Payment record not found for booking ${bookingId}`);
+        console.error(`Payment record not found for ID ${paymentId}`);
     }
-
-    // Update Booking Status -> confirmed
-    await this.bookingRepo.update(bookingId, {
-        status: 'confirmed' // Assuming 'confirmed' is valid BookingStatus
-    });
   }
 }

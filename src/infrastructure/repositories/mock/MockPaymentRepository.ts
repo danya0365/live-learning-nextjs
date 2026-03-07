@@ -34,10 +34,6 @@ export class MockPaymentRepository implements IPaymentRepository {
     return [...this.items];
   }
 
-  async getByBookingId(bookingId: string): Promise<Payment | null> {
-    await this.delay(100);
-    return this.items.find((item) => item.bookingId === bookingId) || null;
-  }
 
   async getPaginated(page: number, perPage: number): Promise<PaginatedResult<Payment>> {
     await this.delay(100);
@@ -55,7 +51,7 @@ export class MockPaymentRepository implements IPaymentRepository {
     await this.delay(200);
     const newItem: Payment = {
       id: `pay-${Date.now()}`,
-      bookingId: data.bookingId,
+      enrollmentId: data.enrollmentId,
       amount: data.amount,
       currency: data.currency,
       paymentMethod: data.paymentMethod,
@@ -108,10 +104,10 @@ export class MockPaymentRepository implements IPaymentRepository {
     };
   }
 
-  async createCheckoutSession(bookingId: string): Promise<CheckoutResult> {
+  async createCheckoutSession(targetId: string): Promise<CheckoutResult> {
     await this.delay(500);
     return {
-      url: `http://localhost:3000/payment/mock-success?bookingId=${bookingId}`,
+      url: `http://localhost:3000/payment/mock-success?targetId=${targetId}`,
       sessionId: `mock-session-${Date.now()}`
     };
   }

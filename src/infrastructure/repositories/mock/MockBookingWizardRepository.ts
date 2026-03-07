@@ -1,7 +1,7 @@
-import { Booking } from '@/src/application/repositories/IBookingRepository';
 import {
     CreateWizardBookingData,
     IBookingWizardRepository,
+    WizardBookingResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot,
@@ -25,31 +25,20 @@ export class MockBookingWizardRepository implements IBookingWizardRepository {
     return ALL_SLOTS[instructorId] || [];
   }
 
-  async createBooking(data: CreateWizardBookingData): Promise<Booking> {
+  async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     console.log('Mock createBooking:', data);
     
     const course = ALL_COURSES.find(c => c.id === data.courseId);
-    const instructor = ALL_INSTRUCTORS.find(i => i.id === data.instructorId);
-    const slot = ALL_SLOTS[data.instructorId]?.find(s => s.id === data.slotId);
-
+    
+    const finalPrice = course?.price || 0;
+    
     return {
-      id: `booking-${Date.now()}`,
-      studentId: 'user-001',
-      studentName: 'Current User',
-      instructorId: data.instructorId,
-      instructorName: instructor?.name || '',
-      courseId: data.courseId,
-      courseName: course?.title || '',
-      instructorAvailabilityId: data.slotId,
-      scheduledDate: data.date,
-      startTime: slot?.startTime || '',
-      endTime: slot?.endTime || '',
-      bookedHours: 0,
-      status: 'pending',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+        paymentId: finalPrice > 0 ? `pay-${Date.now()}` : undefined,
+        bookingId: finalPrice === 0 ? `book-${Date.now()}` : undefined,
+        finalPrice: finalPrice,
+        status: finalPrice > 0 ? 'awaiting_payment' : 'success',
+        checkoutUrl: finalPrice > 0 ? 'https://checkout.stripe.com/mock' : undefined
     };
   }
 }

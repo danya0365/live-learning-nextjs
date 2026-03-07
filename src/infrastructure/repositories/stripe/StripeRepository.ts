@@ -38,10 +38,10 @@ export class StripeRepository implements IStripeRepository {
       mode: 'payment',
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
-      client_reference_id: params.bookingId,
+      client_reference_id: params.paymentId,
       customer_email: params.customerEmail,
       metadata: {
-        bookingId: params.bookingId,
+        paymentId: params.paymentId,
         ...params.metadata,
       },
     });

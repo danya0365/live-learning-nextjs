@@ -42,11 +42,17 @@ export interface CreateWizardBookingData {
   couponCode?: string;
 }
 
-import { Booking } from './IBookingRepository';
+export interface WizardBookingResult {
+  bookingId?: string;
+  paymentId?: string;
+  finalPrice: number;
+  status: 'success' | 'awaiting_payment';
+  checkoutUrl?: string;
+}
 
 export interface IBookingWizardRepository {
   getCourses(): Promise<WizardCourse[]>;
   getInstructorsByCourse(courseId: string): Promise<WizardInstructor[]>;
   getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]>;
-  createBooking(data: CreateWizardBookingData): Promise<Booking>;
+  createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult>;
 }

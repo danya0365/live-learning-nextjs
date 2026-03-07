@@ -24,6 +24,7 @@ export interface BookingWizardState {
   couponError: string | null;
   discountAmount: number;
   finalPrice: number | null;
+  isEnrolled: boolean;
 }
 
 export interface BookingWizardActions {
@@ -65,6 +66,7 @@ export function useBookingWizardPresenter() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   // Initial Load
   useEffect(() => {
@@ -94,10 +96,24 @@ export function useBookingWizardPresenter() {
     setSelectedInstructor(null);
     setSelectedSlot(null);
     setAvailableInstructors([]); 
+    setIsEnrolled(false);
     
-    // Fetch instructors
-    const insts = await presenter.getInstructorsByCourse(course.id);
+    // 2. Proactive Enrollment Check
+    const [insts, enrollment] = await Promise.all([
+        presenter.getInstructorsByCourse(course.id),
+        presenter.checkEnrollment(course.id)
+    ]);
+
     setAvailableInstructors(insts);
+    if (enrollment && enrollment.isActive) {
+        setIsEnrolled(true);
+        setFinalPrice(0);
+        setDiscountAmount(course.price);
+    } else {
+        setIsEnrolled(false);
+        setFinalPrice(null);
+        setDiscountAmount(0);
+    }
 
     setStep('instructor');
   }, [presenter]);
@@ -139,13 +155,20 @@ export function useBookingWizardPresenter() {
              ? selectedSlot.bookedCourseId
              : selectedCourse.id;
 
-        await presenter.createBooking({
+        const result = await presenter.createBooking({
             courseId: courseIdPayload,
+            instructorId: selectedInstructor.id,
             slotId: selectedSlot.id, // This is the instructor_availability_id
             date: targetDate.toISOString(),
             action: bookingAction,
             couponCode: couponCode ? couponCode : undefined
         });
+
+        if (result.status === 'awaiting_payment' && result.checkoutUrl) {
+            // Redirect to Stripe
+            window.location.href = result.checkoutUrl;
+            return;
+        }
         
         setIsBooking(false);
         setBookingDone(true);
@@ -153,7 +176,7 @@ export function useBookingWizardPresenter() {
         console.error('Booking failed', error);
         setIsBooking(false);
     }
-  }, [selectedCourse, selectedInstructor, selectedSlot, bookingAction, presenter]);
+  }, [selectedCourse, selectedInstructor, selectedSlot, bookingAction, presenter, couponCode]);
 
   const goBack = useCallback(() => {
     if (step === 'instructor') { setStep('course'); setSelectedInstructor(null); setAvailableInstructors([]); }
@@ -165,6 +188,11 @@ export function useBookingWizardPresenter() {
     router.push('/my-bookings');
   }, [router]);
 
+  const handleNewBooking = useCallback(() => {
+    setStep('course');
+    setSelectedCourse(null);
+    setSelectedInstructor(null);
+    setSelectedSlot(null);
     setAvailableInstructors([]);
     setCalendarSlots([]);
     setBookingDone(false);
@@ -172,6 +200,7 @@ export function useBookingWizardPresenter() {
     setDiscountAmount(0);
     setFinalPrice(null);
     setCouponError(null);
+    setIsEnrolled(false);
   }, []);
 
   const applyCoupon = useCallback(async () => {
@@ -228,7 +257,8 @@ export function useBookingWizardPresenter() {
       isApplyingCoupon,
       couponError,
       discountAmount,
-      finalPrice
+      finalPrice,
+      isEnrolled
     },
     actions: {
       handleCourseSelect,

@@ -12,7 +12,6 @@ export type PaymentStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export interface Payment {
   id: string;
-  bookingId?: string;
   enrollmentId?: string;
   amount: number;
   currency: string;
@@ -32,7 +31,6 @@ export interface PaymentStats {
 }
 
 export interface CreatePaymentData {
-  bookingId?: string;
   enrollmentId?: string;
   amount: number;
   currency: string;
@@ -68,7 +66,6 @@ export interface IPaymentRepository {
   getById(id: string): Promise<Payment | null>;
   getByIds(ids: string[]): Promise<Payment[]>;
   getAll(): Promise<Payment[]>;
-  getByBookingId(bookingId: string): Promise<Payment | null>;
   getPaginated(page: number, perPage: number): Promise<PaginatedResult<Payment>>;
   
   // Write

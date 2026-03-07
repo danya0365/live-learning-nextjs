@@ -1,10 +1,10 @@
 import {
-    Coupon,
-    CouponValidationResult,
-    ICouponRepository,
-    ValidateCouponRequest
+  Coupon,
+  CouponValidationResult,
+  ICouponRepository,
+  ValidateCouponRequest
 } from '@/src/application/repositories/ICouponRepository';
-import { Database } from '@/src/infrastructure/supabase/types';
+import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export class SupabaseCouponRepository implements ICouponRepository {
@@ -41,7 +41,7 @@ export class SupabaseCouponRepository implements ICouponRepository {
     }
 
     // 3. Global Usage Limit
-    if (couponData.usage_limit !== null && couponData.usage_count >= couponData.usage_limit) {
+    if (couponData.usage_limit !== null && (couponData.usage_count ?? 0) >= couponData.usage_limit) {
         return { isValid: false, errorMessage: 'โค้ดส่วนลดนี้ถูกใช้งานครบโควต้าแล้ว' };
     }
 
@@ -54,7 +54,7 @@ export class SupabaseCouponRepository implements ICouponRepository {
 
     if (countError) {
         console.error('Error checking coupon usage count:', countError);
-    } else if (count !== null && count >= couponData.per_user_limit) {
+    } else if (count !== null && couponData.per_user_limit !== null && count >= couponData.per_user_limit) {
         return { isValid: false, errorMessage: 'คุณได้ใช้โค้ดส่วนลดนี้ครบตามจำนวนที่กำหนดแล้ว' };
     }
 
@@ -86,8 +86,8 @@ export class SupabaseCouponRepository implements ICouponRepository {
       maxDiscountAmount: couponData.max_discount_amount ? Number(couponData.max_discount_amount) : undefined,
       minPurchaseAmount: Number(couponData.min_purchase_amount),
       usageLimit: couponData.usage_limit || undefined,
-      usageCount: couponData.usage_count,
-      perUserLimit: couponData.per_user_limit,
+      usageCount: couponData.usage_count ?? 0,
+      perUserLimit: couponData.per_user_limit ?? 999999,
       validUntil: couponData.valid_until || undefined,
       isActive: couponData.is_active || false,
     };
@@ -117,8 +117,8 @@ export class SupabaseCouponRepository implements ICouponRepository {
         maxDiscountAmount: data.max_discount_amount ? Number(data.max_discount_amount) : undefined,
         minPurchaseAmount: Number(data.min_purchase_amount),
         usageLimit: data.usage_limit || undefined,
-        usageCount: data.usage_count,
-        perUserLimit: data.per_user_limit,
+        usageCount: data.usage_count ?? 0,
+        perUserLimit: data.per_user_limit ?? 999999,
         validUntil: data.valid_until || undefined,
         isActive: data.is_active || false,
     };

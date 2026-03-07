@@ -140,7 +140,16 @@ BEGIN
         RAISE EXCEPTION 'Course not found';
     END IF;
 
-    -- 3. Validate Coupon if provided
+    -- 3. Check for existing Active Enrollment
+    SELECT id INTO v_enrollment_id FROM public.enrollments 
+    WHERE student_profile_id = v_user_id AND course_id = p_course_id AND status = 'active';
+
+    -- 4. Logic: If enrollment exists, price is 0 (Free booking)
+    IF v_enrollment_id IS NOT NULL THEN
+        v_final_price := 0;
+        v_discount := v_course_price;
+    ELSE
+        -- 5. Validate Coupon if provided
     IF p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN
         -- Lock coupon for concurrency using a single fetch
         SELECT * INTO v_coupon 
@@ -185,6 +194,7 @@ BEGIN
     END IF;
 
     v_final_price := v_course_price - v_discount;
+    END IF;
 
     -- 4. Create Payment (Status succeeded immediately for 'free' or 100% discount)
     INSERT INTO public.payments (
@@ -237,6 +247,89 @@ BEGIN
         'booking_id', v_booking_id,
         'final_price', v_final_price,
         'status', CASE WHEN v_final_price = 0 THEN 'success' ELSE 'awaiting_payment' END
+    );
+END;
+$$;
+
+-- Fulfill Stripe Payment RPC (System use by Webhook)
+CREATE OR REPLACE FUNCTION public.fulfill_stripe_payment(
+    p_payment_id UUID,
+    p_transaction_id TEXT, -- Stripe Session ID
+    p_instructor_id UUID,
+    p_slot_id UUID,
+    p_scheduled_date DATE
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_payment RECORD;
+    v_course RECORD;
+    v_enrollment_id UUID;
+    v_booking_id UUID;
+    v_start_time TIME;
+    v_end_time TIME;
+BEGIN
+    -- 1. Fetch and Lock Payment
+    SELECT * INTO v_payment FROM public.payments WHERE id = p_payment_id FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Payment not found';
+    END IF;
+
+    IF v_payment.status = 'succeeded' THEN
+        RETURN jsonb_build_object('status', 'already_fulfilled');
+    END IF;
+
+    -- 2. Fetch Course Info
+    SELECT * INTO v_course FROM public.courses WHERE id = v_payment.course_id;
+
+    -- 3. Update Payment Status
+    UPDATE public.payments SET 
+        status = 'succeeded',
+        transaction_id = p_transaction_id,
+        updated_at = now()
+    WHERE id = p_payment_id;
+
+    -- 4. If Coupon was used, log it and update count
+    IF v_payment.coupon_id IS NOT NULL THEN
+        -- Insert into usages if not already there (idempotency)
+        INSERT INTO public.coupon_usages (coupon_id, user_profile_id, payment_id, discount_applied)
+        VALUES (v_payment.coupon_id, v_payment.user_profile_id, p_payment_id, v_payment.discount_amount)
+        ON CONFLICT DO NOTHING;
+        
+        UPDATE public.coupons SET usage_count = usage_count + 1 WHERE id = v_payment.coupon_id;
+    END IF;
+
+    -- 5. Upsert Enrollment
+    INSERT INTO public.enrollments (student_profile_id, course_id, status, total_hours, used_hours)
+    VALUES (v_payment.user_profile_id, v_payment.course_id, 'active', v_course.total_hours, 1)
+    ON CONFLICT (student_profile_id, course_id) 
+    DO UPDATE SET status = 'active', 
+                  used_hours = public.enrollments.used_hours + 1,
+                  total_hours = v_course.total_hours
+    RETURNING id INTO v_enrollment_id;
+
+    -- Update payment with enrollment link
+    UPDATE public.payments SET enrollment_id = v_enrollment_id WHERE id = p_payment_id;
+
+    -- 6. Create Booking
+    SELECT start_time, end_time INTO v_start_time, v_end_time 
+    FROM public.instructor_availabilities WHERE id = p_slot_id;
+
+    INSERT INTO public.bookings (
+        student_profile_id, instructor_profile_id, course_id, enrollment_id,
+        instructor_availability_id, scheduled_date, start_time, end_time, status
+    ) VALUES (
+        v_payment.user_profile_id, p_instructor_id, v_payment.course_id, v_enrollment_id,
+        p_slot_id, p_scheduled_date, v_start_time, v_end_time, 'confirmed'
+    ) RETURNING id INTO v_booking_id;
+
+    RETURN jsonb_build_object(
+        'payment_id', p_payment_id,
+        'enrollment_id', v_enrollment_id,
+        'booking_id', v_booking_id,
+        'status', 'fulfilled'
     );
 END;
 $$;

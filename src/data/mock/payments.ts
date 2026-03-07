@@ -3,7 +3,6 @@ import { Payment } from '@/src/application/repositories/IPaymentRepository';
 export const MOCK_PAYMENTS: Payment[] = [
   {
     id: 'pay-001',
-    bookingId: 'book-001',
     amount: 1500,
     currency: 'thb',
     paymentMethod: 'stripe_checkout',
@@ -14,7 +13,6 @@ export const MOCK_PAYMENTS: Payment[] = [
   },
   {
     id: 'pay-002',
-    bookingId: 'book-002',
     amount: 2500,
     currency: 'thb',
     paymentMethod: 'stripe_checkout',

@@ -45,9 +45,17 @@ export class PaymentPresenter {
         throw new Error('Course is free');
     }
 
-    // 4. Create Checkout Session via StripeRepository
+    // 4. Create Payment Record (Pending) via SupabasePaymentRepository
+    const payment = await this.repository.create({
+        amount: course.price,
+        currency: 'thb',
+        paymentMethod: 'stripe_checkout',
+        status: 'pending',
+    });
+
+    // 5. Create Checkout Session via StripeRepository
     const session = await this.stripeRepo.createCheckoutSession({
-      bookingId: booking.id,
+      paymentId: payment.id,
       courseTitle: course.title,
       amount: course.price,
       currency: 'thb',
@@ -56,14 +64,9 @@ export class PaymentPresenter {
       cancelUrl: `${origin}/payment/cancel`,
     });
 
-    // 5. Create Payment Record via SupabasePaymentRepository
-    await this.repository.create({
-        bookingId: booking.id,
-        amount: course.price,
-        currency: 'thb',
-        paymentMethod: 'stripe_checkout',
+    // 6. Update Payment Record with Transaction ID
+    await this.repository.update(payment.id, {
         transactionId: session.sessionId,
-        status: 'pending',
     });
 
     return session;

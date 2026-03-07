@@ -6,10 +6,10 @@
  * ✅ For SERVER-SIDE use only (API Routes, Server Components)
  */
 
-import { Booking } from "@/src/application/repositories/IBookingRepository";
 import {
     CreateWizardBookingData,
     IBookingWizardRepository,
+    WizardBookingResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot
@@ -143,28 +143,20 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         });
     }
 
-    async createBooking(data: CreateWizardBookingData): Promise<Booking> {
+    async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
         // 🔒 Server-Injected Identity: resolve studentId from auth session
         const { data: { user } } = await this.supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const { data: profile } = await this.supabase
-            .from('profiles')
-            .select('id')
-            .eq('auth_id', user.id)
-            .single();
-
-        if (!profile) throw new Error('Profile not found');
-        
         // 1. Execute Atomic Transaction via RPC
-        // This handles: Coupon Validation -> Payment -> Enrollment -> Booking
+        // This handles: Coupon Validation -> Payment (Pending/Succeeded) -> Enrollment -> Booking
         const { data: result, error: rpcError } = await this.supabase.rpc('process_wizard_transaction', {
             p_course_id: data.courseId,
             p_instructor_id: data.instructorId,
             p_slot_id: data.slotId,
             p_date: data.date,
             p_coupon_code: data.couponCode || undefined,
-            p_payment_method: 'free' // Default for now
+            p_payment_method: 'free' // Default, will be updated if Stripe is used
         });
 
         if (rpcError) {
@@ -174,13 +166,11 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
 
         const typedResult = result as any;
 
-        // 2. Fetch the newly created booking to return it
-        if (!typedResult.booking_id) {
-            // If No Booking ID provided, it might mean payment is pending (Total > 0)
-            // But for this current flow, we expect success or error
-            throw new Error('Booking could not be confirmed. Please check your payment.');
-        }
-
-        return await this.bookingRepo.getById(typedResult.booking_id) as Booking;
+        return {
+            bookingId: typedResult.booking_id,
+            paymentId: typedResult.payment_id,
+            finalPrice: typedResult.final_price,
+            status: typedResult.status
+        };
     }
 }

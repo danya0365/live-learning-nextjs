@@ -53,9 +53,19 @@ export function useEasyBookingPresenter() {
         date: new Date().toISOString(),
         action,
       });
-      setBookingId(booking.id);
-      setBookingSuccess(true);
-      return booking.id;
+
+      if (booking.status === 'awaiting_payment' && booking.checkoutUrl) {
+          window.location.href = booking.checkoutUrl;
+          return undefined;
+      }
+
+      if (booking.status === 'success') {
+          setBookingId(booking.bookingId || null);
+          setBookingSuccess(true);
+          return booking.bookingId;
+      }
+
+      throw new Error('Unexpected booking status');
     } catch (err) {
       console.error('Booking failed:', err);
       setError('Booking failed. Please try again.');

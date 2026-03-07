@@ -1,15 +1,18 @@
 import {
-    CreateWizardBookingData,
-    IBookingWizardRepository,
-    WizardCourse,
-    WizardInstructor,
-    WizardSlot,
+  CreateWizardBookingData,
+  IBookingWizardRepository,
+  WizardBookingResult,
+  WizardCourse,
+  WizardInstructor,
+  WizardSlot,
 } from '@/src/application/repositories/IBookingWizardRepository';
-
-import { Booking } from '@/src/application/repositories/IBookingRepository';
+import { Enrollment, IEnrollmentRepository } from '@/src/application/repositories/IEnrollmentRepository';
 
 export class BookingWizardPresenter {
-  constructor(private readonly repo: IBookingWizardRepository) {}
+  constructor(
+    private readonly repo: IBookingWizardRepository,
+    private readonly enrollmentRepo: IEnrollmentRepository
+  ) {}
 
   async getCourses(): Promise<WizardCourse[]> {
     return this.repo.getCourses();
@@ -23,7 +26,11 @@ export class BookingWizardPresenter {
      return this.repo.getSlotsByInstructor(instructorId);
   }
 
-  async createBooking(data: CreateWizardBookingData): Promise<Booking> {
+  async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
     return this.repo.createBooking(data);
+  }
+
+  async checkEnrollment(courseId: string): Promise<Enrollment | null> {
+    return this.enrollmentRepo.checkEnrollment(courseId);
   }
 }

@@ -7,10 +7,10 @@
 
 'use client';
 
-import { Booking } from "@/src/application/repositories/IBookingRepository";
 import {
     CreateWizardBookingData,
     IBookingWizardRepository,
+    WizardBookingResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot
@@ -64,7 +64,7 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         return res.json();
     }
 
-    async createBooking(data: CreateWizardBookingData): Promise<Booking> {
+    async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
         const res = await fetch('/api/booking-wizard/bookings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

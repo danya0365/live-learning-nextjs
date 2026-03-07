@@ -54,13 +54,16 @@ export function BookingWizard() {
     selectedInstructor,
     selectedSlot,
     bookingAction,
+    isBooking,
+    bookingDone,
     loading,
     levels,
     couponCode,
     isApplyingCoupon,
     couponError,
     discountAmount,
-    finalPrice
+    finalPrice,
+    isEnrolled
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -133,6 +136,7 @@ export function BookingWizard() {
               instructors={availableInstructors}
               onSelect={actions.handleInstructorSelect}
               onBack={actions.goBack}
+              isEnrolled={isEnrolled}
             />
           )}
           {step === 'calendar' && selectedCourse && selectedInstructor && (
@@ -142,6 +146,7 @@ export function BookingWizard() {
               slots={calendarSlots}
               onSelect={actions.handleSlotSelect}
               onBack={actions.goBack}
+              isEnrolled={isEnrolled}
             />
           )}
           {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
@@ -164,6 +169,7 @@ export function BookingWizard() {
               onBack={actions.goBack}
               onFinish={actions.handleFinish}
               onNewBooking={actions.handleNewBooking}
+              isEnrolled={isEnrolled}
             />
           )}
         </div>
@@ -277,11 +283,13 @@ function StepInstructor({
   instructors,
   onSelect,
   onBack,
+  isEnrolled,
 }: {
   course: WizardCourse;
   instructors: WizardInstructor[];
   onSelect: (i: WizardInstructor) => void;
   onBack: () => void;
+  isEnrolled: boolean;
 }) {
   return (
     <div>
@@ -301,6 +309,11 @@ function StepInstructor({
             <p className="text-xs text-primary font-medium">คอร์สที่เลือก</p>
             <p className="font-bold text-text-primary text-sm truncate">{course.title}</p>
           </div>
+          {isEnrolled && (
+            <div className="ml-auto px-2 py-1 rounded-lg bg-success/10 border border-success/30 text-[10px] font-bold text-success animate-pulse">
+               👑 OWNED
+            </div>
+          )}
         </div>
       </div>
 
@@ -377,12 +390,14 @@ function StepCalendar({
   slots,
   onSelect,
   onBack,
+  isEnrolled,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
   slots: WizardSlot[];
   onSelect: (slot: WizardSlot) => void;
   onBack: () => void;
+  isEnrolled: boolean;
 }) {
   // Group slots by day of week
   const slotsByDay = useMemo(() => {
@@ -417,6 +432,11 @@ function StepCalendar({
               <p className="text-[10px] text-primary font-medium">คอร์ส</p>
               <p className="text-xs font-bold text-text-primary truncate">{course.title}</p>
             </div>
+            {isEnrolled && (
+              <div className="ml-auto px-1.5 py-0.5 rounded bg-success/10 border border-success/30 text-[8px] font-bold text-success animate-pulse">
+                👑 OWNED
+              </div>
+            )}
           </div>
         </div>
         <div className="flex-1 glass rounded-xl p-3 border border-purple-500/20 bg-purple-500/5">
@@ -573,7 +593,8 @@ function StepConfirm({
   discountAmount,
   finalPrice,
   setCouponCode,
-  applyCoupon
+  applyCoupon,
+  isEnrolled,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -593,6 +614,7 @@ function StepConfirm({
   finalPrice: number | null;
   setCouponCode: (c: string) => void;
   applyCoupon: () => void;
+  isEnrolled: boolean;
 }) {
   if (bookingDone) {
     return (
@@ -609,7 +631,7 @@ function StepConfirm({
             : 'คุณได้เข้าร่วมห้องเรียนเรียบร้อยแล้ว'}
         </p>
         <p className="text-text-muted text-xs mb-8">
-          ✉️ อีเมลยืนยันจะถูกส่งไปยังอีเมลของคุณ
+          ✉️ {isEnrolled ? 'คุณสามารถดูตารางเรียนทั้งหมดได้ในหน้าการจอง' : 'อีเมลยืนยันจะถูกส่งไปยังอีเมลของคุณ'}
         </p>
 
         {/* Summary card */}
@@ -680,9 +702,11 @@ function StepConfirm({
           {action === 'new' ? 'ยืนยันการจอง' : 'ยืนยันเข้าร่วม'}
         </h2>
         <p className="text-text-secondary text-sm">
-          {action === 'new'
-            ? 'ตรวจสอบข้อมูลก่อนยืนยัน'
-            : 'คุณจะเข้าร่วมห้องเรียนที่มีคนจองไว้แล้ว'}
+          {isEnrolled 
+            ? '✨ คุณเป็นเจ้าของคอร์สนี้แล้ว สามารถจองเวลาเรียนได้ฟรี' 
+            : action === 'new'
+              ? 'ตรวจสอบข้อมูลก่อนยืนยัน'
+              : 'คุณจะเข้าร่วมห้องเรียนที่มีคนจองไว้แล้ว'}
         </p>
       </div>
 
@@ -737,10 +761,25 @@ function StepConfirm({
             )}
           </div>
         </div>
-      </div>
+    </div>
+
+      {/* Enrollment Badge - Modern & Premium */}
+      {isEnrolled && (
+        <div className="mb-6 animate-slideIn">
+          <div className="glass border border-success/30 bg-success/10 rounded-2xl p-4 flex items-center gap-4 shadow-xl shadow-success/5">
+            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl">
+              👑
+            </div>
+            <div>
+              <p className="text-success font-black text-sm uppercase tracking-tight">VIP STATUS: ENROLLED</p>
+              <p className="text-text-secondary text-xs">คุณเป็นเจ้าของคอร์สนี้แล้ว สิทธิพิเศษจองเวลาเรียนได้ไม่จำกัดตามโควตาชั่วโมงของคุณ</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Coupon Input */}
-      {!bookingDone && (
+      {!bookingDone && !isEnrolled && (
         <div className="glass rounded-2xl p-4 border border-border/50 mb-6 bg-surface/30">
           <p className="text-xs font-bold text-text-primary mb-3">🏷️ มีโค้ดส่วนลดไหม?</p>
           <div className="flex gap-2">
@@ -776,22 +815,30 @@ function StepConfirm({
       )}
 
       {/* Price Breakdown */}
-      <div className="glass rounded-2xl p-5 border border-primary/20 bg-primary/5 mb-6 shadow-lg shadow-primary/5">
+      <div className={`glass rounded-2xl p-5 border mb-6 shadow-lg transition-all duration-500 ${
+        isEnrolled 
+          ? 'border-success/30 bg-success/5 shadow-success/5' 
+          : 'border-primary/20 bg-primary/5 shadow-primary/5'
+      }`}>
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-text-secondary">
             <span>ยอดชำระเบื้องต้น</span>
-            <span>฿{course.price.toLocaleString()}</span>
+            <span className={isEnrolled ? 'line-through opacity-50' : ''}>฿{course.price.toLocaleString()}</span>
           </div>
-          {discountAmount > 0 && (
+          {(discountAmount > 0 || isEnrolled) && (
             <div className="flex justify-between text-sm text-success font-medium">
-              <span>ส่วนลด</span>
-              <span>-฿{discountAmount.toLocaleString()}</span>
+              <span>ส่วนลด {isEnrolled && '(สิทธิพิเศษของผู้เรียน)'}</span>
+              <span>-฿{course.price.toLocaleString()}</span>
             </div>
           )}
-          <div className="pt-2 border-t border-primary/10 flex justify-between items-center">
+          <div className={`pt-2 border-t flex justify-between items-center ${
+            isEnrolled ? 'border-success/10' : 'border-primary/10'
+          }`}>
             <span className="font-bold text-text-primary">ยอดที่ต้องชำระ</span>
-            <span className="text-2xl font-black text-primary animate-fadeIn">
-              ฿{(finalPrice !== null ? finalPrice : course.price).toLocaleString()}
+            <span className={`text-2xl font-black animate-fadeIn ${
+              isEnrolled ? 'text-success' : 'text-primary'
+            }`}>
+              ฿0
             </span>
           </div>
         </div>
