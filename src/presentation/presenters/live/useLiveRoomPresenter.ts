@@ -2,6 +2,7 @@
 
 import { ChatMessage, LiveRoom, Participant } from '@/src/application/repositories/ILiveRoomRepository';
 import { createClient as createSupabaseClient } from '@/src/infrastructure/supabase/client';
+import { useAuthStore } from '@/src/stores/authStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClientLiveRoomPresenter } from './LiveRoomPresenterClientFactory';
 
@@ -112,21 +113,16 @@ export function useLiveRoomPresenter(roomId: string) {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          // Get current user profile to track presence
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-
+          // Use authStore for current user profile (Reliable)
+          const { user: storeUser } = useAuthStore.getState();
+          
+          if (storeUser) {
             await channel.track({
-              profile_id: user.id,
-              name: profile?.full_name || 'Anonymous',
-              avatar: profile?.avatar_url || '',
+              profile_id: storeUser.profileId || storeUser.id,
+              name: storeUser.name || 'Anonymous',
+              avatar: storeUser.avatar || '',
               online_at: new Date().toISOString(),
-              isInstructor: room.instructor === profile?.full_name // Simple check for demo
+              isInstructor: storeUser.role === 'instructor'
             });
           }
         }
