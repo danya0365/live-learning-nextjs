@@ -1,38 +1,33 @@
 
+import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
+import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
+  const authRepo = new SupabaseAuthRepository(supabase);
+  const instructorRepo = new SupabaseInstructorRepository(supabase);
   
-  // Get Auth User
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  try {
+    // 1. Get the current active profile (handles multiple profiles context)
+    const profile = await authRepo.getProfile();
+    
+    if (!profile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    // 2. Get the specific instructor profile linked to this profile
+    const instructor = await instructorRepo.getMe(); // getMe handles auth user -> profile -> instructor link
+
+    if (!instructor) {
+        return NextResponse.json({ error: 'Instructor profile not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(instructor);
+
+  } catch (error: any) {
+    console.error('API Error in instructors/me:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  // Get Profile ID
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('auth_id', user.id)
-    .single();
-
-  if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-  }
-
-  // Get Instructor Profile
-  const { data: instructor } = await supabase
-    .from('instructor_profiles')
-    .select('*')
-    .eq('profile_id', profile.id)
-    .single();
-
-  if (!instructor) {
-      return NextResponse.json({ error: 'Instructor profile not found' }, { status: 404 });
-  }
-
-  return NextResponse.json(instructor);
 }
