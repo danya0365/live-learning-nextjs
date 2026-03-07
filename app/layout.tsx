@@ -1,5 +1,4 @@
 import '@/public/styles/index.css';
-import { AIHelperWidget } from '@/src/presentation/components/ai-helper/AIHelperWidget';
 import { AuthProvider } from '@/src/presentation/providers/AuthProvider';
 import { ThemeProvider } from '@/src/presentation/providers/ThemeProvider';
 import type { Metadata } from "next";
@@ -28,7 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             {children}
-            <AIHelperWidget />
+            {/* <AIHelperWidget /> */}
           </ThemeProvider>
         </AuthProvider>
       </body>
