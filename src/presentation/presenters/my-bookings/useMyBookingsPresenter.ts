@@ -31,30 +31,30 @@ export function useMyBookingsPresenter(
 
   const loadData = useCallback(async () => {
     if (!isInitialized) return;
-    const targetId = user?.profileId || user?.id; // Prefer profileId, fallback to id (Auth UID) which might match in some setups
-    if (!targetId) return;
 
     setLoading(true);
     setError(null);
     try {
-      const vm = await presenter.getViewModel(targetId, filter);
+      // Session-based: server resolves student identity, no ID needed
+      const vm = await presenter.getViewModel(filter);
       if (isMountedRef.current) setViewModel(vm);
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [presenter, filter, user, isInitialized]);
+  }, [presenter, filter, isInitialized]);
 
   const setFilter = useCallback((f: BookingFilter) => {
     setFilterState(f);
   }, []);
 
   useEffect(() => {
-    if (isInitialized && user) {
+    if (isInitialized) {
       loadData();
     }
-  }, [filter, isInitialized, user?.profileId, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filter, isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   useEffect(() => {
     isMountedRef.current = true;

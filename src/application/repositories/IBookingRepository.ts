@@ -72,5 +72,14 @@ export interface IBookingRepository {
   update(id: string, data: UpdateBookingData): Promise<Booking>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<BookingStats>;
+  /** Get stats for a specific profile */
+  getStatsByProfile(profileId: string): Promise<BookingStats>;
+  /** Get stats for the currently authenticated user */
+  getMyStats(): Promise<BookingStats>;
+
   getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]>;
+  /** Get bookings by month for a specific profile */
+  getByMonthByProfile(profileId: string, month: number, year: number): Promise<Booking[]>;
+  /** Get bookings by month for the currently authenticated user */
+  getMyBookingsByMonth(month: number, year: number): Promise<Booking[]>;
 }

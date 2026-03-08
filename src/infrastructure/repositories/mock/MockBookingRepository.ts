@@ -110,6 +110,26 @@ export class MockBookingRepository implements IBookingRepository {
     };
   }
 
+  async getStatsByProfile(profileId: string): Promise<BookingStats> {
+    await this.delay(100);
+    const profileItems = this.items.filter(i => i.studentId === profileId || i.instructorId === profileId);
+    const totalItems = profileItems.length;
+    const activeItems = profileItems.filter((i) => i.isActive).length;
+    return {
+      totalItems,
+      activeItems,
+      inactiveItems: totalItems - activeItems,
+      pendingCount: profileItems.filter((i) => i.status === 'pending').length,
+      confirmedCount: profileItems.filter((i) => i.status === 'confirmed').length,
+      completedCount: profileItems.filter((i) => i.status === 'completed').length,
+      cancelledCount: profileItems.filter((i) => i.status === 'cancelled').length,
+    };
+  }
+
+  async getMyStats(): Promise<BookingStats> {
+    return this.getStatsByProfile('student-001'); // Mock session
+  }
+
 
   async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
     await this.delay(100);
@@ -120,6 +140,20 @@ export class MockBookingRepository implements IBookingRepository {
         const matchesStudent = filters?.studentId ? item.studentId === filters.studentId : true;
         return matchesDate && matchesInstructor && matchesStudent;
     });
+  }
+
+  async getByMonthByProfile(profileId: string, month: number, year: number): Promise<Booking[]> {
+    await this.delay(100);
+    return this.items.filter(item => {
+        const d = new Date(item.scheduledDate);
+        const matchesDate = d.getMonth() + 1 === month && d.getFullYear() === year;
+        const matchesProfile = item.studentId === profileId || item.instructorId === profileId;
+        return matchesDate && matchesProfile;
+    });
+  }
+
+  async getMyBookingsByMonth(month: number, year: number): Promise<Booking[]> {
+    return this.getByMonthByProfile('student-001', month, year); // Mock session
   }
 
   private delay(ms: number): Promise<void> {

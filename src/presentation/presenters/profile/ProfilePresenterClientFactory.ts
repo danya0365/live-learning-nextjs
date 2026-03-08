@@ -1,5 +1,6 @@
 'use client';
 
+import { ApiAchievementRepository } from '@/src/infrastructure/repositories/api/ApiAchievementRepository';
 import { ApiBookingRepository } from '@/src/infrastructure/repositories/api/ApiBookingRepository';
 import { ApiCourseRepository } from '@/src/infrastructure/repositories/api/ApiCourseRepository';
 import { ApiProfileRepository } from '@/src/infrastructure/repositories/api/ApiProfileRepository';
@@ -10,5 +11,6 @@ export function createClientProfilePresenter(): ProfilePresenter {
     new ApiBookingRepository(),
     new ApiCourseRepository(),
     new ApiProfileRepository(),
+    new ApiAchievementRepository(),
   );
 }

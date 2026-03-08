@@ -150,13 +150,20 @@ export class SupabaseCourseRepository implements ICourseRepository {
   }
 
   async getForCurrentInstructor(): Promise<Course[]> {
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (!user) return [];
+    // 1. Try to get Active Profile via RPC
+    const { data: activeProfiles, error: rpcError } = await this.supabase.rpc('get_active_profile');
+    
+    if (rpcError || !activeProfiles || activeProfiles.length === 0) {
+      return [];
+    }
 
+    const activeProfileId = activeProfiles[0].id;
+
+    // 2. Get instructor profile using the active profile ID
     const { data: instructor } = await this.supabase
       .from('instructor_profiles')
       .select('id')
-      .eq('profile_id', user.id)
+      .eq('profile_id', activeProfileId)
       .single();
 
     if (!instructor) return [];

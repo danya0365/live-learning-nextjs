@@ -47,8 +47,4 @@ export interface IProfileRepository {
    */
   getById(id: string): Promise<AuthProfile | null>;
 
-  /**
-   * Get user achievements
-   */
-  getAchievements(userId: string): Promise<Achievement[]>;
 }

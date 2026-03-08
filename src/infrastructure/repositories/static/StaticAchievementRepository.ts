@@ -11,6 +11,10 @@ import {
 import { MOCK_ACHIEVEMENTS } from '@/src/data/mock/achievements';
 
 export class StaticAchievementRepository implements IAchievementRepository {
+  async getMyAchievements(): Promise<AchievementDetail[]> {
+    return [...MOCK_ACHIEVEMENTS];
+  }
+
   async getByUserId(_userId: string): Promise<AchievementDetail[]> {
     return [...MOCK_ACHIEVEMENTS];
   }

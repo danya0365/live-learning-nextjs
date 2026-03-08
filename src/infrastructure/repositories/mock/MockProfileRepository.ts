@@ -1,11 +1,8 @@
 import { AuthProfile } from '@/src/application/repositories/IAuthRepository';
-import { Achievement, IProfileRepository } from '@/src/application/repositories/IProfileRepository';
+import { IProfileRepository } from '@/src/application/repositories/IProfileRepository';
 
 import {
-    ADMIN_ACHIEVEMENTS,
-    DEMO_ACHIEVEMENTS,
-    INSTRUCTOR_ACHIEVEMENTS,
-    MOCK_AUTH_PROFILES,
+  MOCK_AUTH_PROFILES
 } from '@/src/data/mock/profiles';
 
 export class MockProfileRepository implements IProfileRepository {
@@ -25,13 +22,4 @@ export class MockProfileRepository implements IProfileRepository {
       return true;
   }
 
-  async getAchievements(userId: string): Promise<Achievement[]> {
-    if (userId === 'instructor-001') {
-      return [...INSTRUCTOR_ACHIEVEMENTS];
-    }
-    if (userId === 'admin-001') {
-      return [...ADMIN_ACHIEVEMENTS];
-    }
-    return [...DEMO_ACHIEVEMENTS];
-  }
 }

@@ -174,8 +174,4 @@ export class SupabaseProfileRepository implements IProfileRepository {
     return this.mapProfile(data as unknown as ProfileRow);
   }
 
-  async getAchievements(userId: string): Promise<any[]> {
-    // Return empty for now as schema is unknown
-    return [];
-  }
 }

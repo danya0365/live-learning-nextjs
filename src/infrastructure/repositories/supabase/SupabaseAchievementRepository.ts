@@ -10,9 +10,9 @@
  */
 
 import {
-    AchievementCategory,
-    AchievementDetail,
-    IAchievementRepository,
+  AchievementCategory,
+  AchievementDetail,
+  IAchievementRepository,
 } from '@/src/application/repositories/IAchievementRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -26,6 +26,18 @@ interface JoinedRow extends DefinitionRow {
 
 export class SupabaseAchievementRepository implements IAchievementRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
+
+  async getMyAchievements(): Promise<AchievementDetail[]> {
+    // 1. Try to get Active Profile via RPC
+    const { data: activeProfiles, error: rpcError } = await this.supabase.rpc('get_active_profile');
+    
+    if (rpcError || !activeProfiles || activeProfiles.length === 0) {
+      return [];
+    }
+
+    const activeProfileId = activeProfiles[0].id;
+    return this.getByUserId(activeProfileId);
+  }
 
   async getByUserId(userId: string): Promise<AchievementDetail[]> {
     const { data, error } = await this.supabase

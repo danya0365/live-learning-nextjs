@@ -23,24 +23,23 @@ export function useProfilePresenter(
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
-    const targetId = user?.profileId || user?.id; // Prefer profileId, fallback to id (Auth UID) which might match in some setups
-    if (!targetId) return;
-
     setLoading(true);
     setError(null);
     try {
-      const vm = await presenter.getViewModel(targetId, user?.role);
+      // Session-based: server resolves auth profile identity, no ID needed
+      const vm = await presenter.getViewModel(user?.role);
       if (isMountedRef.current) setViewModel(vm);
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [presenter, user?.profileId, user?.id, user?.role]);
+  }, [presenter, user?.role]);
 
   useEffect(() => {
-    if (!initialViewModel && (user?.profileId || user?.id)) loadData();
-  }, [user?.profileId, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+    // โหลดครั้งแรกถ้าไม่มี initialViewModel
+    if (!initialViewModel) loadData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     isMountedRef.current = true;

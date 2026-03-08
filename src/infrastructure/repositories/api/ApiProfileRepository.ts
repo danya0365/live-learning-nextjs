@@ -56,12 +56,4 @@ export class ApiProfileRepository implements IProfileRepository {
     return res.json();
   }
 
-  async getAchievements(userId: string): Promise<any[]> {
-    const res = await fetch(`${this.baseUrl}/${userId}/achievements`);
-    if (!res.ok) {
-        console.error('Failed to fetch achievements');
-        return [];
-    }
-    return res.json();
-  }
 }

@@ -1,12 +1,10 @@
+import { IAchievementRepository } from '@/src/application/repositories/IAchievementRepository';
 import {
   Booking,
   BookingStats,
   IBookingRepository,
 } from '@/src/application/repositories/IBookingRepository';
-import {
-  Course,
-  ICourseRepository,
-} from '@/src/application/repositories/ICourseRepository';
+import { Course, ICourseRepository } from '@/src/application/repositories/ICourseRepository';
 import { Achievement, IProfileRepository, UserProfile } from '@/src/application/repositories/IProfileRepository';
 
 export interface LearningStats {
@@ -37,18 +35,20 @@ export class ProfilePresenter {
     private readonly bookingRepository: IBookingRepository,
     private readonly courseRepository: ICourseRepository,
     private readonly profileRepository: IProfileRepository,
+    private readonly achievementRepository: IAchievementRepository,
   ) {}
 
-  async getViewModel(userId: string, roleOverride?: string): Promise<ProfileViewModel> {
+  async getViewModel(roleOverride?: string): Promise<ProfileViewModel> {
     const [stats, authProfile, achievements] = await Promise.all([
-      this.bookingRepository.getStats(),
-      this.profileRepository.getById(userId),
-      this.profileRepository.getAchievements(userId),
+      this.bookingRepository.getMyStats(),
+      this.profileRepository.getProfile(), 
+      this.achievementRepository.getMyAchievements(),
     ]);
 
     if (!authProfile) {
       throw new Error('Profile not found');
     }
+
 
     const role = (roleOverride as 'student' | 'instructor' | 'admin') || authProfile.role || 'student';
     const isInstructor = role === 'instructor';
@@ -62,10 +62,11 @@ export class ProfilePresenter {
       role,
     };
 
-    // Fetch role-specific booking data
+    // Fetch role-specific booking data — session-based, no explicit ID needed
     const bookings = isInstructor
-      ? await this.bookingRepository.getByInstructorId(userId)
-      : await this.bookingRepository.getByStudentId(userId);
+      ? await this.bookingRepository.getMyInstructorBookings()
+      : await this.bookingRepository.getMyStudentBookings();
+
 
     const recentBookings = bookings
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -82,7 +83,7 @@ export class ProfilePresenter {
     // Instructor stats — computed from real data
     let instructorStats: InstructorStats | undefined;
     if (isInstructor) {
-      const courses = await this.courseRepository.getByInstructorId(userId);
+      const courses = await this.courseRepository.getForCurrentInstructor();
 
       const now = new Date();
       const weekStart = new Date(now);

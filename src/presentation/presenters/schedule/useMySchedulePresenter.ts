@@ -2,16 +2,16 @@
 
 import { useAuthStore } from '@/src/stores/authStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScheduleFilters, ScheduleViewModel } from './SchedulePresenter';
-import { createClientSchedulePresenter } from './SchedulePresenterClientFactory';
+import { MyScheduleViewModel, ScheduleFilters } from './MySchedulePresenter';
+import { createClientMySchedulePresenter } from './MySchedulePresenterClientFactory';
 
-export interface SchedulePresenterState {
-  viewModel: ScheduleViewModel | null;
+export interface MySchedulePresenterState {
+  viewModel: MyScheduleViewModel | null;
   loading: boolean;
   error: string | null;
 }
 
-export interface SchedulePresenterActions {
+export interface MySchedulePresenterActions {
   loadData: (filters?: Partial<ScheduleFilters>) => Promise<void>;
   setInstructor: (id: string | null) => void;
   setDay: (day: number | null) => void;
@@ -22,16 +22,16 @@ export interface SchedulePresenterActions {
   deleteAvailability: (id: string) => Promise<boolean>;
 }
 
-export function useSchedulePresenter(
-  initialViewModel?: ScheduleViewModel,
-): [SchedulePresenterState, SchedulePresenterActions] {
+export function useMySchedulePresenter(
+  initialViewModel?: MyScheduleViewModel,
+): [MySchedulePresenterState, MySchedulePresenterActions] {
   const { user } = useAuthStore();
   const isInstructor = user?.role === 'instructor';
   
-  const presenter = useMemo(() => createClientSchedulePresenter(), []);
+  const presenter = useMemo(() => createClientMySchedulePresenter(), []);
   const isMountedRef = useRef(true);
 
-  const [viewModel, setViewModel] = useState<ScheduleViewModel | null>(initialViewModel || null);
+  const [viewModel, setViewModel] = useState<MyScheduleViewModel | null>(initialViewModel || null);
   const [loading, setLoading] = useState(!initialViewModel);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Partial<ScheduleFilters>>(initialViewModel?.filters || {});
@@ -91,17 +91,16 @@ export function useSchedulePresenter(
   }, [filters, loadData]);
 
   const addAvailability = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
-    const instructorId = viewModel?.filters?.instructorId || user?.profileId;
-    if (!instructorId) return false;
+    if (!user?.profileId) return false;
     try {
-      const success = await presenter.addAvailability(instructorId, dayOfWeek, startTime, endTime);
+      const success = await presenter.addAvailability(user.profileId, dayOfWeek, startTime, endTime);
       if (success) await loadData();
       return success;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add availability');
       return false;
     }
-  }, [presenter, loadData, user?.profileId, viewModel?.filters?.instructorId]);
+  }, [presenter, loadData, user?.profileId]);
 
   const deleteAvailability = useCallback(async (id: string) => {
     try {

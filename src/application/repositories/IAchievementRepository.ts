@@ -29,6 +29,11 @@ export interface AchievementStats {
 
 export interface IAchievementRepository {
   /**
+   * Get all achievements for the currently authenticated user (session-based, no ID needed)
+   */
+  getMyAchievements(): Promise<AchievementDetail[]>;
+
+  /**
    * Get all achievements for a user (both locked and unlocked)
    */
   getByUserId(userId: string): Promise<AchievementDetail[]>;

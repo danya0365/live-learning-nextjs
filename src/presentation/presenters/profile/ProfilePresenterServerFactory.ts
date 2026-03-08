@@ -1,3 +1,4 @@
+import { SupabaseAchievementRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAchievementRepository';
 import { SupabaseBookingRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingRepository';
 import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
 import { SupabaseProfileRepository } from '@/src/infrastructure/repositories/supabase/SupabaseProfileRepository';
@@ -10,5 +11,6 @@ export async function createServerProfilePresenter(): Promise<ProfilePresenter> 
     new SupabaseBookingRepository(supabase),
     new SupabaseCourseRepository(supabase),
     new SupabaseProfileRepository(supabase),
+    new SupabaseAchievementRepository(supabase),
   );
 }

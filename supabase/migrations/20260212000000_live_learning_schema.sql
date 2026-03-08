@@ -394,7 +394,10 @@ CREATE POLICY "Instructors can manage their own availabilities"
     instructor_profile_id IN (
       SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()
     )
-  )
+  );
+
+CREATE POLICY "Instructors can insert their own availabilities"
+  ON public.instructor_availabilities FOR INSERT
   WITH CHECK (
     instructor_profile_id IN (
       SELECT id FROM public.instructor_profiles WHERE profile_id = public.get_active_profile_id()

@@ -7,13 +7,13 @@
  */
 
 import {
-  CreateInstructorData,
-  IInstructorRepository,
-  Instructor,
-  InstructorAvailability,
-  InstructorReview,
-  InstructorStats,
-  UpdateInstructorData,
+    CreateInstructorData,
+    IInstructorRepository,
+    Instructor,
+    InstructorAvailability,
+    InstructorReview,
+    InstructorStats,
+    UpdateInstructorData,
 } from '@/src/application/repositories/IInstructorRepository';
 import { Database } from '@/src/domain/types/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -130,10 +130,20 @@ export class SupabaseInstructorRepository implements IInstructorRepository {
   }
 
   async getAvailabilities(instructorId: string): Promise<InstructorAvailability[]> {
+    // Resolve instructorId if it's a profileId
+    let resolvedId = instructorId;
+    const { data: inst } = await this.supabase
+      .from('instructor_profiles')
+      .select('id')
+      .or(`id.eq.${instructorId},profile_id.eq.${instructorId}`)
+      .single();
+    
+    if (inst) resolvedId = inst.id;
+
     const { data, error } = await this.supabase
       .from('instructor_availabilities')
       .select('*')
-      .eq('instructor_profile_id', instructorId)
+      .eq('instructor_profile_id', resolvedId)
       .eq('is_active', true)
       .order('day_of_week')
       .order('start_time');
@@ -314,10 +324,20 @@ export class SupabaseInstructorRepository implements IInstructorRepository {
   }
 
   async addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<InstructorAvailability> {
+    // Resolve instructorId if it's a profileId
+    let resolvedId = instructorId;
+    const { data: inst } = await this.supabase
+      .from('instructor_profiles')
+      .select('id')
+      .or(`id.eq.${instructorId},profile_id.eq.${instructorId}`)
+      .single();
+    
+    if (inst) resolvedId = inst.id;
+
     const { data, error } = await this.supabase
       .from('instructor_availabilities')
       .insert({
-        instructor_profile_id: instructorId,
+        instructor_profile_id: resolvedId,
         day_of_week: dayOfWeek,
         start_time: startTime,
         end_time: endTime,

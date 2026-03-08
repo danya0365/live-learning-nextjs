@@ -106,20 +106,38 @@ export class SupabaseBookingRepository implements IBookingRepository {
   }
 
 
-  /**
-   * Not applicable for server-side repositories.
-   * Use getByStudentId(studentId) with a resolved ID from the auth layer instead.
-   */
   async getMyStudentBookings(): Promise<Booking[]> {
-    throw new Error('getMyStudentBookings() is not supported in SupabaseBookingRepository. Use getByStudentId(studentId) with a resolved profile ID.');
+    // 1. Try to get Active Profile via RPC
+    const { data: activeProfiles, error: rpcError } = await this.supabase.rpc('get_active_profile');
+    
+    if (rpcError || !activeProfiles || activeProfiles.length === 0) {
+      return [];
+    }
+
+    const activeProfileId = activeProfiles[0].id;
+    return this.getByStudentId(activeProfileId);
   }
 
-  /**
-   * Not applicable for server-side repositories.
-   * Use getByInstructorId(instructorId) with a resolved ID from the auth layer instead.
-   */
   async getMyInstructorBookings(): Promise<Booking[]> {
-    throw new Error('getMyInstructorBookings() is not supported in SupabaseBookingRepository. Use getByInstructorId(instructorId) with a resolved profile ID.');
+    // 1. Try to get Active Profile via RPC
+    const { data: activeProfiles, error: rpcError } = await this.supabase.rpc('get_active_profile');
+    
+    if (rpcError || !activeProfiles || activeProfiles.length === 0) {
+      return [];
+    }
+
+    const activeProfileId = activeProfiles[0].id;
+
+    // 2. Get instructor profile using the active profile ID
+    const { data: instructor } = await this.supabase
+      .from('instructor_profiles')
+      .select('id')
+      .eq('profile_id', activeProfileId)
+      .single();
+
+    if (!instructor) return [];
+
+    return this.getByInstructorId(instructor.id);
   }
 
   async getByStudentId(studentId: string): Promise<Booking[]> {
@@ -274,6 +292,55 @@ export class SupabaseBookingRepository implements IBookingRepository {
       };
   }
 
+  async getStatsByProfile(profileId: string): Promise<BookingStats> {
+      // Resolve instructor ID if this profile is an instructor
+      const { data: instructor } = await this.supabase
+          .from('instructor_profiles')
+          .select('id')
+          .eq('profile_id', profileId)
+          .maybeSingle();
+
+      const instructorFilter = instructor ? `instructor_profile_id.eq.${instructor.id}` : '';
+      const studentFilter = `student_profile_id.eq.${profileId}`;
+      const condition = instructor ? `${studentFilter},${instructorFilter}` : studentFilter;
+      const [totalReq, activeReq, pendingReq, confirmedReq, completedReq, cancelledReq] = await Promise.all([
+        this.supabase.from('bookings').select('*', { count: 'exact', head: true }).or(condition),
+        this.supabase.from('bookings').select('*', { count: 'exact', head: true }).or(condition).eq('is_active', true),
+        this.supabase.from('bookings').select('*', { count: 'exact', head: true }).or(condition).eq('status', 'pending'),
+        this.supabase.from('bookings').select('*', { count: 'exact', head: true }).or(condition).eq('status', 'confirmed'),
+        this.supabase.from('bookings').select('*', { count: 'exact', head: true }).or(condition).eq('status', 'completed'),
+        this.supabase.from('bookings').select('*', { count: 'exact', head: true }).or(condition).eq('status', 'cancelled'),
+      ]);
+      
+      const total = totalReq.count || 0;
+      const active = activeReq.count || 0;
+      return {
+          totalItems: total,
+          activeItems: active,
+          inactiveItems: total - active,
+          pendingCount: pendingReq.count || 0,
+          confirmedCount: confirmedReq.count || 0,
+          completedCount: completedReq.count || 0,
+          cancelledCount: cancelledReq.count || 0
+      };
+  }
+
+  async getMyStats(): Promise<BookingStats> {
+      const { data: activeProfiles, error: rpcError } = await this.supabase.rpc('get_active_profile');
+      if (rpcError) {
+          console.error("RPC Error (get_active_profile):", rpcError);
+          return this.getEmptyStats();
+      }
+      const authProfile = activeProfiles && activeProfiles.length > 0 ? activeProfiles[0] : null;
+      if (!authProfile) return this.getEmptyStats();
+      
+      return this.getStatsByProfile(authProfile.id);
+  }
+
+  private getEmptyStats(): BookingStats {
+      return { totalItems: 0, activeItems: 0, inactiveItems: 0, pendingCount: 0, confirmedCount: 0, completedCount: 0, cancelledCount: 0 };
+  }
+
 
   async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
     const startOfMonth = `${year}-${String(month).padStart(2, '0')}-01`;
@@ -305,5 +372,58 @@ export class SupabaseBookingRepository implements IBookingRepository {
 
     if (error || !data) return [];
     return data.map(this.mapBooking);
+  }
+
+  async getByMonthByProfile(profileId: string, month: number, year: number): Promise<Booking[]> {
+    const startOfMonth = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endOfMonth = `${year}-${String(month).padStart(2, '0')}-31`; 
+    
+    // Resolve instructor ID if this profile is an instructor
+    const { data: instructor } = await this.supabase
+        .from('instructor_profiles')
+        .select('id')
+        .eq('profile_id', profileId)
+        .maybeSingle();
+
+    const instructorFilter = instructor ? `instructor_profile_id.eq.${instructor.id}` : '';
+    const studentFilter = `student_profile_id.eq.${profileId}`;
+    const condition = instructor ? `${studentFilter},${instructorFilter}` : studentFilter;
+
+    // Using string matching for date range or simply >= / <= with ISO dates.
+    const { data, error } = await this.supabase
+      .from('bookings')
+      .select(`
+        *,
+        student:profiles!student_profile_id(*),
+        instructor:instructor_profiles!instructor_profile_id(
+             *,
+            profile:profiles(*)
+        ),
+        course:courses(*)
+      `)
+      .gte('scheduled_date', startOfMonth)
+      .lte('scheduled_date', endOfMonth)
+      .or(condition)
+      .order('scheduled_date', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (error || !data) {
+      if (error) console.error('Error in getByMonthByProfile:', error);
+      return [];
+    }
+    
+    return data.map(this.mapBooking);
+  }
+
+  async getMyBookingsByMonth(month: number, year: number): Promise<Booking[]> {
+      const { data: activeProfiles, error: rpcError } = await this.supabase.rpc('get_active_profile');
+      if (rpcError) {
+          console.error("RPC Error (get_active_profile):", rpcError);
+          return [];
+      }
+      const authProfile = activeProfiles && activeProfiles.length > 0 ? activeProfiles[0] : null;
+      if (!authProfile) return [];
+      
+      return this.getByMonthByProfile(authProfile.id, month, year);
   }
 }

@@ -114,6 +114,28 @@ export class ApiBookingRepository implements IBookingRepository {
     return res.json();
   }
 
+  async getStatsByProfile(profileId: string): Promise<BookingStats> {
+    const res = await fetch(`${this.baseUrl}/profiles/${profileId}/stats`);
+    if (!res.ok) {
+        return {
+            totalItems: 0, activeItems: 0, inactiveItems: 0,
+            pendingCount: 0, confirmedCount: 0, completedCount: 0, cancelledCount: 0
+        };
+    }
+    return res.json();
+  }
+
+  async getMyStats(): Promise<BookingStats> {
+    const res = await fetch(`${this.baseUrl}/me/stats`);
+    if (!res.ok) {
+        return {
+            totalItems: 0, activeItems: 0, inactiveItems: 0,
+            pendingCount: 0, confirmedCount: 0, completedCount: 0, cancelledCount: 0
+        };
+    }
+    return res.json();
+  }
+
   async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
     const params = new URLSearchParams({ month: month.toString(), year: year.toString() });
     if (filters?.instructorId) params.append('instructorId', filters.instructorId);
@@ -121,6 +143,20 @@ export class ApiBookingRepository implements IBookingRepository {
 
     const res = await fetch(`${this.baseUrl}?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch bookings by month');
+    return res.json();
+  }
+
+  async getByMonthByProfile(profileId: string, month: number, year: number): Promise<Booking[]> {
+    const params = new URLSearchParams({ month: month.toString(), year: year.toString() });
+    const res = await fetch(`${this.baseUrl}/profiles/${profileId}/month?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch bookings by month by profile');
+    return res.json();
+  }
+
+  async getMyBookingsByMonth(month: number, year: number): Promise<Booking[]> {
+    const params = new URLSearchParams({ month: month.toString(), year: year.toString() });
+    const res = await fetch(`${this.baseUrl}/me/month?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch my bookings by month');
     return res.json();
   }
 }
