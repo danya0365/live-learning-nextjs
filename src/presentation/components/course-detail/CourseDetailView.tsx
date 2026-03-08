@@ -144,7 +144,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             <div className="glass rounded-2xl p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border border-primary/20 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
               <div className="relative z-10 flex-1">
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                <h3 className="text-xl sm:text-2xl font-bold mb-2 flex items-center gap-2">
                   <span className="text-2xl">✨</span> ระบบเรียนรู้แบบ Interactive
                 </h3>
                 <p className="text-text-secondary text-sm sm:text-base">
