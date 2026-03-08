@@ -3434,5 +3434,162 @@ export async function submitForm(data: string) {
   }
 ];
 
+const lineOaLessons: LearnLesson[] = [
+  {
+    id: "learn-line-oa-basics-1",
+    topicId: "topic-line-oa-basics",
+    slug: "intro-and-features",
+    title: "Intro & Features",
+    titleTh: "บทบาทและฟังก์ชันหลัก",
+    description: "Understanding LINE OA roles and key features",
+    order: 1,
+    duration: 15,
+    content: `
+# บทบาทและศักยภาพของ LINE OA
+
+LINE Official Account (LINE OA) คือเครื่องมือสำคัญที่ช่วยให้องค์กรสามารถสื่อสารกับกลุ่มเป้าหมายได้อย่างมีประสิทธิภาพ มีความน่าเชื่อถือ และเป็นระบบมากกว่าการใช้ LINE ส่วนตัว
+
+## ฟังก์ชันหลักที่สำคัญ
+- **Broadcast:** ส่งข้อความหาผู้ติดตามทุกคนพร้อมกัน
+- **Rich Menu:** เมนูทางลัดด้านล่างหน้าจอแชท เชื่อมโยงไปบริการต่างๆ
+- **Auto-reply:** ระบบตอบกลับอัตโนมัติ ช่วยลดภาระแอดมิน
+- **Chat:** การพูดคุยแบบ 1-on-1 หรือ Group
+    `,
+    quiz: [
+      {
+        question: "ฟังก์ชันใดที่ช่วยให้ผู้ใช้งานสามารถคลิกเมนูด้านล่างสุดของช่องแชทเพื่อเข้าถึงบริการลัดได้?",
+        options: ["Broadcast", "Rich Menu", "Auto-reply", "Chat"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "learn-line-oa-setup-1",
+    topicId: "topic-line-oa-setup",
+    slug: "account-setup",
+    title: "Account Setup",
+    titleTh: "การตั้งค่าบัญชี",
+    description: "Setting up your LINE OA efficiently",
+    order: 1,
+    duration: 20,
+    content: `
+# การตั้งค่าและจัดการระบบบัญชี LINE OA
+
+ก่อนเริ่มสื่อสาร เราต้องตั้งค่าหน้าร้านหรือหน้าบัญชีให้มีความน่าเชื่อถือ
+
+## ขั้นตอนสำคัญ
+1. **ออกแบบโลโก้และภาพปก:** ให้มีความเป็นมืออาชีพ สื่อถึงองค์กร
+2. **ตั้งรหัสผ่านและเพิ่มแอดมิน:** ควบคุมสิทธิ์อย่างรอบคอบ ไม่ควรให้สิทธิ์แอดมินสูงสุด(Admin) ให้กับทุกคน
+3. **ปรับแต่ง Greeting Message:** ข้อความต้อนรับเมื่อมีคนแอดไลน์ ควรระบุชัดเจนว่าบัญชีนี้ไว้ทำอะไร ให้บริการเวลาไหน
+    `,
+    quiz: [
+      {
+        question: "ข้อความต้อนรับเมื่อผู้ใช้แอดไลน์เข้ามาใหม่เรียกว่าอะไร?",
+        options: ["Welcome Message", "Greeting Message", "Auto Reply", "Start Message"],
+        correctAnswer: 1
+      }
+    ]
+  },
+  {
+    id: "learn-line-oa-content-1",
+    topicId: "topic-line-oa-content",
+    slug: "content-and-rich-menu",
+    title: "Content & Rich Menu",
+    titleTh: "คอนเทนต์และ Rich Menu",
+    description: "Designing Content and Rich Menu",
+    order: 1,
+    duration: 25,
+    content: `
+# การสร้างและออกแบบคอนเทนต์ (Content) และ Rich Menu
+
+เครื่องมือที่จะช่วยเพิ่มความน่าสนใจให้กับบัญชีของคุณ
+
+## เทคนิคการทำ Content ให้น่าสนใจบน LINE
+- พาดหัวเด่นชัด เข้าใจง่าย
+- ใช้รูปแบบบัตรภาพ (Rich Message, Rich Video) 
+- มี Call to Action ชัดเจน เช่น "ลงทะเบียนรับสิทธิ์คลิก!"
+
+## การออกแบบ Rich Menu
+Rich Menu เปรียบเสมือนปุ่มลัดการทำงานหลัก เช่น:
+- เมนูสำหรับปรึกษาด่วน
+- เมนูเช็คประวัติการรับบริการ
+- เมนูให้ความรู้
+    `,
+    quiz: [
+      {
+        question: "Call to Action (CTA) คืออะไร?",
+        options: ["ปุ่มหรือข้อความกระตุ้นให้ผู้บริโภคเกิด Action บางอย่าง", "ชื่อหัวข้อในการส่ง Broadcast", "ระบบตอบแชทอัตโนมัติ", "การสร้าง Rich Menu"],
+        correctAnswer: 0
+      }
+    ]
+  },
+  {
+    id: "learn-line-oa-communication-1",
+    topicId: "topic-line-oa-communication",
+    slug: "communication-skills",
+    title: "Communication Skills",
+    titleTh: "ทักษะการสื่อสาร",
+    description: "Handling chats and responding professionally",
+    order: 1,
+    duration: 30,
+    content: `
+# ทักษะการสื่อสาร การตอบแชท และการคัดกรองส่งต่อ
+
+แอดมิน LINE OA คือหน้าตาขององค์กร การสื่อสารมีความสำคัญอย่างยิ่ง
+
+## หลักการตอบแชท (Chat)
+- **ความรวดเร็ว:** ควรกำหนดระยะเวลามาตรฐานในการตอบรับ
+- **โทนเสียง (Tone of Voice):** เป็นมิตร น่าเชื่อถือ และรักษาความลับของผู้ใช้บริการ
+- **การคัดกรอง:** ใช้ Tags ในการแบ่งกลุ่มแชท หรือใช้การทำ Note เพื่อให้แอดมินคนอื่นทำงานต่อได้ง่าย
+
+> [!TIP]
+> ควรมีข้อความ Quick Reply เตรียมไว้สำหรับคำถามที่ถูกถามบ่อย (FAQ) เพื่อประหยัดเวลาพิมพ์
+    `,
+  },
+  {
+    id: "learn-line-oa-o2o-1",
+    topicId: "topic-line-oa-o2o",
+    slug: "online-to-offline",
+    title: "Online to Offline (O2O)",
+    titleTh: "บริการ O2O",
+    description: "Connecting the dots between online and offline services",
+    order: 1,
+    duration: 20,
+    content: `
+# การเชื่อมโยงบริการ Online to Offline (O2O)
+
+ไม่ใช่แค่ออนไลน์ แต่เป้าหมายคือการดึงผู้รับบริการเข้าสู่ระบบช่วยเหลือจริงในออฟไลน์ได้
+
+## ตัวอย่าง O2O บน LINE OA
+- ลูกค้าทักแชทสอบถาม (Online)
+- แอดมินจองคิวบริการผ่าน LINE (Online)
+- ผู้รับบริการเดินทางมารับบริการที่ศูนย์ตามวัน/เวลาที่นัด (Offline)
+- แอดมินติดตามผลการรับบริการ (Online)
+    `,
+  },
+  {
+    id: "learn-line-oa-analytics-1",
+    topicId: "topic-line-oa-analytics",
+    slug: "analytics-evaluation",
+    title: "Analytics & Evaluation",
+    titleTh: "การวิเคราะห์และประเมินผล",
+    description: "Analyzing stats and evaluating performance",
+    order: 1,
+    duration: 15,
+    content: `
+# การวิเคราะห์สถิติและประเมินผลการดำเนินงาน
+
+เพื่อปรับปรุงและพัฒนาการสื่อสาร เราต้องอ่านผลและวิเคราะห์
+
+## สถิติที่ควรดู
+- **Target Reach:** จำนวนผู้ติดตามที่ยังใช้งานและไม่บล็อกบัญชี
+- **Open Rate / CTR (Click-through Rate):** สัดส่วนคนเปิดอ่านและคลิกลิงก์ต่างๆ
+- **Chat Response Time:** ระยะเวลาเฉลี่ยในการตอบแชทของแอดมิน
+
+ข้อมูลส่วนนี้จะถูกนำมาสรุปผลเพื่อพัฒนากลยุทธ์ขององค์กรต่อไปในระยะยาว
+    `,
+  }
+];
+
 // Add specific lessons to the main array
-learnLessons.push(...goBasicsLessons, ...goConcurrencyLessons, ...nextjsBasicsLessons, ...nextjsDataLessons);
+learnLessons.push(...goBasicsLessons, ...goConcurrencyLessons, ...nextjsBasicsLessons, ...nextjsDataLessons, ...lineOaLessons);

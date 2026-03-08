@@ -49,6 +49,18 @@ export const learnCourses: LearnCourse[] = [
     bgGradient: "from-slate-800 to-black",
     order: 4,
   },
+  {
+    id: "course-line-oa",
+    slug: "line-oa",
+    title: "LINE OA",
+    titleTh: "LINE OA เบื้องต้น",
+    description: "Learn how to manage LINE Official Account effectively",
+    descriptionTh: "เรียนรู้การใช้ LINE OA เพื่อสื่อสารกับกลุ่มเป้าหมาย",
+    icon: "💬",
+    color: "green",
+    bgGradient: "from-green-500 to-emerald-600",
+    order: 5,
+  },
 ];
 
 export function getCourseBySlug(slug: string): LearnCourse | undefined {
