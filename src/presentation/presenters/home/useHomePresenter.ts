@@ -114,15 +114,13 @@ export function useStudentHomePresenter(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Flag to prevent race conditions and state updates on unmounted component
     let isCancelled = false;
 
     const fetchStudentData = async () => {
-      if (!user?.profileId) return;
-      
       setLoading(true);
       try {
-        const data = await presenter.getStudentDashboardData(user.profileId);
+        // Session-based: server resolves identity, no ID needed
+        const data = await presenter.getStudentDashboardData();
         
         if (!isCancelled) {
           setBookings(data.bookings);
@@ -144,7 +142,7 @@ export function useStudentHomePresenter(
     return () => {
       isCancelled = true;
     };
-  }, [user?.profileId, presenter]);
+  }, [presenter]);
 
   return { bookings, loading, error };
 }
@@ -176,11 +174,10 @@ export function useInstructorHomePresenter(
     let isCancelled = false;
 
     const fetchInstructorData = async () => {
-      if (!user?.profileId) return;
-      
       setLoading(true);
       try {
-        const data = await presenter.getInstructorDashboardData(user.profileId);
+        // Session-based: server resolves identity, no ID needed
+        const data = await presenter.getInstructorDashboardData();
         
         if (!isCancelled) {
           setSchedule(data.schedule);
@@ -202,7 +199,7 @@ export function useInstructorHomePresenter(
     return () => {
       isCancelled = true;
     };
-  }, [user, presenter]);
+  }, [presenter]);
 
   return { schedule, loading, error };
 }

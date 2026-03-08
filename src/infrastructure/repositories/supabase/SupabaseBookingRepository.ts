@@ -105,7 +105,25 @@ export class SupabaseBookingRepository implements IBookingRepository {
     };
   }
 
+
+  /**
+   * Not applicable for server-side repositories.
+   * Use getByStudentId(studentId) with a resolved ID from the auth layer instead.
+   */
+  async getMyStudentBookings(): Promise<Booking[]> {
+    throw new Error('getMyStudentBookings() is not supported in SupabaseBookingRepository. Use getByStudentId(studentId) with a resolved profile ID.');
+  }
+
+  /**
+   * Not applicable for server-side repositories.
+   * Use getByInstructorId(instructorId) with a resolved ID from the auth layer instead.
+   */
+  async getMyInstructorBookings(): Promise<Booking[]> {
+    throw new Error('getMyInstructorBookings() is not supported in SupabaseBookingRepository. Use getByInstructorId(instructorId) with a resolved profile ID.');
+  }
+
   async getByStudentId(studentId: string): Promise<Booking[]> {
+
      const { data, error } = await this.supabase
       .from('bookings')
       .select(`

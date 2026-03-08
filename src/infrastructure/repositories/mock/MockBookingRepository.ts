@@ -5,11 +5,11 @@
  */
 
 import {
-  Booking,
-  BookingStats,
-  CreateBookingPayload,
-  IBookingRepository,
-  UpdateBookingData,
+    Booking,
+    BookingStats,
+    CreateBookingPayload,
+    IBookingRepository,
+    UpdateBookingData,
 } from '@/src/application/repositories/IBookingRepository';
 import { MOCK_BOOKINGS } from '@/src/data/mock/bookings';
 
@@ -29,10 +29,23 @@ export class MockBookingRepository implements IBookingRepository {
     return { data: this.items.slice(start, end), total: this.items.length, page, perPage };
   }
 
+  /** Mock: returns all bookings (no session in mock environment) */
+  async getMyStudentBookings(): Promise<Booking[]> {
+    await this.delay(100);
+    return this.items;
+  }
+
+  /** Mock: returns all bookings (no session in mock environment) */
+  async getMyInstructorBookings(): Promise<Booking[]> {
+    await this.delay(100);
+    return this.items;
+  }
+
   async getByStudentId(studentId: string): Promise<Booking[]> {
     await this.delay(100);
     return this.items.filter((item) => item.studentId === studentId);
   }
+
 
   async getByInstructorId(instructorId: string): Promise<Booking[]> {
     await this.delay(100);

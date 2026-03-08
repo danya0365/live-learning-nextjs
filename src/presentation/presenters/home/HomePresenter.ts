@@ -60,9 +60,10 @@ export class HomePresenter {
     }
   }
 
-  async getStudentDashboardData(studentId: string): Promise<{ bookings: Booking[] }> {
+  /** Get bookings for the currently authenticated student — uses session (no ID needed) */
+  async getStudentDashboardData(): Promise<{ bookings: Booking[] }> {
     try {
-      const bookings = await this.bookingRepository.getByStudentId(studentId);
+      const bookings = await this.bookingRepository.getMyStudentBookings();
       return { bookings };
     } catch (error) {
       console.error('Error getting student dashboard data:', error);
@@ -70,9 +71,10 @@ export class HomePresenter {
     }
   }
 
-  async getInstructorDashboardData(instructorId: string): Promise<{ schedule: Booking[] }> {
+  /** Get bookings for the currently authenticated instructor — uses session (no ID needed) */
+  async getInstructorDashboardData(): Promise<{ schedule: Booking[] }> {
     try {
-      const schedule = await this.bookingRepository.getByInstructorId(instructorId);
+      const schedule = await this.bookingRepository.getMyInstructorBookings();
       return { schedule };
     } catch (error) {
       console.error('Error getting instructor dashboard data:', error);

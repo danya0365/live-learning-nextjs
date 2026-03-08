@@ -59,7 +59,13 @@ export interface UpdateBookingData {
 export interface IBookingRepository {
   getById(id: string): Promise<Booking | null>;
   getPaginated(page: number, perPage: number): Promise<{ data: Booking[]; total: number; page: number; perPage: number }>;
+  /** Get bookings for the currently authenticated student (session-based, no ID needed) */
+  getMyStudentBookings(): Promise<Booking[]>;
+  /** Get bookings for the currently authenticated instructor (session-based, no ID needed) */
+  getMyInstructorBookings(): Promise<Booking[]>;
+  /** Get bookings for a specific student by explicit studentId */
   getByStudentId(studentId: string): Promise<Booking[]>;
+  /** Get bookings for a specific instructor by explicit instructorId */
   getByInstructorId(instructorId: string): Promise<Booking[]>;
   getByCourseId(courseId: string): Promise<Booking[]>;
   create(data: CreateBookingPayload): Promise<Booking>;

@@ -3,6 +3,12 @@
  * Implements IBookingRepository using API calls
  * 
  * ✅ For use in CLIENT-SIDE components only
+ * 
+ * Patterns:
+ *  - getMyStudentBookings()     → GET /api/bookings/students         (session-based, no ID)
+ *  - getMyInstructorBookings()  → GET /api/bookings/instructors      (session-based, no ID)
+ *  - getByStudentId(id)         → GET /api/bookings/students/[id]    (explicit ID)
+ *  - getByInstructorId(id)      → GET /api/bookings/instructors/[id] (explicit ID)
  */
 
 'use client';
@@ -31,14 +37,30 @@ export class ApiBookingRepository implements IBookingRepository {
     return res.json();
   }
 
-  async getByStudentId(studentId: string): Promise<Booking[]> {
+  /** My bookings as a student — server resolves identity from session */
+  async getMyStudentBookings(): Promise<Booking[]> {
     const res = await fetch(`${this.baseUrl}/students`);
+    if (!res.ok) throw new Error('Failed to fetch my student bookings');
+    return res.json();
+  }
+
+  /** My bookings as an instructor — server resolves identity from session */
+  async getMyInstructorBookings(): Promise<Booking[]> {
+    const res = await fetch(`${this.baseUrl}/instructors`);
+    if (!res.ok) throw new Error('Failed to fetch my instructor bookings');
+    return res.json();
+  }
+
+  /** Bookings of a specific student by explicit ID */
+  async getByStudentId(studentId: string): Promise<Booking[]> {
+    const res = await fetch(`${this.baseUrl}/students/${studentId}`);
     if (!res.ok) throw new Error('Failed to fetch student bookings');
     return res.json();
   }
 
+  /** Bookings of a specific instructor by explicit ID */
   async getByInstructorId(instructorId: string): Promise<Booking[]> {
-    const res = await fetch(`${this.baseUrl}/instructors`);
+    const res = await fetch(`${this.baseUrl}/instructors/${instructorId}`);
     if (!res.ok) throw new Error('Failed to fetch instructor bookings');
     return res.json();
   }
@@ -91,7 +113,6 @@ export class ApiBookingRepository implements IBookingRepository {
     }
     return res.json();
   }
-
 
   async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]> {
     const params = new URLSearchParams({ month: month.toString(), year: year.toString() });
