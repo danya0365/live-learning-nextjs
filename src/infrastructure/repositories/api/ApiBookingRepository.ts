@@ -38,7 +38,7 @@ export class ApiBookingRepository implements IBookingRepository {
   }
 
   async getByInstructorId(instructorId: string): Promise<Booking[]> {
-    const res = await fetch(`${this.baseUrl}?instructorId=${instructorId}`);
+    const res = await fetch(`${this.baseUrl}/instructors`);
     if (!res.ok) throw new Error('Failed to fetch instructor bookings');
     return res.json();
   }
