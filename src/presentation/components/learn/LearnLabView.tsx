@@ -4,6 +4,7 @@ import { LabSidebarItem } from "@/src/domain/types/learn-content";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LineOALabView } from "./labs/LineOALabView";
+import { PrintPreviewModal } from "./PrintPreviewModal";
 
 interface LearnLabViewProps {
   courseSlug: string;
@@ -25,6 +26,7 @@ export function LearnLabView({ courseSlug }: LearnLabViewProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarItems, setSidebarItems] = useState<LabSidebarItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string>("");
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
 
   // Refs for scrolling
   const listRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -277,6 +279,12 @@ export function LearnLabView({ courseSlug }: LearnLabViewProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowPrintPreview(true)}
+              className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-lg text-sm transition-colors border border-green-600 flex items-center gap-2"
+            >
+              <span>🖨️</span> Print
+            </button>
+            <button
               onClick={handleExit}
               className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors border border-slate-600 flex items-center gap-2"
             >
@@ -290,6 +298,11 @@ export function LearnLabView({ courseSlug }: LearnLabViewProps) {
           {renderLabContent()}
         </div>
       </main>
+
+      {/* Print Preview Modal */}
+      {showPrintPreview && (
+        <PrintPreviewModal onClose={() => setShowPrintPreview(false)} />
+      )}
     </div>
   );
 }
