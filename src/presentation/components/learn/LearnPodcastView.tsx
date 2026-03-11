@@ -59,11 +59,12 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
 
   const { course, allLessons, loading } = data;
 
-  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
+  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange" | "green"> = {
     javascript: "yellow",
     typescript: "blue",
     html: "orange",
     go: "cyan",
+    "line-oa": "green",
   };
   const brandColor = colorMap[courseSlug] || "yellow";
 
@@ -198,6 +199,10 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
       gradient: "from-orange-500 to-red-600",
       glow: "shadow-orange-500/30",
     },
+    green: {
+      gradient: "from-green-500 to-emerald-600",
+      glow: "shadow-green-500/30",
+    },
   };
 
   const colors = colorClasses[brandColor] || colorClasses.yellow;
@@ -214,7 +219,7 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-purple-900 via-indigo-900 to-slate-900">
+    <div className="dark fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-purple-900 via-indigo-900 to-slate-900">
       {/* Header */}
       <header className="flex-shrink-0 p-4 flex items-center justify-between">
         <button

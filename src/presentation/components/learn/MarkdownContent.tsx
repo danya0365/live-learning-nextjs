@@ -53,7 +53,7 @@ const markdownComponents: Components = {
     </a>
   ),
   ul: ({ children }) => (
-    <ul className="mb-4 ml-1 space-y-1.5">{children}</ul>
+    <ul className="mb-4 ml-1 space-y-1.5 list-disc list-inside">{children}</ul>
   ),
   ol: ({ children }) => (
     <ol className="mb-4 ml-1 space-y-1.5 list-decimal list-inside">
@@ -71,23 +71,25 @@ const markdownComponents: Components = {
     </blockquote>
   ),
   code: ({ className, children }) => {
-    const isBlock = className?.includes("language-");
-    if (isBlock) {
-      return (
-        <code className="block text-sm font-mono">{children}</code>
-      );
+    // If this code element has a language class, it's inside a <pre> block
+    // and will be styled by the pre component — just render plain
+    if (className?.includes("language-")) {
+      return <code className="block text-sm font-mono">{children}</code>;
     }
+    // Inline code styling (single backtick)
     return (
       <code className="px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-sm text-pink-600 dark:text-pink-400 font-mono">
         {children}
       </code>
     );
   },
-  pre: ({ children }) => (
-    <pre className="bg-gray-900 dark:bg-slate-950 text-gray-100 p-4 rounded-xl overflow-x-auto my-4 text-sm border border-gray-700 dark:border-slate-700 shadow-lg">
-      {children}
-    </pre>
-  ),
+  pre: ({ children }) => {
+    return (
+      <pre className="bg-gray-900 dark:bg-slate-950 text-gray-100 p-4 rounded-xl overflow-x-auto my-4 text-sm border border-gray-700 dark:border-slate-700 shadow-lg [&_code]:bg-transparent [&_code]:text-gray-100 [&_code]:p-0 [&_code]:text-sm [&_code]:rounded-none">
+        {children}
+      </pre>
+    );
+  },
   table: ({ children }) => (
     <div className="my-4 overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
       <table className="w-full text-sm text-left">

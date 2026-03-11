@@ -1,6 +1,7 @@
 "use client";
 
 import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
+import { MarkdownContent } from "@/src/presentation/components/learn/MarkdownContent";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
@@ -44,11 +45,12 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
     loading: true
   });
 
-  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
+  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange" | "green"> = {
     javascript: "yellow",
     typescript: "blue",
     html: "orange",
     go: "cyan",
+    "line-oa": "green",
   };
   const brandColor = colorMap[courseSlug] || "yellow";
 
@@ -245,12 +247,20 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
       activeBg: "bg-orange-500/20",
       activeBorder: "border-orange-500",
     },
+    green: {
+      gradient: "from-green-600 to-emerald-600",
+      bg: "bg-green-500",
+      text: "text-green-400",
+      border: "border-green-500/30",
+      activeBg: "bg-green-500/20",
+      activeBorder: "border-green-500",
+    },
   };
 
   const colors = colorClasses[brandColor] || colorClasses.yellow;
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="dark fixed inset-0 z-50 flex bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Left Sidebar */}
       <aside 
         className={`flex-shrink-0 bg-slate-800/80 backdrop-blur-sm border-r border-white/10 flex flex-col transition-all duration-300 ${
@@ -412,46 +422,7 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
                 
                 {/* Content */}
                 <div className="prose prose-invert prose-lg max-w-none">
-                  {currentSlide.content.split('\n').map((line, i) => {
-                    // Handle code blocks
-                    if (line.startsWith('```')) {
-                      return null; // Skip code fence markers
-                    }
-                    // Handle bullet points
-                    if (line.startsWith('- ')) {
-                      return (
-                        <li key={i} className="text-white/90 text-lg">
-                          {line.substring(2)}
-                        </li>
-                      );
-                    }
-                    // Handle inline code
-                    if (line.includes('`')) {
-                      const parts = line.split(/(`[^`]+`)/);
-                      return (
-                        <p key={i} className="text-white/90 text-lg mb-2">
-                          {parts.map((part, j) =>
-                            part.startsWith('`') ? (
-                              <code key={j} className="px-2 py-0.5 bg-black/30 rounded text-yellow-300 font-mono text-base">
-                                {part.slice(1, -1)}
-                              </code>
-                            ) : (
-                              part
-                            )
-                          )}
-                        </p>
-                      );
-                    }
-                    // Regular text
-                    if (line.trim()) {
-                      return (
-                        <p key={i} className="text-white/90 text-lg mb-2">
-                          {line}
-                        </p>
-                      );
-                    }
-                    return null;
-                  })}
+                  <MarkdownContent content={currentSlide.content} />
                 </div>
               </div>
             ) : (

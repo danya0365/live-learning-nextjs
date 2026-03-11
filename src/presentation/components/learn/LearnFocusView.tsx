@@ -2,6 +2,8 @@
 
 import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
 import { CodeEditor } from "@/src/presentation/components/editor/CodeEditor";
+import { MarkdownContent } from "@/src/presentation/components/learn/MarkdownContent";
+import { ContentComponentRenderer } from "@/src/presentation/components/learn/content/LearnContentRegistry";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
@@ -159,11 +161,12 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
     loading: true
   });
 
-  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
+  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange" | "green"> = {
     javascript: "yellow",
     typescript: "blue",
     html: "orange",
     go: "cyan",
+    "line-oa": "green",
   };
   const brandColor = colorMap[courseSlug] || "yellow";
 
@@ -338,96 +341,24 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
       activeBg: "bg-orange-500/20",
       buttonGradient: "from-orange-500 to-red-500",
     },
+    green: {
+      gradient: "from-green-600 to-emerald-600",
+      bg: "bg-green-500",
+      text: "text-green-400",
+      border: "border-green-500",
+      activeBg: "bg-green-500/20",
+      buttonGradient: "from-green-500 to-emerald-500",
+    },
   };
 
   const colors = colorClasses[brandColor] || colorClasses.yellow;
 
-  // Render content from markdown
-  const renderContent = (content: string) => {
-    const lines = content.split('\n');
-    let inCodeBlock = false;
-    let codeBlockLines: string[] = [];
-    let codeLanguage = '';
-    const elements: React.ReactElement[] = [];
-
-    lines.forEach((line, i) => {
-      // Code block start
-      if (line.startsWith('```')) {
-        if (!inCodeBlock) {
-          inCodeBlock = true;
-          codeLanguage = line.slice(3).trim();
-          codeBlockLines = [];
-        } else {
-          // Code block end
-          inCodeBlock = false;
-          elements.push(
-            <pre key={`code-${i}`} className="bg-slate-900 rounded-lg p-4 overflow-x-auto my-4">
-              <code className="text-sm text-green-400 font-mono whitespace-pre">
-                {codeBlockLines.join('\n')}
-              </code>
-            </pre>
-          );
-        }
-        return;
-      }
-
-      if (inCodeBlock) {
-        codeBlockLines.push(line);
-        return;
-      }
-
-      // Headings
-      if (line.startsWith('## ')) {
-        elements.push(
-          <h2 key={i} className="text-2xl font-bold text-white mt-8 mb-4">
-            {line.slice(3)}
-          </h2>
-        );
-        return;
-      }
-      if (line.startsWith('### ')) {
-        elements.push(
-          <h3 key={i} className="text-xl font-semibold text-white mt-6 mb-3">
-            {line.slice(4)}
-          </h3>
-        );
-        return;
-      }
-
-      // Bullet points
-      if (line.startsWith('- ')) {
-        elements.push(
-          <li key={i} className="text-gray-300 ml-4 mb-1">
-            {renderInlineCode(line.slice(2))}
-          </li>
-        );
-        return;
-      }
-
-      // Regular text with inline code
-      if (line.trim()) {
-        elements.push(
-          <p key={i} className="text-gray-300 mb-3">
-            {renderInlineCode(line)}
-          </p>
-        );
-      }
-    });
-
-    return elements;
-  };
-
-  const renderInlineCode = (text: string) => {
-    const parts = text.split(/(`[^`]+`)/);
-    return parts.map((part, i) =>
-      part.startsWith('`') ? (
-        <code key={i} className="px-1.5 py-0.5 bg-slate-700 rounded text-yellow-300 font-mono text-sm">
-          {part.slice(1, -1)}
-        </code>
-      ) : (
-        part
-      )
-    );
+  // Render lesson content
+  const renderLessonContent = (lesson: LearnLesson) => {
+    if (lesson.contentType === 'component' && lesson.contentComponent) {
+      return <ContentComponentRenderer componentKey={lesson.contentComponent} lessonId={lesson.id} />;
+    }
+    return <MarkdownContent content={lesson.content} />;
   };
 
   if (loading) {
@@ -442,7 +373,7 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-slate-900">
+    <div className="dark fixed inset-0 z-50 flex bg-slate-900">
       {/* Left Sidebar */}
       <aside 
         className={`flex-shrink-0 bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300 ${
@@ -595,7 +526,7 @@ export function LearnFocusView({ courseSlug }: LearnFocusViewProps) {
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Main Content */}
               <div className="bg-slate-800 rounded-xl shadow-lg p-6 md:p-8 border border-slate-700">
-                {renderContent(currentLesson.content)}
+                {renderLessonContent(currentLesson)}
               </div>
 
               {/* Code Example Section */}

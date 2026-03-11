@@ -1,6 +1,7 @@
 "use client";
 
 import { LearnCourse, LearnLesson } from "@/src/domain/types/learn-content";
+import { MarkdownContent } from "@/src/presentation/components/learn/MarkdownContent";
 import { useBackgroundMusic } from "@/src/presentation/hooks/useBackgroundMusic";
 import { useTTS } from "@/src/presentation/hooks/useTTS";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
@@ -14,6 +15,7 @@ interface LearnCinemaViewProps {
 
 interface Slide {
   text: string;
+  markdownContent: string;
   title: string;
   lessonIndex: number;
 }
@@ -60,11 +62,12 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
 
   const { course, allLessons, loading } = data;
 
-  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange"> = {
+  const colorMap: Record<string, "yellow" | "blue" | "cyan" | "orange" | "green"> = {
     javascript: "yellow",
     typescript: "blue",
     html: "orange",
     go: "cyan",
+    "line-oa": "green",
   };
   const brandColor = colorMap[courseSlug] || "yellow";
 
@@ -76,9 +79,10 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
       parts.forEach((part) => {
         const lines = part.trim().split('\n');
         const title = lines[0]?.replace(/^#+\s*/, '') || lesson.titleTh;
+        const markdownContent = lines.slice(1).join('\n').trim();
         const text = lines.slice(1).join(' ').replace(/`[^`]+`/g, '').replace(/[#*_]/g, '').trim();
         if (text) {
-          result.push({ text, title, lessonIndex });
+          result.push({ text, markdownContent, title, lessonIndex });
         }
       });
     });
@@ -225,6 +229,10 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
       gradient: "from-orange-600 to-red-600",
       glow: "shadow-orange-500/30",
     },
+    green: {
+      gradient: "from-green-600 to-emerald-600",
+      glow: "shadow-green-500/30",
+    },
   };
 
   const colors = colorClasses[brandColor] || colorClasses.yellow;
@@ -241,7 +249,7 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="dark fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
       <header className="flex-shrink-0 h-16 px-4 md:px-6 flex items-center justify-between bg-black/30 backdrop-blur-sm border-b border-white/10">
         <div className="flex items-center gap-4">
@@ -309,9 +317,9 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6">
                 {currentSlide.title}
               </h2>
-              <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
-                {currentSlide.text}
-              </p>
+              <div className="text-lg md:text-xl leading-relaxed">
+                <MarkdownContent content={currentSlide.markdownContent} />
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">
