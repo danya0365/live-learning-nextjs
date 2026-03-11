@@ -1,9 +1,9 @@
 'use client';
 
-import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
-import { MockInstructorRepository } from '@/src/infrastructure/repositories/mock/MockInstructorRepository';
+import { ApiCourseRepository } from '@/src/infrastructure/repositories/api/ApiCourseRepository';
+import { ApiInstructorRepository } from '@/src/infrastructure/repositories/api/ApiInstructorRepository';
 import { InstructorDetailPresenter } from './InstructorDetailPresenter';
 
 export function createClientInstructorDetailPresenter(): InstructorDetailPresenter {
-  return new InstructorDetailPresenter(new MockInstructorRepository(), new MockCourseRepository());
+  return new InstructorDetailPresenter(new ApiInstructorRepository(), new ApiCourseRepository());
 }

@@ -1,6 +1,8 @@
-import { MockBookingRepository } from '@/src/infrastructure/repositories/mock/MockBookingRepository';
+import { SupabaseBookingRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { MyBookingsPresenter } from './MyBookingsPresenter';
 
-export function createServerMyBookingsPresenter(): MyBookingsPresenter {
-  return new MyBookingsPresenter(new MockBookingRepository());
+export async function createServerMyBookingsPresenter(): Promise<MyBookingsPresenter> {
+  const supabase = await createServerSupabaseClient();
+  return new MyBookingsPresenter(new SupabaseBookingRepository(supabase));
 }

@@ -9,9 +9,11 @@
 import { AuthGuard } from '@/src/presentation/components/auth/AuthGuard';
 import { BookingWizard } from '@/src/presentation/components/booking/BookingWizard';
 
+import BookingSkeleton from '@/src/presentation/components/booking/BookingSkeleton';
+
 export default function BookingPage() {
   return (
-    <AuthGuard>
+    <AuthGuard fallback={<BookingSkeleton />}>
       <BookingWizard />
     </AuthGuard>
   );

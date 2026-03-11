@@ -23,13 +23,13 @@ export class MyBookingsPresenter {
   constructor(private readonly bookingRepository: IBookingRepository) {}
 
   async getViewModel(
-    studentId: string,
     filter: BookingFilter = 'all',
   ): Promise<MyBookingsViewModel> {
     const [allBookings, stats] = await Promise.all([
-      this.bookingRepository.getByStudentId(studentId),
-      this.bookingRepository.getStats(),
+      this.bookingRepository.getMyStudentBookings(),
+      this.bookingRepository.getMyStats(),
     ]);
+
 
     const filteredBookings =
       filter === 'all'

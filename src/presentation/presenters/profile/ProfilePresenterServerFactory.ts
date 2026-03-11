@@ -1,7 +1,16 @@
-import { MockBookingRepository } from '@/src/infrastructure/repositories/mock/MockBookingRepository';
-import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
+import { SupabaseAchievementRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAchievementRepository';
+import { SupabaseBookingRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingRepository';
+import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
+import { SupabaseProfileRepository } from '@/src/infrastructure/repositories/supabase/SupabaseProfileRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { ProfilePresenter } from './ProfilePresenter';
 
-export function createServerProfilePresenter(): ProfilePresenter {
-  return new ProfilePresenter(new MockBookingRepository(), new MockCourseRepository());
+export async function createServerProfilePresenter(): Promise<ProfilePresenter> {
+  const supabase = await createServerSupabaseClient();
+  return new ProfilePresenter(
+    new SupabaseBookingRepository(supabase),
+    new SupabaseCourseRepository(supabase),
+    new SupabaseProfileRepository(supabase),
+    new SupabaseAchievementRepository(supabase),
+  );
 }

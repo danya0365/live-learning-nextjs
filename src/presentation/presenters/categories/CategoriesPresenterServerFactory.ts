@@ -1,7 +1,9 @@
-import { MockCategoryRepository } from '@/src/infrastructure/repositories/mock/MockCategoryRepository';
-import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
+import { SupabaseCategoryRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCategoryRepository';
+import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { CategoriesPresenter } from './CategoriesPresenter';
 
-export function createServerCategoriesPresenter(): CategoriesPresenter {
-  return new CategoriesPresenter(new MockCategoryRepository(), new MockCourseRepository());
+export async function createServerCategoriesPresenter(): Promise<CategoriesPresenter> {
+  const supabase = await createServerSupabaseClient();
+  return new CategoriesPresenter(new SupabaseCategoryRepository(supabase), new SupabaseCourseRepository(supabase));
 }

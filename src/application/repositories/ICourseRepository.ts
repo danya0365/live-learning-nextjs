@@ -18,12 +18,17 @@ export interface Course {
   price: number;
   rating: number;
   totalStudents: number;
-  instructorId: string;
-  instructorName: string;
-  instructorAvatar: string;
-  isLive: boolean;
+  instructorCount: number;
+  isLiveFeature: boolean;
   isActive: boolean;
   tags: string[];
+  learningOutcomes: string[];
+  requirements: string[];
+  targetAudience: string[];
+  syllabus: any[];
+  aboutCourse: string;
+  hasInteractiveLab: boolean;
+  interactiveLabSlug?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,7 +49,6 @@ export interface CreateCourseData {
   level: CourseLevel;
   durationMinutes: number;
   price: number;
-  instructorId: string;
   tags?: string[];
 }
 
@@ -78,4 +82,5 @@ export interface ICourseRepository {
   update(id: string, data: UpdateCourseData): Promise<Course>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<CourseStats>;
+  getForCurrentInstructor(): Promise<Course[]>;
 }

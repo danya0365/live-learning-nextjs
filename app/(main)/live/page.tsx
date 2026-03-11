@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function LiveSessionsPage() {
-  const presenter = createServerLiveSessionsPresenter();
+  const presenter = await createServerLiveSessionsPresenter();
   const viewModel = await presenter.getViewModel();
   return <LiveSessionsView initialViewModel={viewModel} />;
 }

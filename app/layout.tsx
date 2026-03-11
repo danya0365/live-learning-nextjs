@@ -1,11 +1,11 @@
 import '@/public/styles/index.css';
+import { AuthProvider } from '@/src/presentation/providers/AuthProvider';
 import { ThemeProvider } from '@/src/presentation/providers/ThemeProvider';
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from 'next/font/google';
 
 const notoSansThai = Noto_Sans_Thai({
   subsets: ['thai', 'latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
   display: 'swap',
   variable: '--font-noto-sans-thai',
   preload: true,
@@ -24,9 +24,12 @@ export default function RootLayout({
   return (
     <html lang="th" className={notoSansThai.variable} suppressHydrationWarning>
       <body className={`${notoSansThai.className} antialiased`}>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+            {/* <AIHelperWidget /> */}
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

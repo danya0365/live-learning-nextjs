@@ -33,9 +33,11 @@ export default function MainGroupLayout({ children }: { children: ReactNode }) {
         />
       </div>
 
+      {/* Sticky Header — always visible */}
       <Header />
 
-      <main className="flex-1">
+      {/* Page content — pt-[68px] accounts for fixed header (h-16 + 1px gradient + 3px extra) */}
+      <main className="flex-1 pt-[68px]">
         {children}
       </main>
 

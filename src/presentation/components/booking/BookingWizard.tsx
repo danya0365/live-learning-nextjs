@@ -1,122 +1,27 @@
-/**
- * BookingWizard — Focus Mode Step-by-Step Booking
- *
- * Flow: เลือกคอร์ส → เลือกอาจารย์ → ดูปฏิทิน → ยืนยัน
- *
- * Calendar slots:
- *   🟢 Green  = ว่าง → จองใหม่
- *   🟡 Yellow = มีคนจองแล้ว → เข้าร่วมห้อง
- *   ⬜ Gray   = ไม่มี slot
- */
-
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { WizardCourse, WizardInstructor, WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
+import { Level } from '@/src/application/repositories/IConfigRepository';
+import { useBookingWizardPresenter } from '@/src/presentation/presenters/booking/useBookingWizardPresenter';
+import { useMemo, useState } from 'react';
+import BookingSkeleton from './BookingSkeleton';
 
-/* ── Types ─────────────────────────────────── */
-
-type Step = 'course' | 'instructor' | 'calendar' | 'confirm';
-
-interface CourseOption {
-  id: string;
-  title: string;
-  level: string;
-  rating: number;
-  totalStudents: number;
-  price: number;
-  tags: string[];
-  instructorId: string;
-  instructorName: string;
-  durationMinutes: number;
-  categoryName: string;
-}
-
-interface InstructorOption {
-  id: string;
-  name: string;
-  specializations: string[];
-  rating: number;
-  totalStudents: number;
-  hourlyRate: number;
-  isOnline: boolean;
-  coursesForSelected: string[];
-}
-
-interface CalendarSlot {
-  id: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  status: 'available' | 'booked' | 'none';
-  bookedCourseName?: string;
-  bookedCourseId?: string;
-}
-
-interface BookingSummary {
-  course: CourseOption;
-  instructor: InstructorOption;
-  slot: CalendarSlot;
-  date: string;
-  action: 'new' | 'join';
-}
-
-/* ── Mock Data (inline for focus) ──────────── */
-
-const ALL_COURSES: CourseOption[] = [
-  { id: 'course-001', title: 'พื้นฐาน React.js สำหรับผู้เริ่มต้น', level: 'beginner', rating: 4.8, totalStudents: 2450, price: 1990, tags: ['React', 'JavaScript', 'Frontend'], instructorId: 'inst-001', instructorName: 'อ.สมชาย พัฒนาเว็บ', durationMinutes: 120, categoryName: 'Web Development' },
-  { id: 'course-002', title: 'Python AI & Machine Learning', level: 'intermediate', rating: 4.9, totalStudents: 1890, price: 3490, tags: ['Python', 'AI', 'Machine Learning'], instructorId: 'inst-002', instructorName: 'ดร.นภา AI วิจัย', durationMinutes: 120, categoryName: 'Data Science & AI' },
-  { id: 'course-003', title: 'UX/UI Design Masterclass', level: 'beginner', rating: 4.7, totalStudents: 1560, price: 2490, tags: ['UX', 'UI', 'Figma', 'Design'], instructorId: 'inst-003', instructorName: 'อ.พิมพ์ลดา ดีไซน์', durationMinutes: 120, categoryName: 'Design' },
-  { id: 'course-004', title: 'Node.js & Express Backend', level: 'intermediate', rating: 4.6, totalStudents: 980, price: 2990, tags: ['Node.js', 'Express', 'MongoDB'], instructorId: 'inst-001', instructorName: 'อ.สมชาย พัฒนาเว็บ', durationMinutes: 120, categoryName: 'Web Development' },
-  { id: 'course-005', title: 'Flutter Mobile App Development', level: 'intermediate', rating: 4.5, totalStudents: 720, price: 2790, tags: ['Flutter', 'Dart', 'Mobile'], instructorId: 'inst-004', instructorName: 'อ.ธนกร โมบาย', durationMinutes: 120, categoryName: 'Mobile Development' },
-  { id: 'course-006', title: 'Cybersecurity Fundamentals', level: 'advanced', rating: 4.9, totalStudents: 350, price: 4990, tags: ['Cybersecurity', 'Hacking', 'Security'], instructorId: 'inst-005', instructorName: 'อ.วีรภัทร ไซเบอร์', durationMinutes: 180, categoryName: 'Cybersecurity' },
-];
-
-const ALL_INSTRUCTORS: InstructorOption[] = [
-  { id: 'inst-001', name: 'อ.สมชาย พัฒนาเว็บ', specializations: ['React', 'Node.js', 'TypeScript'], rating: 4.8, totalStudents: 3430, hourlyRate: 800, isOnline: true, coursesForSelected: ['course-001', 'course-004'] },
-  { id: 'inst-002', name: 'ดร.นภา AI วิจัย', specializations: ['Python', 'Machine Learning', 'Deep Learning'], rating: 4.9, totalStudents: 1890, hourlyRate: 1200, isOnline: false, coursesForSelected: ['course-002'] },
-  { id: 'inst-003', name: 'อ.พิมพ์ลดา ดีไซน์', specializations: ['UX Design', 'UI Design', 'Figma'], rating: 4.7, totalStudents: 1560, hourlyRate: 700, isOnline: true, coursesForSelected: ['course-003'] },
-  { id: 'inst-004', name: 'อ.ธนกร โมบาย', specializations: ['Flutter', 'React Native', 'Dart'], rating: 4.5, totalStudents: 720, hourlyRate: 650, isOnline: true, coursesForSelected: ['course-005'] },
-  { id: 'inst-005', name: 'อ.วีรภัทร ไซเบอร์', specializations: ['Cybersecurity', 'Ethical Hacking'], rating: 4.9, totalStudents: 350, hourlyRate: 1500, isOnline: false, coursesForSelected: ['course-006'] },
-];
-
-const ALL_SLOTS: Record<string, CalendarSlot[]> = {
-  'inst-001': [
-    { id: 'ts-001', dayOfWeek: 1, startTime: '09:00', endTime: '11:00', status: 'available' },
-    { id: 'ts-002', dayOfWeek: 1, startTime: '13:00', endTime: '15:00', status: 'booked', bookedCourseId: 'course-001', bookedCourseName: 'พื้นฐาน React.js' },
-    { id: 'ts-003', dayOfWeek: 3, startTime: '09:00', endTime: '11:00', status: 'available' },
-    { id: 'ts-004', dayOfWeek: 3, startTime: '14:00', endTime: '16:00', status: 'available' },
-    { id: 'ts-005', dayOfWeek: 5, startTime: '14:00', endTime: '16:00', status: 'booked', bookedCourseId: 'course-004', bookedCourseName: 'Node.js & Express' },
-    { id: 'ts-006', dayOfWeek: 5, startTime: '09:00', endTime: '11:00', status: 'available' },
-  ],
-  'inst-002': [
-    { id: 'ts-007', dayOfWeek: 2, startTime: '10:00', endTime: '12:00', status: 'booked', bookedCourseId: 'course-002', bookedCourseName: 'Python AI & ML' },
-    { id: 'ts-008', dayOfWeek: 4, startTime: '10:00', endTime: '12:00', status: 'available' },
-    { id: 'ts-009', dayOfWeek: 4, startTime: '14:00', endTime: '16:00', status: 'available' },
-  ],
-  'inst-003': [
-    { id: 'ts-010', dayOfWeek: 1, startTime: '10:00', endTime: '12:00', status: 'booked', bookedCourseId: 'course-003', bookedCourseName: 'UX/UI Masterclass' },
-    { id: 'ts-011', dayOfWeek: 3, startTime: '13:00', endTime: '15:00', status: 'available' },
-    { id: 'ts-012', dayOfWeek: 6, startTime: '09:00', endTime: '12:00', status: 'available' },
-  ],
-  'inst-004': [
-    { id: 'ts-013', dayOfWeek: 2, startTime: '18:00', endTime: '20:00', status: 'booked', bookedCourseId: 'course-005', bookedCourseName: 'Flutter Mobile' },
-    { id: 'ts-014', dayOfWeek: 4, startTime: '18:00', endTime: '20:00', status: 'available' },
-    { id: 'ts-015', dayOfWeek: 6, startTime: '10:00', endTime: '12:00', status: 'available' },
-  ],
-  'inst-005': [
-    { id: 'ts-016', dayOfWeek: 6, startTime: '09:00', endTime: '12:00', status: 'booked', bookedCourseId: 'course-006', bookedCourseName: 'Cybersecurity' },
-    { id: 'ts-017', dayOfWeek: 0, startTime: '13:00', endTime: '16:00', status: 'available' },
-  ],
-};
+/* ── UI Constants ──────────────────────────── */
 
 const DAY_LABELS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 const DAY_SHORT = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-const LEVEL_MAP: Record<string, { label: string; color: string }> = {
-  beginner: { label: 'เริ่มต้น', color: 'bg-success/10 text-success border-success/30' },
-  intermediate: { label: 'กลาง', color: 'bg-primary/10 text-primary border-primary/30' },
-  advanced: { label: 'สูง', color: 'bg-warning/10 text-warning border-warning/30' },
-};
+
+function getLevelBadgeClass(levelValue: string, levels: { value: string; color?: string }[]) {
+  const level = levels.find((l) => l.value === levelValue);
+  const colorClass = level?.color || 'text-primary';
+  
+  if (colorClass.includes('success')) return 'bg-success/10 text-success border-success/30';
+  if (colorClass.includes('warning')) return 'bg-warning/10 text-warning border-warning/30';
+  if (colorClass.includes('error')) return 'bg-error/10 text-error border-error/30';
+  return 'bg-primary/10 text-primary border-primary/30';
+}
+
+type Step = 'course' | 'instructor' | 'calendar' | 'confirm';
 
 const STEP_META: Record<Step, { number: number; label: string; icon: string }> = {
   course: { number: 1, label: 'เลือกคอร์ส', icon: '📚' },
@@ -138,84 +43,35 @@ function getNextDateForDay(dayOfWeek: number): string {
 
 /* ── Component ─────────────────────────────── */
 export function BookingWizard() {
-  const router = useRouter();
-  const [step, setStep] = useState<Step>('course');
-  const [selectedCourse, setSelectedCourse] = useState<CourseOption | null>(null);
-  const [selectedInstructor, setSelectedInstructor] = useState<InstructorOption | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
-  const [bookingAction, setBookingAction] = useState<'new' | 'join'>('new');
-  const [isBooking, setIsBooking] = useState(false);
-  const [bookingDone, setBookingDone] = useState(false);
-
-  // Filter instructors for selected course
-  const availableInstructors = useMemo(() => {
-    if (!selectedCourse) return [];
-    return ALL_INSTRUCTORS.filter((inst) =>
-      inst.coursesForSelected.includes(selectedCourse.id),
-    );
-  }, [selectedCourse]);
-
-  // Get slots for selected instructor
-  const calendarSlots = useMemo(() => {
-    if (!selectedInstructor) return [];
-    return ALL_SLOTS[selectedInstructor.id] || [];
-  }, [selectedInstructor]);
-
-  // Auto-select instructor if only one available
-  useEffect(() => {
-    if (availableInstructors.length === 1 && step === 'instructor') {
-      setSelectedInstructor(availableInstructors[0]);
-      setStep('calendar');
-    }
-  }, [availableInstructors, step]);
-
-  const goBack = useCallback(() => {
-    if (step === 'instructor') { setStep('course'); setSelectedInstructor(null); }
-    else if (step === 'calendar') { setStep('instructor'); setSelectedSlot(null); }
-    else if (step === 'confirm') { setStep('calendar'); setSelectedSlot(null); }
-  }, [step]);
-
-  const handleCourseSelect = useCallback((course: CourseOption) => {
-    setSelectedCourse(course);
-    setSelectedInstructor(null);
-    setSelectedSlot(null);
-    setStep('instructor');
-  }, []);
-
-  const handleInstructorSelect = useCallback((instructor: InstructorOption) => {
-    setSelectedInstructor(instructor);
-    setSelectedSlot(null);
-    setStep('calendar');
-  }, []);
-
-  const handleSlotSelect = useCallback((slot: CalendarSlot) => {
-    setSelectedSlot(slot);
-    setBookingAction(slot.status === 'booked' ? 'join' : 'new');
-    setStep('confirm');
-  }, []);
-
-  const handleConfirm = useCallback(async () => {
-    setIsBooking(true);
-    // Simulate API call
-    await new Promise((res) => setTimeout(res, 1500));
-    setIsBooking(false);
-    setBookingDone(true);
-  }, []);
-
-  const handleFinish = useCallback(() => {
-    router.push('/my-bookings');
-  }, [router]);
-
-  const handleNewBooking = useCallback(() => {
-    setStep('course');
-    setSelectedCourse(null);
-    setSelectedInstructor(null);
-    setSelectedSlot(null);
-    setBookingDone(false);
-  }, []);
+  const { state, actions } = useBookingWizardPresenter();
+  
+  const {
+    step,
+    courses,
+    availableInstructors,
+    calendarSlots,
+    selectedCourse,
+    selectedInstructor,
+    selectedSlot,
+    bookingAction,
+    isBooking,
+    bookingDone,
+    loading,
+    levels,
+    couponCode,
+    isApplyingCoupon,
+    couponError,
+    discountAmount,
+    finalPrice,
+    isEnrolled
+  } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
   const currentIdx = steps.indexOf(step);
+
+  if (loading) {
+    return <BookingSkeleton />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -223,7 +79,7 @@ export function BookingWizard() {
       <div className="sticky top-0 z-30 glass border-b border-border/50 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => window.location.href = '/'} 
             className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span>
@@ -272,14 +128,15 @@ export function BookingWizard() {
         {/* Step content */}
         <div className="animate-fadeIn">
           {step === 'course' && (
-            <StepCourse onSelect={handleCourseSelect} />
+            <StepCourse courses={courses} levels={levels} onSelect={actions.handleCourseSelect} />
           )}
           {step === 'instructor' && selectedCourse && (
             <StepInstructor
               course={selectedCourse}
               instructors={availableInstructors}
-              onSelect={handleInstructorSelect}
-              onBack={goBack}
+              onSelect={actions.handleInstructorSelect}
+              onBack={actions.goBack}
+              isEnrolled={isEnrolled}
             />
           )}
           {step === 'calendar' && selectedCourse && selectedInstructor && (
@@ -287,8 +144,9 @@ export function BookingWizard() {
               course={selectedCourse}
               instructor={selectedInstructor}
               slots={calendarSlots}
-              onSelect={handleSlotSelect}
-              onBack={goBack}
+              onSelect={actions.handleSlotSelect}
+              onBack={actions.goBack}
+              isEnrolled={isEnrolled}
             />
           )}
           {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
@@ -299,10 +157,19 @@ export function BookingWizard() {
               action={bookingAction}
               isBooking={isBooking}
               bookingDone={bookingDone}
-              onConfirm={handleConfirm}
-              onBack={goBack}
-              onFinish={handleFinish}
-              onNewBooking={handleNewBooking}
+              levels={levels}
+              couponCode={couponCode}
+              isApplyingCoupon={isApplyingCoupon}
+              couponError={couponError}
+              discountAmount={discountAmount}
+              finalPrice={finalPrice}
+              setCouponCode={actions.setCouponCode}
+              applyCoupon={actions.applyCoupon}
+              onConfirm={actions.handleConfirm}
+              onBack={actions.goBack}
+              onFinish={actions.handleFinish}
+              onNewBooking={actions.handleNewBooking}
+              isEnrolled={isEnrolled}
             />
           )}
         </div>
@@ -314,19 +181,19 @@ export function BookingWizard() {
 /* ════════════════════════════════════════════
    Step 1: เลือกคอร์ส
    ════════════════════════════════════════════ */
-function StepCourse({ onSelect }: { onSelect: (c: CourseOption) => void }) {
+function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; levels: Level[]; onSelect: (c: WizardCourse) => void }) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    if (!search) return ALL_COURSES;
+    if (!search) return courses;
     const q = search.toLowerCase();
-    return ALL_COURSES.filter(
+    return courses.filter(
       (c) =>
         c.title.toLowerCase().includes(q) ||
         c.tags.some((t) => t.toLowerCase().includes(q)) ||
         c.categoryName.toLowerCase().includes(q),
     );
-  }, [search]);
+  }, [search, courses]);
 
   return (
     <div>
@@ -352,7 +219,8 @@ function StepCourse({ onSelect }: { onSelect: (c: CourseOption) => void }) {
       {/* Course list */}
       <div className="space-y-3">
         {filtered.map((course) => {
-          const lv = LEVEL_MAP[course.level];
+          const lv = levels.find((l) => l.value === course.level) || levels[0];
+          const badgeClass = getLevelBadgeClass(course.level, levels);
           return (
             <button
               key={course.id}
@@ -368,7 +236,7 @@ function StepCourse({ onSelect }: { onSelect: (c: CourseOption) => void }) {
                     {course.instructorName} • {course.categoryName}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${lv.color}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass}`}>
                       {lv.label}
                     </span>
                     {course.tags.slice(0, 3).map((tag) => (
@@ -415,11 +283,13 @@ function StepInstructor({
   instructors,
   onSelect,
   onBack,
+  isEnrolled,
 }: {
-  course: CourseOption;
-  instructors: InstructorOption[];
-  onSelect: (i: InstructorOption) => void;
+  course: WizardCourse;
+  instructors: WizardInstructor[];
+  onSelect: (i: WizardInstructor) => void;
   onBack: () => void;
+  isEnrolled: boolean;
 }) {
   return (
     <div>
@@ -439,6 +309,11 @@ function StepInstructor({
             <p className="text-xs text-primary font-medium">คอร์สที่เลือก</p>
             <p className="font-bold text-text-primary text-sm truncate">{course.title}</p>
           </div>
+          {isEnrolled && (
+            <div className="ml-auto px-2 py-1 rounded-lg bg-success/10 border border-success/30 text-[10px] font-bold text-success animate-pulse">
+               👑 OWNED
+            </div>
+          )}
         </div>
       </div>
 
@@ -498,7 +373,7 @@ function StepInstructor({
 
       {instructors.length === 0 && (
         <div className="text-center py-12 glass rounded-2xl">
-          <div className="text-4xl mb-3">😕</div>
+          <div className="text-4xl mb-3">👨‍🏫</div>
           <p className="text-text-muted">ไม่พบอาจารย์สำหรับคอร์สนี้</p>
         </div>
       )}
@@ -515,16 +390,18 @@ function StepCalendar({
   slots,
   onSelect,
   onBack,
+  isEnrolled,
 }: {
-  course: CourseOption;
-  instructor: InstructorOption;
-  slots: CalendarSlot[];
-  onSelect: (slot: CalendarSlot) => void;
+  course: WizardCourse;
+  instructor: WizardInstructor;
+  slots: WizardSlot[];
+  onSelect: (slot: WizardSlot) => void;
   onBack: () => void;
+  isEnrolled: boolean;
 }) {
   // Group slots by day of week
   const slotsByDay = useMemo(() => {
-    const grouped: Record<number, CalendarSlot[]> = {};
+    const grouped: Record<number, WizardSlot[]> = {};
     for (const slot of slots) {
       if (!grouped[slot.dayOfWeek]) grouped[slot.dayOfWeek] = [];
       grouped[slot.dayOfWeek].push(slot);
@@ -555,6 +432,11 @@ function StepCalendar({
               <p className="text-[10px] text-primary font-medium">คอร์ส</p>
               <p className="text-xs font-bold text-text-primary truncate">{course.title}</p>
             </div>
+            {isEnrolled && (
+              <div className="ml-auto px-1.5 py-0.5 rounded bg-success/10 border border-success/30 text-[8px] font-bold text-success animate-pulse">
+                👑 OWNED
+              </div>
+            )}
           </div>
         </div>
         <div className="flex-1 glass rounded-xl p-3 border border-purple-500/20 bg-purple-500/5">
@@ -575,19 +457,37 @@ function StepCalendar({
         <p className="text-text-secondary text-sm">คลิกช่องเพื่อจองหรือเข้าร่วม</p>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mb-6 text-xs">
+      {slots.length === 0 ? (
+        <div className="glass rounded-2xl p-8 border border-warning/30 bg-warning/5 text-center my-8 animate-fadeIn">
+          <div className="text-5xl mb-4">🗓️</div>
+          <h3 className="text-xl font-bold text-text-primary mb-2">
+            ยังไม่มีตารางสอน
+          </h3>
+          <p className="text-text-secondary text-sm max-w-sm mx-auto mb-6">
+            อ๊ะ! ดูเหมือนว่าอาจารย์ท่านนี้ยังไม่ได้เปิดช่วงเวลาสอนในขณะนี้ กรุณาเลือกอาจารย์ท่านอื่น หรือกลับมาตรวจสอบใหม่ภายหลังครับ
+          </p>
+          <button
+            onClick={onBack}
+            className="px-6 py-2.5 rounded-xl btn-game text-white text-sm font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+          >
+            ← เลือกอาจารย์ท่านอื่น
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Legend */}
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-6 text-xs">
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-success/20 border border-success/50" />
           <span className="text-text-secondary">ว่าง — จองใหม่</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-warning/20 border border-warning/50" />
-          <span className="text-text-secondary">มีคนจอง — เข้าร่วม</span>
+          <span className="text-text-secondary">คอร์สเดียวกัน — เข้าร่วม</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-surface border border-border" />
-          <span className="text-text-secondary">ไม่มีคลาส</span>
+          <span className="text-text-secondary">ติดสอนคลาสอื่น / ไม่มีคลาส</span>
         </div>
       </div>
 
@@ -613,48 +513,61 @@ function StepCalendar({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {daySlots.map((slot) => (
+                  {daySlots.map((slot) => {
+                    const isAvailable = slot.status === 'available';
+                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id;
+                    const isUnavailable = slot.status === 'booked' && slot.bookedCourseId !== course.id;
+                    
+                    return (
                     <button
                       key={slot.id}
-                      onClick={() => onSelect(slot)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all hover:scale-[1.02] cursor-pointer ${
-                        slot.status === 'available'
-                          ? 'bg-success/10 border-success/40 hover:bg-success/20 hover:shadow-md hover:shadow-success/10'
-                          : 'bg-warning/10 border-warning/40 hover:bg-warning/20 hover:shadow-md hover:shadow-warning/10'
+                      onClick={() => !isUnavailable && onSelect(slot)}
+                      disabled={isUnavailable}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl border transition-all ${
+                        isAvailable
+                          ? 'bg-success/10 border-success/40 hover:bg-success/20 hover:shadow-md hover:shadow-success/10 hover:scale-[1.02] cursor-pointer'
+                          : isJoinable
+                          ? 'bg-warning/10 border-warning/40 hover:bg-warning/20 hover:shadow-md hover:shadow-warning/10 hover:scale-[1.02] cursor-pointer'
+                          : 'bg-surface/50 border-border/30 opacity-70 cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm ${slot.status === 'available' ? 'text-success' : 'text-warning'}`}>
-                              {slot.status === 'available' ? '🟢' : '🟡'}
+                            <span className={`text-sm ${isAvailable ? 'text-success' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              {isAvailable ? '🟢' : isJoinable ? '🟡' : '🔴'}
                             </span>
-                            <span className="text-sm font-bold text-text-primary">
+                            <span className={`text-sm font-bold ${isUnavailable ? 'text-text-muted' : 'text-text-primary'}`}>
                               {slot.startTime} — {slot.endTime}
                             </span>
                           </div>
                           {slot.status === 'booked' && slot.bookedCourseName && (
-                            <p className="text-[10px] text-warning ml-5 mt-0.5">
+                            <p className={`text-[10px] ml-5 mt-0.5 ${isJoinable ? 'text-warning' : 'text-text-muted'}`}>
                               📌 {slot.bookedCourseName}
                             </p>
                           )}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          slot.status === 'available'
+                          isAvailable
                             ? 'bg-success/20 text-success'
-                            : 'bg-warning/20 text-warning'
+                            : isJoinable
+                            ? 'bg-warning/20 text-warning'
+                            : 'bg-surface text-text-muted'
                         }`}>
-                          {slot.status === 'available' ? 'จองใหม่' : 'เข้าร่วม'}
+                          {isAvailable ? 'จองใหม่' : isJoinable ? 'เข้าร่วม' : 'ไม่ว่าง'}
                         </span>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           );
         })}
       </div>
+        </>
+      )}
     </div>
   );
 }
@@ -673,10 +586,19 @@ function StepConfirm({
   onBack,
   onFinish,
   onNewBooking,
+  levels,
+  couponCode,
+  isApplyingCoupon,
+  couponError,
+  discountAmount,
+  finalPrice,
+  setCouponCode,
+  applyCoupon,
+  isEnrolled,
 }: {
-  course: CourseOption;
-  instructor: InstructorOption;
-  slot: CalendarSlot;
+  course: WizardCourse;
+  instructor: WizardInstructor;
+  slot: WizardSlot;
   action: 'new' | 'join';
   isBooking: boolean;
   bookingDone: boolean;
@@ -684,6 +606,15 @@ function StepConfirm({
   onBack: () => void;
   onFinish: () => void;
   onNewBooking: () => void;
+  levels: Level[];
+  couponCode: string;
+  isApplyingCoupon: boolean;
+  couponError: string | null;
+  discountAmount: number;
+  finalPrice: number | null;
+  setCouponCode: (c: string) => void;
+  applyCoupon: () => void;
+  isEnrolled: boolean;
 }) {
   if (bookingDone) {
     return (
@@ -700,7 +631,7 @@ function StepConfirm({
             : 'คุณได้เข้าร่วมห้องเรียนเรียบร้อยแล้ว'}
         </p>
         <p className="text-text-muted text-xs mb-8">
-          ✉️ อีเมลยืนยันจะถูกส่งไปยังอีเมลของคุณ
+          ✉️ {isEnrolled ? 'คุณสามารถดูตารางเรียนทั้งหมดได้ในหน้าการจอง' : 'อีเมลยืนยันจะถูกส่งไปยังอีเมลของคุณ'}
         </p>
 
         {/* Summary card */}
@@ -710,7 +641,9 @@ function StepConfirm({
               <span className="text-lg">📚</span>
               <div>
                 <p className="text-[10px] text-text-muted">คอร์ส</p>
-                <p className="text-sm font-bold text-text-primary">{course.title}</p>
+                <p className="text-sm font-bold text-text-primary">
+                  {action === 'join' && slot.bookedCourseName ? slot.bookedCourseName : course.title}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -769,9 +702,11 @@ function StepConfirm({
           {action === 'new' ? 'ยืนยันการจอง' : 'ยืนยันเข้าร่วม'}
         </h2>
         <p className="text-text-secondary text-sm">
-          {action === 'new'
-            ? 'ตรวจสอบข้อมูลก่อนยืนยัน'
-            : 'คุณจะเข้าร่วมห้องเรียนที่มีคนจองไว้แล้ว'}
+          {isEnrolled 
+            ? '✨ คุณเป็นเจ้าของคอร์สนี้แล้ว สามารถจองเวลาเรียนได้ฟรี' 
+            : action === 'new'
+              ? 'ตรวจสอบข้อมูลก่อนยืนยัน'
+              : 'คุณจะเข้าร่วมห้องเรียนที่มีคนจองไว้แล้ว'}
         </p>
       </div>
 
@@ -781,9 +716,12 @@ function StepConfirm({
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg shrink-0">📚</div>
           <div>
             <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium">คอร์ส</p>
-            <p className="font-bold text-text-primary">{course.title}</p>
+            <p className="font-bold text-text-primary">
+              {action === 'join' && slot.bookedCourseName ? slot.bookedCourseName : course.title}
+            </p>
             <p className="text-xs text-text-muted mt-0.5">
-              {LEVEL_MAP[course.level].label} • {course.categoryName}
+              {(levels.find(l => l.value === course.level) || levels[0])?.label} 
+              {action !== 'join' && ` • ${course.categoryName}`}
             </p>
           </div>
         </div>
@@ -823,15 +761,86 @@ function StepConfirm({
             )}
           </div>
         </div>
-      </div>
+    </div>
 
-      {/* Price */}
-      <div className="glass rounded-2xl p-4 border border-primary/20 bg-primary/5 mb-6">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-text-secondary">💰 ค่าเรียน</span>
-          <span className="text-xl font-extrabold text-primary">
-            ฿{course.price.toLocaleString()}
-          </span>
+      {/* Enrollment Badge - Modern & Premium */}
+      {isEnrolled && (
+        <div className="mb-6 animate-slideIn">
+          <div className="glass border border-success/30 bg-success/10 rounded-2xl p-4 flex items-center gap-4 shadow-xl shadow-success/5">
+            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl">
+              👑
+            </div>
+            <div>
+              <p className="text-success font-black text-sm uppercase tracking-tight">VIP STATUS: ENROLLED</p>
+              <p className="text-text-secondary text-xs">คุณเป็นเจ้าของคอร์สนี้แล้ว สิทธิพิเศษจองเวลาเรียนได้ไม่จำกัดตามโควตาชั่วโมงของคุณ</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coupon Input */}
+      {!bookingDone && !isEnrolled && (
+        <div className="glass rounded-2xl p-4 border border-border/50 mb-6 bg-surface/30">
+          <p className="text-xs font-bold text-text-primary mb-3">🏷️ มีโค้ดส่วนลดไหม?</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="กรอกรหัสคูปอง"
+              disabled={isApplyingCoupon || discountAmount > 0}
+              className="flex-1 bg-surface border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:opacity-50"
+            />
+            <button
+              onClick={applyCoupon}
+              disabled={!couponCode || isApplyingCoupon || discountAmount > 0 || isBooking}
+              className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all disabled:opacity-50"
+            >
+              {isApplyingCoupon ? '⏳' : discountAmount > 0 ? '✅' : 'ใช้โค้ด'}
+            </button>
+          </div>
+          {couponError && <p className="text-[10px] text-error mt-2 ml-1">❌ {couponError}</p>}
+          {discountAmount > 0 && (
+            <div className="text-[10px] text-success mt-2 ml-1 flex items-center justify-between">
+              <span>✨ ประหยัดไปได้ ฿{discountAmount.toLocaleString()}</span>
+              <button 
+                onClick={() => setCouponCode('')} 
+                className="underline opacity-60 hover:opacity-100"
+              >
+                เปลี่ยนโค้ด
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Price Breakdown */}
+      <div className={`glass rounded-2xl p-5 border mb-6 shadow-lg transition-all duration-500 ${
+        isEnrolled 
+          ? 'border-success/30 bg-success/5 shadow-success/5' 
+          : 'border-primary/20 bg-primary/5 shadow-primary/5'
+      }`}>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-text-secondary">
+            <span>ยอดชำระเบื้องต้น</span>
+            <span className={isEnrolled ? 'line-through opacity-50' : ''}>฿{course.price.toLocaleString()}</span>
+          </div>
+          {(discountAmount > 0 || isEnrolled) && (
+            <div className="flex justify-between text-sm text-success font-medium">
+              <span>ส่วนลด {isEnrolled && '(สิทธิพิเศษของผู้เรียน)'}</span>
+              <span>-฿{course.price.toLocaleString()}</span>
+            </div>
+          )}
+          <div className={`pt-2 border-t flex justify-between items-center ${
+            isEnrolled ? 'border-success/10' : 'border-primary/10'
+          }`}>
+            <span className="font-bold text-text-primary">ยอดที่ต้องชำระ</span>
+            <span className={`text-2xl font-black animate-fadeIn ${
+              isEnrolled ? 'text-success' : 'text-primary'
+            }`}>
+              ฿0
+            </span>
+          </div>
         </div>
       </div>
 
@@ -847,19 +856,19 @@ function StepConfirm({
           onClick={onConfirm}
           disabled={isBooking}
           className={`flex-1 px-4 py-3 rounded-xl text-white text-sm font-bold transition-all ${
-            action === 'new'
-              ? 'btn-game hover:scale-[1.02] active:scale-95'
-              : 'bg-warning hover:bg-warning/90 hover:scale-[1.02] active:scale-95'
-          } disabled:opacity-60 disabled:cursor-not-allowed`}
+            (finalPrice === 0 || (course.price - discountAmount === 0))
+              ? 'bg-success hover:bg-success/90 hover:scale-[1.02] active:scale-95'
+              : 'btn-game hover:scale-[1.02] active:scale-95'
+          } disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-primary/20`}
         >
           {isBooking ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin">⏳</span> กำลังดำเนินการ...
+              <span className="animate-spin text-lg">⏳</span> กำลังดำเนินการ...
             </span>
-          ) : action === 'new' ? (
-            '✅ ยืนยันจอง'
+          ) : (finalPrice === 0 || (course.price - discountAmount === 0)) ? (
+            '✅ ยืนยันจองฟรี'
           ) : (
-            '🤝 ยืนยันเข้าร่วม'
+            `💳 ชำระเงิน ฿${(finalPrice !== null ? finalPrice : course.price).toLocaleString()}`
           )}
         </button>
       </div>

@@ -10,13 +10,13 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const presenter = createServerCourseDetailPresenter();
+  const presenter = await createServerCourseDetailPresenter();
   return presenter.generateMetadata(id);
 }
 
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const presenter = createServerCourseDetailPresenter();
+  const presenter = await createServerCourseDetailPresenter();
 
   try {
     const viewModel = await presenter.getViewModel(id);

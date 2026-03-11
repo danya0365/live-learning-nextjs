@@ -9,6 +9,7 @@
 import { BookingFilter, MyBookingsViewModel } from '@/src/presentation/presenters/my-bookings/MyBookingsPresenter';
 import { useMyBookingsPresenter } from '@/src/presentation/presenters/my-bookings/useMyBookingsPresenter';
 import Link from 'next/link';
+import MyBookingsSkeleton from './MyBookingsSkeleton';
 
 interface MyBookingsViewProps {
   initialViewModel?: MyBookingsViewModel;
@@ -34,14 +35,7 @@ export function MyBookingsView({ initialViewModel }: MyBookingsViewProps) {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📋</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดการจอง...</p>
-        </div>
-      </div>
-    );
+    return <MyBookingsSkeleton />;
   }
 
   if (state.error && !vm) {

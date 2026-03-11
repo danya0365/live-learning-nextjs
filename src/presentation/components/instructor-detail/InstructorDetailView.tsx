@@ -9,6 +9,7 @@
 import { InstructorDetailViewModel } from '@/src/presentation/presenters/instructor-detail/InstructorDetailPresenter';
 import { useInstructorDetailPresenter } from '@/src/presentation/presenters/instructor-detail/useInstructorDetailPresenter';
 import Link from 'next/link';
+import InstructorDetailSkeleton from './InstructorDetailSkeleton';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -22,14 +23,7 @@ export function InstructorDetailView({ instructorId, initialViewModel }: Instruc
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">👨‍🏫</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดข้อมูลอาจารย์...</p>
-        </div>
-      </div>
-    );
+    return <InstructorDetailSkeleton />;
   }
 
   if (state.error || !vm) {
@@ -146,8 +140,8 @@ export function InstructorDetailView({ instructorId, initialViewModel }: Instruc
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-bold text-text-primary text-sm line-clamp-1">{course.title}</h3>
-                      {course.isLive && (
-                        <span className="flex-shrink-0 px-2 py-0.5 rounded bg-error/90 text-white text-[10px] font-bold">LIVE</span>
+                      {course.isLiveFeature && (
+                        <span className="flex-shrink-0 px-2 py-0.5 rounded bg-primary text-white text-[10px] font-bold">📡 คลาสเรียนสด</span>
                       )}
                     </div>
                     <p className="text-xs text-text-muted line-clamp-1 mt-0.5">{course.description}</p>
@@ -180,30 +174,18 @@ export function InstructorDetailView({ instructorId, initialViewModel }: Instruc
               {timeSlots.map((slot) => (
                 <div
                   key={slot.id}
-                  className={`glass rounded-xl p-4 border-l-4 ${slot.isBooked ? 'border-l-warning' : 'border-l-success'} hover:scale-[1.01] transition-transform`}
+                  className="glass rounded-xl p-4 border-l-4 border-l-success hover:scale-[1.01] transition-transform"
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-semibold text-text-primary text-sm">
                       วัน{DAY_NAMES[slot.dayOfWeek]}
                     </span>
-                    {slot.isBooked ? (
-                      <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-xs font-bold">📌 จองแล้ว</span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-bold">✅ ว่าง</span>
-                    )}
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-bold">✅ ว่าง</span>
                   </div>
                   <div className="text-lg font-bold text-text-primary mb-1">{slot.startTime} - {slot.endTime}</div>
-                  {slot.isBooked && slot.bookedCourseName && (
-                    <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span>📖 {slot.bookedCourseName}</span>
-                      <button className="text-primary font-medium hover:underline ml-auto">เข้าร่วมเรียน →</button>
-                    </div>
-                  )}
-                  {!slot.isBooked && (
-                    <button className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium">
-                      📅 จองเวลานี้
-                    </button>
-                  )}
+                  <button className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium">
+                    📅 จองเวลานี้
+                  </button>
                 </div>
               ))}
             </div>

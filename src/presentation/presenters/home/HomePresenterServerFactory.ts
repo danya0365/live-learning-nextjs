@@ -1,24 +1,34 @@
 /**
  * HomePresenterServerFactory
  * Factory for creating HomePresenter on the server side
- * ✅ Injects Mock repositories for development
+ * ✅ Injects Supabase repositories for production
  */
 
-import { MockCategoryRepository } from '@/src/infrastructure/repositories/mock/MockCategoryRepository';
-import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
-import { MockInstructorRepository } from '@/src/infrastructure/repositories/mock/MockInstructorRepository';
+
+import { SupabaseBookingRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingRepository';
+import { SupabaseCategoryRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCategoryRepository';
+import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
+import { SupabaseInstructorRepository } from '@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository';
+import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { HomePresenter } from './HomePresenter';
 
 export class HomePresenterServerFactory {
-  static create(): HomePresenter {
-    const courseRepository = new MockCourseRepository();
-    const instructorRepository = new MockInstructorRepository();
-    const categoryRepository = new MockCategoryRepository();
+  static async create(): Promise<HomePresenter> {
+    const supabase = await createServerSupabaseClient();
+    
+    // Use Supabase Repository for Courses & Categories
+    const courseRepository = new SupabaseCourseRepository(supabase);
+    const categoryRepository = new SupabaseCategoryRepository(supabase);
+    const instructorRepository = new SupabaseInstructorRepository(supabase);
+    
+    // Keep others as Mock for now until implemented
+    const bookingRepository = new SupabaseBookingRepository(supabase);
 
-    return new HomePresenter(courseRepository, instructorRepository, categoryRepository);
+    return new HomePresenter(courseRepository, instructorRepository, categoryRepository, bookingRepository);
   }
 }
 
-export function createServerHomePresenter(): HomePresenter {
+export async function createServerHomePresenter(): Promise<HomePresenter> {
   return HomePresenterServerFactory.create();
 }
+

@@ -14,10 +14,12 @@ export interface Booking {
   instructorName: string;
   courseId: string;
   courseName: string;
-  timeSlotId: string;
+  enrollmentId?: string;
+  instructorAvailabilityId: string;
   scheduledDate: string;
   startTime: string;
   endTime: string;
+  bookedHours: number;
   status: BookingStatus;
   isActive: boolean;
   createdAt: string;
@@ -35,12 +37,19 @@ export interface BookingStats {
 }
 
 export interface CreateBookingData {
-  studentId: string;
+  studentId: string;        // 🔒 Server-injected from auth session
   instructorId: string;
   courseId: string;
-  timeSlotId: string;
+  enrollmentId?: string;
+  instructorAvailabilityId: string;
   scheduledDate: string;
 }
+
+/**
+ * 🔒 Server-Injected Identity Pattern
+ * Client-safe payload — auth IDs (studentId) are resolved server-side from session
+ */
+export type CreateBookingPayload = Omit<CreateBookingData, 'studentId'>;
 
 export interface UpdateBookingData {
   status?: BookingStatus;
@@ -49,13 +58,28 @@ export interface UpdateBookingData {
 
 export interface IBookingRepository {
   getById(id: string): Promise<Booking | null>;
-  getAll(): Promise<Booking[]>;
   getPaginated(page: number, perPage: number): Promise<{ data: Booking[]; total: number; page: number; perPage: number }>;
+  /** Get bookings for the currently authenticated student (session-based, no ID needed) */
+  getMyStudentBookings(): Promise<Booking[]>;
+  /** Get bookings for the currently authenticated instructor (session-based, no ID needed) */
+  getMyInstructorBookings(): Promise<Booking[]>;
+  /** Get bookings for a specific student by explicit studentId */
   getByStudentId(studentId: string): Promise<Booking[]>;
+  /** Get bookings for a specific instructor by explicit instructorId */
   getByInstructorId(instructorId: string): Promise<Booking[]>;
   getByCourseId(courseId: string): Promise<Booking[]>;
-  create(data: CreateBookingData): Promise<Booking>;
+  create(data: CreateBookingPayload): Promise<Booking>;
   update(id: string, data: UpdateBookingData): Promise<Booking>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<BookingStats>;
+  /** Get stats for a specific profile */
+  getStatsByProfile(profileId: string): Promise<BookingStats>;
+  /** Get stats for the currently authenticated user */
+  getMyStats(): Promise<BookingStats>;
+
+  getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string }): Promise<Booking[]>;
+  /** Get bookings by month for a specific profile */
+  getByMonthByProfile(profileId: string, month: number, year: number): Promise<Booking[]>;
+  /** Get bookings by month for the currently authenticated user */
+  getMyBookingsByMonth(month: number, year: number): Promise<Booking[]>;
 }

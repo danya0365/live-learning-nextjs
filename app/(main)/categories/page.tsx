@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function CategoriesPage() {
-  const presenter = createServerCategoriesPresenter();
+  const presenter = await createServerCategoriesPresenter();
   const viewModel = await presenter.getViewModel();
   return <CategoriesView initialViewModel={viewModel} />;
 }

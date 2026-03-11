@@ -1,8 +1,8 @@
 'use client';
 
-import { MockBookingRepository } from '@/src/infrastructure/repositories/mock/MockBookingRepository';
+import { ApiBookingRepository } from '@/src/infrastructure/repositories/api/ApiBookingRepository';
 import { MyBookingsPresenter } from './MyBookingsPresenter';
 
 export function createClientMyBookingsPresenter(): MyBookingsPresenter {
-  return new MyBookingsPresenter(new MockBookingRepository());
+  return new MyBookingsPresenter(new ApiBookingRepository());
 }

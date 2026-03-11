@@ -1,14 +1,14 @@
 'use client';
 
-import { MockBookingRepository } from '@/src/infrastructure/repositories/mock/MockBookingRepository';
-import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
-import { MockInstructorRepository } from '@/src/infrastructure/repositories/mock/MockInstructorRepository';
+import { ApiBookingRepository } from '@/src/infrastructure/repositories/api/ApiBookingRepository';
+import { ApiCourseRepository } from '@/src/infrastructure/repositories/api/ApiCourseRepository';
+import { ApiInstructorRepository } from '@/src/infrastructure/repositories/api/ApiInstructorRepository';
 import { SchedulePresenter } from './SchedulePresenter';
 
 export function createClientSchedulePresenter(): SchedulePresenter {
   return new SchedulePresenter(
-    new MockInstructorRepository(),
-    new MockBookingRepository(),
-    new MockCourseRepository(),
+    new ApiInstructorRepository(),
+    new ApiBookingRepository(),
+    new ApiCourseRepository(),
   );
 }

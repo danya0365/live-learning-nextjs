@@ -1,9 +1,9 @@
 'use client';
 
-import { MockCategoryRepository } from '@/src/infrastructure/repositories/mock/MockCategoryRepository';
-import { MockCourseRepository } from '@/src/infrastructure/repositories/mock/MockCourseRepository';
+import { ApiCategoryRepository } from '@/src/infrastructure/repositories/api/ApiCategoryRepository';
+import { ApiCourseRepository } from '@/src/infrastructure/repositories/api/ApiCourseRepository';
 import { CoursesPresenter } from './CoursesPresenter';
 
 export function createClientCoursesPresenter(): CoursesPresenter {
-  return new CoursesPresenter(new MockCourseRepository(), new MockCategoryRepository());
+  return new CoursesPresenter(new ApiCourseRepository(), new ApiCategoryRepository());
 }

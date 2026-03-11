@@ -1,17 +1,15 @@
-/**
- * ScheduleView
- * Role-aware schedule:
- * - Instructor: shows only THEIR OWN schedule ("ตารางสอนของฉัน")
- * - Student: shows all instructors' schedule with filters
- * Pure CSS — no react-spring
- */
-
 'use client';
 
 import { ScheduleTimeSlot, ScheduleViewModel } from '@/src/presentation/presenters/schedule/SchedulePresenter';
 import { useSchedulePresenter } from '@/src/presentation/presenters/schedule/useSchedulePresenter';
 import { useAuthStore } from '@/src/stores/authStore';
+import dayjs from 'dayjs';
+import { Calendar as CalendarIcon, Filter, List, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import AvailabilityModal from './AvailabilityModal';
+import Calendar from './Calendar';
+import ScheduleSkeleton from './ScheduleSkeleton';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -26,25 +24,21 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
   const router = useRouter();
   const isInstructor = user?.role === 'instructor';
 
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">📅</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดตารางเรียน...</p>
-        </div>
-      </div>
-    );
+    return <ScheduleSkeleton />;
   }
 
   if (state.error && !vm) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <p className="text-error font-medium mb-2">เกิดข้อผิดพลาด</p>
-          <p className="text-text-secondary mb-4">{state.error}</p>
-          <button onClick={() => actions.loadData()} className="btn-game px-6 py-2 text-white rounded-xl">ลองใหม่</button>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="glass p-8 rounded-3xl text-center max-w-md">
+          <div className="text-6xl mb-6">⚠️</div>
+          <p className="text-error font-bold text-xl mb-2">เกิดข้อผิดพลาด</p>
+          <p className="text-text-secondary mb-8">{state.error}</p>
+          <button onClick={() => actions.loadData()} className="btn-game w-full py-3 text-white rounded-xl font-bold">ลองใหม่อีกครั้ง</button>
         </div>
       </div>
     );
@@ -52,172 +46,177 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
 
   if (!vm) return null;
 
-  // For instructors: filter to show only their own slots
-  // Mock: instructor-001 maps to instructor 'inst-001' in the schedule data
-  // We match by instructor name from the auth user
-  const displaySlots = isInstructor
-    ? vm.timeSlots.filter((slot) => slot.instructorName.includes(user?.name?.replace('อ.', '').trim() || ''))
-    : vm.timeSlots;
-
-  // Group timeslots by day
-  const slotsByDay: Record<number, ScheduleTimeSlot[]> = {};
-  displaySlots.forEach((slot) => {
-    if (!slotsByDay[slot.dayOfWeek]) slotsByDay[slot.dayOfWeek] = [];
-    slotsByDay[slot.dayOfWeek].push(slot);
-  });
+  const displaySlots = vm.timeSlots;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">
-          {isInstructor ? '📅 ตารางสอนของฉัน' : '📅 ตารางเรียน'}
-        </h1>
-        <p className="text-text-secondary">
-          {isInstructor
-            ? 'ดูคลาสที่ต้องสอน จำนวนนักเรียนที่จอง และเข้าสอนได้ทันที'
-            : 'ดูตารางเวลาสอน จองเรียนสด หรือเข้าร่วมคอร์สที่มีอยู่'}
-        </p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Hero Section */}
+      <div className="mb-12 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl sm:text-5xl font-black text-text-primary mb-4 tracking-tight">
+            {isInstructor ? (
+              <span className="flex items-center gap-3">📅 ตารางสอน<span className="text-primary text-2xl">ของฉัน</span></span>
+            ) : (
+              <span className="flex items-center gap-3">📅 ตารางเรียน<span className="text-primary text-2xl">สดทั้งหมด</span></span>
+            )}
+          </h1>
+          <p className="text-text-muted text-lg max-w-2xl leading-relaxed">
+            {isInstructor
+              ? 'จัดการเวลาว่างของคุณ และตรวจสอบคลาสที่มีนักเรียนจองเข้ามา'
+              : 'ค้นหาช่วงเวลาที่อาจารย์เปิดสอน เลือกคอสที่ต้องการ และเริ่มเรียนได้ทันที'}
+          </p>
+        </div>
+
+        <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/10 self-center sm:self-auto">
+          <button 
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              viewMode === 'calendar' ? 'bg-primary text-white shadow-lg' : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <CalendarIcon size={18} /> ปฏิทิน
+          </button>
+          <button 
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              viewMode === 'list' ? 'bg-primary text-white shadow-lg' : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+            }`}
+          >
+            <List size={18} /> รายการ
+          </button>
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="glass rounded-2xl p-4 text-center">
-          <div className="text-2xl font-extrabold text-text-primary">{displaySlots.length}</div>
-          <div className="text-xs text-text-muted">📅 {isInstructor ? 'คลาสทั้งหมด' : 'ช่วงเวลาทั้งหมด'}</div>
-        </div>
-        <div className="glass rounded-2xl p-4 text-center">
-          <div className="text-2xl font-extrabold text-success">{displaySlots.filter(s => !s.isBooked).length}</div>
-          <div className="text-xs text-text-muted">✅ ว่าง</div>
-        </div>
-        <div className="glass rounded-2xl p-4 text-center">
-          <div className="text-2xl font-extrabold text-warning">{displaySlots.filter(s => s.isBooked).length}</div>
-          <div className="text-xs text-text-muted">📌 {isInstructor ? 'มีนักเรียนจอง' : 'ถูกจองแล้ว'}</div>
-        </div>
-      </div>
-
-      {/* Filters — hide instructor filter for instructors (they only see their own) */}
-      <div className="glass rounded-2xl p-4 sm:p-6 mb-8 flex flex-col gap-4">
-        {!isInstructor && (
-          <div className="flex flex-wrap gap-3">
-            {/* Instructor filter — only for students */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => actions.setInstructor(null)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  !vm.filters.instructorId
-                    ? 'bg-primary text-white'
-                    : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
-                }`}
-              >
-                👨‍🏫 ทุกอาจารย์
-              </button>
-              {vm.instructors.map((inst) => (
-                <button
-                  key={inst.id}
-                  onClick={() => actions.setInstructor(inst.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    vm.filters.instructorId === inst.id
-                      ? 'bg-primary text-white'
-                      : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
-                  }`}
-                >
-                  {inst.name}
-                </button>
-              ))}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Sidebar Controls */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+            <div className="glass p-5 rounded-3xl border-l-4 border-l-success">
+              <div className="text-3xl font-black text-text-primary mb-1">{vm.availableSlots}</div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-wider">ช่วงว่างทั้งหมด</div>
+            </div>
+            <div className="glass p-5 rounded-3xl border-l-4 border-l-warning">
+              <div className="text-3xl font-black text-text-primary mb-1">{vm.bookedSlots}</div>
+              <div className="text-xs font-bold text-text-muted uppercase tracking-wider">คลาสที่มีการจอง</div>
             </div>
           </div>
-        )}
 
-        <div className="flex flex-wrap gap-3">
-          {/* Day filter */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => actions.setDay(null)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                vm.filters.dayOfWeek === null
-                  ? 'bg-primary text-white'
-                  : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
-              }`}
-            >
-              ทุกวัน
-            </button>
-            {DAY_NAMES.map((day, index) => (
-              <button
-                key={day}
-                onClick={() => actions.setDay(index)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  vm.filters.dayOfWeek === index
-                    ? 'bg-primary text-white'
-                    : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
-                }`}
-              >
-                {day}
-              </button>
-            ))}
+          {/* Filters */}
+          <div className="glass p-6 rounded-3xl space-y-8 sticky top-24 border border-white/10">
+            <div>
+              <h3 className="text-sm font-black text-text-primary mb-4 flex items-center gap-2 uppercase tracking-widest">
+                <Filter size={16} className="text-primary" /> ตัวกรองอาจารย์
+              </h3>
+              {!isInstructor ? (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => actions.setInstructor(null)}
+                    className={`text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                      !vm.filters.instructorId
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-white/5 text-text-muted hover:bg-white/10 border border-white/5'
+                    }`}
+                  >
+                    👨‍🏫 ทุกอาจารย์
+                  </button>
+                  {vm.instructors.map((inst) => (
+                    <button
+                      key={inst.id}
+                      onClick={() => actions.setInstructor(inst.id)}
+                      className={`text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                        vm.filters.instructorId === inst.id
+                          ? 'bg-primary text-white shadow-md'
+                          : 'bg-white/5 text-text-muted hover:bg-white/10 border border-white/5'
+                      }`}
+                    >
+                      <span className="flex items-center justify-between">
+                         {inst.name}
+                         <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded opacity-50">★ {inst.rating}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                   <p className="text-xs text-text-muted font-medium mb-1">มุมมอง</p>
+                   <p className="text-sm font-bold text-text-primary italic">ตารางสอนของคุณเอง</p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-black text-text-primary mb-4 flex items-center gap-2 uppercase tracking-widest">
+                <Search size={16} className="text-primary" /> สถานะ
+              </h3>
+              <div className="space-y-2">
+                <button
+                  onClick={() => actions.toggleShowAvailableOnly()}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all border ${
+                    vm.filters.showAvailableOnly
+                      ? 'bg-success/10 text-success border-success/30'
+                      : 'bg-white/5 text-text-muted border-white/5'
+                  }`}
+                >
+                  ✅ เฉพาะช่วงว่าง
+                </button>
+                <button
+                  onClick={() => actions.toggleShowBookedOnly()}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all border ${
+                    vm.filters.showBookedOnly
+                      ? 'bg-warning/10 text-warning border-warning/30'
+                      : 'bg-white/5 text-text-muted border-white/5'
+                  }`}
+                >
+                  📌 {isInstructor ? 'คลาสที่จองแล้ว' : 'ถูกจองแล้วเท่านั้น'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => actions.toggleShowAvailableOnly()}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
-              vm.filters.showAvailableOnly
-                ? 'bg-success/10 text-success border border-success/30'
-                : 'bg-surface border border-border text-text-secondary hover:border-success/50'
-            }`}
-          >
-            ✅ ว่างเท่านั้น
-          </button>
-          <button
-            onClick={() => actions.toggleShowBookedOnly()}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
-              vm.filters.showBookedOnly
-                ? 'bg-warning/10 text-warning border border-warning/30'
-                : 'bg-surface border border-border text-text-secondary hover:border-warning/50'
-            }`}
-          >
-            📌 {isInstructor ? 'มีนักเรียนจองเท่านั้น' : 'ถูกจองแล้วเท่านั้น'}
-          </button>
+        {/* Main Content Area */}
+        <div className="lg:col-span-9">
+          {viewMode === 'calendar' ? (
+            <Calendar 
+              month={vm.filters.month}
+              year={vm.filters.year}
+              timeSlots={displaySlots}
+              onMonthChange={(m, y) => actions.setMonth(m, y)}
+              onDateClick={(d) => setSelectedDate(d)}
+              isInstructor={isInstructor}
+            />
+          ) : (
+            <div className="space-y-12">
+              {displaySlots.length === 0 ? (
+                <div className="glass py-24 rounded-3xl text-center border border-white/10 border-dashed">
+                  <div className="text-7xl mb-6">📅</div>
+                  <h3 className="text-2xl font-bold text-text-primary mb-2">ไม่พบคลาสที่ค้นหา</h3>
+                  <p className="text-text-muted">ลองปรับตัวกรอง หรือเปลี่ยนเป็นมุมมองปฏิทิน</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   {displaySlots.map((slot) => (
+                      <TimeSlotCard key={`${slot.scheduledDate}-${slot.id}`} slot={slot} />
+                   ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Results count */}
-      <p className="text-sm text-text-muted mb-6">
-        แสดงผล <span className="font-bold text-text-primary">{displaySlots.length}</span> {isInstructor ? 'คลาส' : 'ช่วงเวลา'}
-      </p>
-
-      {/* Schedule by day */}
-      {displaySlots.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4">📅</div>
-          <p className="text-text-secondary text-lg mb-2">
-            {isInstructor ? 'ยังไม่มีคลาสที่ต้องสอน' : 'ไม่พบช่วงเวลาที่ค้นหา'}
-          </p>
-          <p className="text-text-muted text-sm">ลองเปลี่ยนตัวกรองใหม่</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {Object.entries(slotsByDay)
-            .sort(([a], [b]) => Number(a) - Number(b))
-            .map(([dayIndex, slots]) => (
-              <div key={dayIndex}>
-                <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                    {DAY_NAMES[Number(dayIndex)].charAt(0)}
-                  </span>
-                  วัน{DAY_NAMES[Number(dayIndex)]}
-                  <span className="text-xs text-text-muted font-normal ml-2">({slots.length} ช่วง)</span>
-                </h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {slots.map((slot) => (
-                    <TimeSlotCard key={slot.id} slot={slot} />
-                  ))}
-                </div>
-              </div>
-            ))}
-        </div>
+      {/* Detail Modal */}
+      {selectedDate && (
+        <AvailabilityModal 
+          isOpen={!!selectedDate}
+          onClose={() => setSelectedDate(null)}
+          date={selectedDate}
+          slots={displaySlots.filter(s => s.scheduledDate === selectedDate)}
+          onAdd={actions.addAvailability}
+          onDelete={actions.deleteAvailability}
+          isInstructor={isInstructor}
+        />
       )}
     </div>
   );
@@ -225,60 +224,66 @@ export function ScheduleView({ initialViewModel }: ScheduleViewProps) {
 
 function TimeSlotCard({ slot }: { slot: ScheduleTimeSlot }) {
   const router = useRouter();
+  const isBooked = slot.isBooked;
+  
   return (
     <div
-      className={`glass rounded-2xl p-5 relative hover:scale-[1.02] transition-transform border-l-4 ${
-        slot.isBooked ? 'border-l-warning' : 'border-l-success'
-      }`}
+      className={`glass rounded-3xl p-6 relative group transition-all duration-300 border-l-8 ${
+        isBooked ? 'border-l-warning' : 'border-l-primary shadow-lg shadow-primary/5'
+      } hover:-translate-y-1 hover:shadow-xl`}
     >
-      {/* Status badge */}
-      <div className="absolute top-4 right-4">
-        {slot.isBooked ? (
-          <span className="px-2 py-1 rounded-full bg-warning/10 text-warning text-xs font-bold border border-warning/30">
-            📌 ถูกจองแล้ว
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex flex-col">
+          <span className="text-xs font-black text-text-muted uppercase tracking-widest mb-1">
+            {dayjs(slot.scheduledDate).format('D MMM YYYY')}
           </span>
-        ) : (
-          <span className="px-2 py-1 rounded-full bg-success/10 text-success text-xs font-bold border border-success/30">
-            ✅ ว่าง
-          </span>
+          <h3 className="text-2xl font-black text-text-primary flex items-center gap-2">
+            {slot.startTime.slice(0, 5)} - {slot.endTime.slice(0, 5)}
+          </h3>
+        </div>
+        <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter border ${
+          isBooked ? 'bg-warning/10 text-warning border-warning/30' : 'bg-success/10 text-success border-success/30'
+        }`}>
+          {isBooked ? '📌 ถูกจองแล้ว' : '✅ ว่าง'}
+        </div>
+      </div>
+
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-lg">
+            👨‍🏫
+          </div>
+          <div>
+            <p className="text-xs text-text-muted font-bold uppercase tracking-widest">ผู้สอน</p>
+            <p className="text-sm font-bold text-text-primary">{slot.instructorName}</p>
+          </div>
+        </div>
+
+        {isBooked && (
+          <div className="bg-warning/5 rounded-2xl p-4 border border-warning/10">
+            <p className="text-xs text-warning/80 font-bold uppercase tracking-widest mb-1">วิชาที่สอน</p>
+            <p className="text-sm font-bold text-text-primary line-clamp-1">{slot.courseName || 'ไม่ระบุวิชา'}</p>
+            {slot.studentName && (
+               <p className="text-[10px] text-text-muted mt-2">โดย: {slot.studentName}</p>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Instructor */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-sm">
-          👨‍🏫
-        </div>
-        <span className="font-semibold text-text-primary text-sm">{slot.instructorName}</span>
-      </div>
-
-      {/* Time */}
-      <div className="flex items-center gap-2 text-text-primary mb-2">
-        <span className="text-lg">🕐</span>
-        <span className="text-lg font-bold">{slot.startTime} - {slot.endTime}</span>
-      </div>
-
-      {/* Booked course info */}
-      {slot.isBooked && slot.bookedCourseName && (
-        <div className="mt-3 p-3 rounded-xl bg-warning/5 border border-warning/20">
-          <p className="text-xs text-text-muted mb-1">กำลังสอนคอร์ส:</p>
-          <p className="text-sm font-semibold text-text-primary">{slot.bookedCourseName}</p>
-          <button
-            onClick={() => router.push(`/live/${slot.id}`)}
-            className="mt-2 text-xs text-primary font-medium hover:underline"
-          >
-            🎥 เข้าห้องเรียน →
-          </button>
-        </div>
-      )}
-
-      {/* Book button for available slots */}
-      {!slot.isBooked && (
+      {!isBooked && (
         <button
-          onClick={() => router.push('/book')}
-          className="mt-3 w-full btn-game py-2 text-sm text-white rounded-xl font-medium hover:scale-105 transition-transform"
+          onClick={() => router.push(`/book?instructorId=${slot.instructorId}&date=${slot.scheduledDate}&slotId=${slot.id}`)}
+          className="w-full btn-game py-3 text-sm text-white rounded-xl font-black uppercase tracking-widest hover:scale-[1.02] transition-transform"
         >
           📅 จองเวลาเรียน
+        </button>
+      )}
+      
+      {isBooked && (
+        <button
+          className="w-full bg-white/5 text-text-muted py-3 rounded-xl text-xs font-bold border border-white/5 cursor-not-allowed"
+        >
+          เข้าร่วมห้องเรียนออนไลน์
         </button>
       )}
     </div>

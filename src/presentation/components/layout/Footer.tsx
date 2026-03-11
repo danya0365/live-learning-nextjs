@@ -1,5 +1,5 @@
 /**
- * Footer — CSS only, no react-spring
+ * Footer — Redesigned with premium styling
  */
 
 'use client';
@@ -36,20 +36,27 @@ const SOCIAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="relative mt-auto">
-      <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+    <footer id="main-footer" className="relative mt-auto">
+      {/* Top gradient divider */}
+      <div
+        className="h-px"
+        style={{
+          background: 'linear-gradient(to right, transparent, var(--color-primary), var(--color-secondary), var(--color-accent), transparent)',
+          opacity: 0.4,
+        }}
+      />
 
-      <div className="glass border-t border-border/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="glass border-t border-border/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
             {/* Brand */}
             <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2.5 mb-5">
                 <span className="text-3xl">🎮</span>
-                <span className="text-xl font-bold gradient-text">Live Learning</span>
+                <span className="text-xl font-bold gradient-text tracking-tight">Live Learning</span>
               </div>
               <p className="text-text-secondary text-sm leading-relaxed mb-6 max-w-sm">
-                แพลตฟอร์มเรียนรู้สดออนไลน์ เลือกคอร์สที่ชอบ เรียนกับอาจารย์ตัวจริง 
+                แพลตฟอร์มเรียนรู้สดออนไลน์ เลือกคอร์สที่ชอบ เรียนกับอาจารย์ตัวจริง
                 พร้อมระบบจองเวลาเรียนอัจฉริยะ 🚀
               </p>
 
@@ -62,7 +69,7 @@ export function Footer() {
                     rel="noopener noreferrer"
                     aria-label={social.label}
                     title={social.label}
-                    className="w-10 h-10 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-lg hover:border-primary/50 hover:scale-110 hover:-translate-y-1 transition-all cursor-pointer"
+                    className="w-10 h-10 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-lg hover:border-primary/50 hover:scale-110 hover:-translate-y-1 transition-all duration-200 cursor-pointer"
                   >
                     {social.icon}
                   </a>
@@ -77,8 +84,13 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   {links.map((link) => (
                     <li key={link.href}>
-                      <Link href={link.href} className="text-sm text-text-secondary hover:text-primary transition-colors">
-                        {link.label}
+                      <Link
+                        href={link.href}
+                        className="text-sm text-text-secondary hover:text-primary transition-colors duration-200 inline-flex items-center gap-1 group/flink"
+                      >
+                        <span className="group-hover/flink:translate-x-0.5 transition-transform duration-200">
+                          {link.label}
+                        </span>
                       </Link>
                     </li>
                   ))}
@@ -88,7 +100,7 @@ export function Footer() {
           </div>
 
           {/* Bottom bar */}
-          <div className="mt-12 pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mt-14 pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-text-muted">© 2025 Live Learning Platform. สงวนลิขสิทธิ์ทุกประการ.</p>
             <div className="flex items-center gap-2 text-xs text-text-muted">
               <span>สร้างด้วย</span>

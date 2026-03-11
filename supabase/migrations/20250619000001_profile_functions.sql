@@ -1,4 +1,4 @@
--- Racing Game Station Profile Functions
+-- Live Learning Profile Functions
 -- Created: 2025-06-19
 -- Author: Marosdee Uma
 -- Description: Adds profile management RPC functions
@@ -92,7 +92,7 @@ BEGIN
   INSERT INTO public.profile_roles (profile_id, role, granted_by)
   SELECT 
     p.id,
-    'user'::public.profile_role,
+    'student'::public.profile_role,
     admin_auth_id
   FROM 
     public.profiles p

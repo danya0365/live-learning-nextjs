@@ -6,20 +6,14 @@
 
 'use client';
 
-import { DEMO_ACCOUNTS, type DemoAccountKey, useAuthStore } from '@/src/stores/authStore';
+import { IS_DEV, useAuthStore } from '@/src/stores/authStore';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const DEMO_CARDS: { key: DemoAccountKey; label: string; desc: string; color: string }[] = [
-  { key: 'student', label: '🧑‍💻 นักเรียน', desc: 'ดูคอร์ส จอง เรียนสด', color: 'from-blue-500 to-cyan-400' },
-  { key: 'instructor', label: '👨‍🏫 อาจารย์', desc: 'จัดการคอร์ส สอนสด', color: 'from-purple-500 to-pink-400' },
-  { key: 'admin', label: '🛡️ แอดมิน', desc: 'จัดการระบบทั้งหมด', color: 'from-amber-500 to-orange-400' },
-];
-
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loginAsDemo, isAuthenticated, isLoading } = useAuthStore();
+  const { login, loginAsDevAdmin, isAuthenticated, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,11 +38,6 @@ export default function LoginPage() {
     // redirect handled by useEffect
   }
 
-  function handleDemoLogin(key: DemoAccountKey) {
-    loginAsDemo(key);
-    // redirect handled by useEffect
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative">
       {/* Decorative orbs */}
@@ -67,32 +56,34 @@ export default function LoginPage() {
           <p className="text-text-secondary mt-2 text-sm">เข้าสู่ระบบเพื่อเริ่มเรียนรู้</p>
         </div>
 
-        {/* Demo one-click login */}
-        <div className="glass rounded-2xl p-5 border border-border/50 shadow-lg mb-6">
-          <h2 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
-            ⚡ เข้าสู่ระบบ Demo คลิกเดียว
-          </h2>
-          <div className="grid grid-cols-3 gap-2">
-            {DEMO_CARDS.map((demo) => {
-              const account = DEMO_ACCOUNTS[demo.key];
-              return (
-                <button
-                  key={demo.key}
-                  onClick={() => handleDemoLogin(demo.key)}
-                  disabled={isLoading}
-                  className="group relative overflow-hidden rounded-xl p-3 text-center hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-50"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${demo.color} opacity-10 group-hover:opacity-20 transition-opacity`} />
-                  <div className="relative">
-                    <div className="text-2xl mb-1">{account.user.avatar}</div>
-                    <p className="text-xs font-bold text-text-primary">{demo.label.split(' ')[1]}</p>
-                    <p className="text-[10px] text-text-muted mt-0.5">{demo.desc}</p>
-                  </div>
-                </button>
-              );
-            })}
+        {/* Demo one-click login (Dev Only) */}
+        {IS_DEV && (
+          <div className="glass rounded-2xl p-5 border border-border/50 shadow-lg mb-6">
+            <h2 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
+              ⚡ Dev Mode Login
+            </h2>
+            <button
+              type="button"
+              onClick={() => loginAsDevAdmin()}
+              disabled={isLoading}
+              className="w-full group relative overflow-hidden rounded-xl p-4 text-left border border-primary/20 hover:border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all"
+            >
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    🚀
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors">
+                      เข้าใช้งานแบบ Admin (Super User)
+                    </p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      บัญชีเดียว สลับได้ครบทุก Role (นักเรียน/อาจารย์)
+                    </p>
+                 </div>
+              </div>
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Login card */}
         <div className="glass rounded-2xl p-8 border border-border/50 shadow-xl">

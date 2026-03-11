@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuthStore } from '@/src/stores/authStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ProfileViewModel } from './ProfilePresenter';
 import { createClientProfilePresenter } from './ProfilePresenterClientFactory';
@@ -10,13 +11,12 @@ export interface ProfilePresenterState {
   error: string | null;
 }
 
-const DEMO_STUDENT_ID = 'student-001';
-
 export function useProfilePresenter(
   initialViewModel?: ProfileViewModel,
 ): ProfilePresenterState & { loadData: () => Promise<void> } {
   const presenter = useMemo(() => createClientProfilePresenter(), []);
   const isMountedRef = useRef(true);
+  const { user } = useAuthStore();
 
   const [viewModel, setViewModel] = useState<ProfileViewModel | null>(initialViewModel || null);
   const [loading, setLoading] = useState(!initialViewModel);
@@ -26,16 +26,18 @@ export function useProfilePresenter(
     setLoading(true);
     setError(null);
     try {
-      const vm = await presenter.getViewModel(DEMO_STUDENT_ID);
+      // Session-based: server resolves auth profile identity, no ID needed
+      const vm = await presenter.getViewModel(user?.role);
       if (isMountedRef.current) setViewModel(vm);
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }
-  }, [presenter]);
+  }, [presenter, user?.role]);
 
   useEffect(() => {
+    // โหลดครั้งแรกถ้าไม่มี initialViewModel
     if (!initialViewModel) loadData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

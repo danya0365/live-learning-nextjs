@@ -9,6 +9,7 @@
 import { InstructorSortOption, InstructorsViewModel } from '@/src/presentation/presenters/instructors/InstructorsPresenter';
 import { useInstructorsPresenter } from '@/src/presentation/presenters/instructors/useInstructorsPresenter';
 import Link from 'next/link';
+import InstructorsSkeleton from './InstructorsSkeleton';
 
 interface InstructorsViewProps {
   initialViewModel?: InstructorsViewModel;
@@ -19,14 +20,7 @@ export function InstructorsView({ initialViewModel }: InstructorsViewProps) {
   const vm = state.viewModel;
 
   if (state.loading && !vm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce-soft">👨‍🏫</div>
-          <p className="text-text-secondary text-lg">กำลังโหลดอาจารย์...</p>
-        </div>
-      </div>
-    );
+    return <InstructorsSkeleton />;
   }
 
   if (state.error && !vm) {
