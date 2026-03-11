@@ -2,6 +2,8 @@
 
 import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
 import { CodeEditor } from "@/src/presentation/components/editor/CodeEditor";
+import { MarkdownContent } from "@/src/presentation/components/learn/MarkdownContent";
+import { ContentComponentRenderer } from "@/src/presentation/components/learn/content/LearnContentRegistry";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
 import Link from "next/link";
@@ -213,20 +215,12 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Simple markdown renderer - with light/dark mode support
-  const renderContent = (content: string) => {
-    return content
-      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-white">$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mt-6 mb-3 text-indigo-600 dark:text-indigo-400">$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-sm text-pink-600 dark:text-pink-400">$1</code>')
-      .replace(
-        /```(\w+)?\n([\s\S]*?)```/g,
-        '<pre class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 p-4 rounded-lg overflow-x-auto my-4 text-sm border border-gray-200 dark:border-slate-700"><code>$2</code></pre>'
-      )
-      .replace(/^- (.+)$/gm, '<li class="ml-4 text-gray-700 dark:text-gray-300">• $1</li>')
-      .replace(/\n\n/g, "</p><p class='mb-3 text-gray-700 dark:text-gray-300'>");
+  // Render lesson content based on contentType
+  const renderLessonContent = () => {
+    if (lesson.contentType === 'component' && lesson.contentComponent) {
+      return <ContentComponentRenderer componentKey={lesson.contentComponent} lessonId={lesson.id} />;
+    }
+    return <MarkdownContent content={lesson.content} />;
   };
 
   // Dynamic colors based on course
@@ -234,6 +228,7 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
     javascript: { gradient: "from-yellow-600 to-orange-600", btn: "bg-yellow-600 hover:bg-yellow-700", text: "text-yellow-600 dark:text-yellow-400" },
     html: { gradient: "from-orange-600 to-red-600", btn: "bg-orange-600 hover:bg-orange-700", text: "text-orange-600 dark:text-orange-400" },
     go: { gradient: "from-cyan-600 to-teal-600", btn: "bg-cyan-600 hover:bg-cyan-700", text: "text-cyan-600 dark:text-cyan-400" },
+    "line-oa": { gradient: "from-green-600 to-emerald-600", btn: "bg-green-600 hover:bg-green-700", text: "text-green-600 dark:text-green-400" },
   };
   const colors = colorClasses[courseSlug] || colorClasses.javascript;
 
@@ -280,10 +275,9 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
 
       {/* Content */}
       <div className="bg-white/80 dark:bg-slate-800/50 rounded-2xl p-6 mb-6 border border-gray-200 dark:border-slate-700">
-        <div 
-          className="prose prose-gray dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: renderContent(lesson.content) }}
-        />
+        <div className="max-w-none">
+          {renderLessonContent()}
+        </div>
       </div>
 
       {/* Code Example */}

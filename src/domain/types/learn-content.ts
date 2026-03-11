@@ -33,6 +33,8 @@ export interface LearnLesson {
   titleTh: string;
   description: string;
   content: string;
+  contentType?: 'markdown' | 'component'; // default: 'markdown'
+  contentComponent?: string; // component key for custom rendering (used when contentType is 'component')
   order: number;
   duration: number;
   codeExample?: string;

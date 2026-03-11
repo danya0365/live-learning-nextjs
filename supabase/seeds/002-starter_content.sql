@@ -229,7 +229,7 @@ VALUES
   -- 139. LINE OA Management
   (
     '40000000-0000-0000-0000-000000000139',  '20000000-0000-0000-0000-000000000009',
-    'การจัดทำและบริหาร LINE OA เพื่อองค์กร', 'line-oa-management', 'เข้าถึงกลุ่มเป้าหมายด้วย LINE OA เรียนรู้การตั้งค่าระบบ, สร้าง Rich Menu, กลยุทธ์ Content และเชื่อมบริการ Online สู่ Offline', 1200, 2000, 5.00, 0, 0, 6, 12, 'beginner', '{"LINE OA", "Marketing", "Management"}', FALSE, TRUE, TRUE
+    'การจัดทำและบริหาร LINE OA เพื่อองค์กร', 'line-oa-management', 'เข้าถึงกลุ่มเป้าหมายด้วย LINE OA เรียนรู้การตั้งค่าระบบ, สร้าง Rich Menu, กลยุทธ์ Content และเชื่อมบริการ Online สู่ Offline', 9900, 12000, 5.00, 0, 0, 6, 12, 'beginner', '{"LINE OA", "Marketing", "Management"}', FALSE, TRUE, TRUE
   )
 
 ON CONFLICT (id) DO NOTHING;
