@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type LearnViewMode = "normal" | "focus" | "presentation" | "cinema" | "podcast";
+export type LearnViewMode = "normal" | "focus" | "presentation" | "cinema" | "podcast" | "lab";
 
 interface LearnModeState {
   // View mode

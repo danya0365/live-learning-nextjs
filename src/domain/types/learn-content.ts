@@ -9,6 +9,7 @@ export interface LearnCourse {
   color: string;
   bgGradient: string;
   order: number;
+  hasLab?: boolean;
 }
 
 export interface LearnTopic {
@@ -49,4 +50,18 @@ export interface LearnLesson {
     options: string[];
     correctAnswer: number; // index of correct option (0-based)
   }[];
+}
+
+export interface LabSidebarItem {
+  id: string;
+  title: string;
+  icon?: string;
+  group?: string;
+}
+
+export interface LabViewProps {
+  lesson?: LearnLesson;
+  onSidebarUpdate?: (items: LabSidebarItem[], activeId: string) => void;
+  activeSidebarItemId?: string;
+  onExit?: () => void;
 }

@@ -60,6 +60,7 @@ export const learnCourses: LearnCourse[] = [
     color: "green",
     bgGradient: "from-green-500 to-emerald-600",
     order: 5,
+    hasLab: true,
   },
 ];
 

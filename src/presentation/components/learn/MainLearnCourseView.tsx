@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LearnCinemaView } from "./LearnCinemaView";
 import { LearnFocusView } from "./LearnFocusView";
+import { LearnLabView } from "./LearnLabView";
 import { LearnModeSwitcher } from "./LearnModeSwitcher";
 import { LearnPodcastView } from "./LearnPodcastView";
 import { LearnPresentationView } from "./LearnPresentationView";
@@ -111,6 +112,10 @@ export function MainLearnCourseView({ courseId, courseType }: LearnCourseViewPro
     return <LearnPodcastView courseSlug={courseType} />;
   }
 
+  if (viewMode === "lab") {
+    return <LearnLabView courseSlug={courseType} />;
+  }
+
   // Normal mode
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -123,7 +128,7 @@ export function MainLearnCourseView({ courseId, courseType }: LearnCourseViewPro
 
       {/* Mode Switcher */}
       <div className="mb-6 flex justify-center">
-        <LearnModeSwitcher brandColor={brandColor as "yellow" | "blue" | "cyan" | "orange"} />
+        <LearnModeSwitcher brandColor={brandColor as "yellow" | "blue" | "cyan" | "orange"} hasLab={course?.hasLab} />
       </div>
 
       {/* Header */}

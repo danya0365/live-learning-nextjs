@@ -2,7 +2,7 @@
 
 import { LearnViewMode, useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 
-const modes: { mode: LearnViewMode; icon: string; label: string }[] = [
+const baseModes: { mode: LearnViewMode; icon: string; label: string }[] = [
   { mode: "normal", icon: "📋", label: "ปกติ" },
   { mode: "focus", icon: "🎯", label: "Focus" },
   { mode: "presentation", icon: "📊", label: "Presentation" },
@@ -12,9 +12,10 @@ const modes: { mode: LearnViewMode; icon: string; label: string }[] = [
 
 interface LearnModeSwitcherProps {
   brandColor: "yellow" | "blue" | "cyan" | "orange";
+  hasLab?: boolean;
 }
 
-export function LearnModeSwitcher({ brandColor }: LearnModeSwitcherProps) {
+export function LearnModeSwitcher({ brandColor, hasLab }: LearnModeSwitcherProps) {
   const { viewMode, setViewMode, reset } = useLearnModeStore();
 
   const handleModeChange = (mode: LearnViewMode) => {
@@ -45,9 +46,13 @@ export function LearnModeSwitcher({ brandColor }: LearnModeSwitcherProps) {
 
   const colors = colorClasses[brandColor] || colorClasses.blue;
 
+  const availableModes = hasLab 
+    ? [...baseModes, { mode: "lab" as LearnViewMode, icon: "💻", label: "Lab" }]
+    : baseModes;
+
   return (
-    <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-slate-700">
-      {modes.map(({ mode, icon, label }) => (
+    <div className="flex flex-wrap justify-center items-center gap-1 p-1 bg-gray-100 dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-slate-700">
+      {availableModes.map(({ mode, icon, label }) => (
         <button
           key={mode}
           onClick={() => handleModeChange(mode)}
