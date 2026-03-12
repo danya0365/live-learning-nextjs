@@ -5,6 +5,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useAppVersion } from '@/src/presentation/hooks/useAppVersion';
 
 const FOOTER_LINKS = {
   เรียนรู้: [
@@ -101,8 +102,12 @@ export function Footer() {
 
           {/* Bottom bar */}
           <div className="mt-14 pt-8 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-text-muted">© 2025 Live Learning Platform. สงวนลิขสิทธิ์ทุกประการ.</p>
-            <div className="flex items-center gap-2 text-xs text-text-muted">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs text-text-muted">
+              <p>© 2025 Live Learning Platform. สงวนลิขสิทธิ์ทุกประการ.</p>
+              <span className="hidden sm:inline">•</span>
+              <span>{useAppVersion().displayVersion}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-text-muted uppercase tracking-tight">
               <span>สร้างด้วย</span>
               <span className="text-error animate-pulse">❤️</span>
               <span>โดยทีม Live Learning</span>

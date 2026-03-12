@@ -171,17 +171,17 @@ export function LearnLabView({ courseSlug }: LearnLabViewProps) {
         }`}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+        <div className="flex items-center justify-between px-3 py-2 md:px-4 md:py-3 border-b border-slate-700">
           <h2 className="font-bold text-white flex items-center gap-2">
-            <span className="text-lg">💻</span>
-            <span>Lab Mode</span>
+            <span className="text-base md:text-lg">💻</span>
+            <span className="text-sm md:text-base">Lab Mode</span>
           </h2>
           <button
             onClick={handleExit}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-400 hover:text-white transition-colors p-1"
             title="ออกจาก Lab Mode"
           >
-            ✕
+            <span className="text-sm md:text-base">✕</span>
           </button>
         </div>
         
@@ -219,16 +219,16 @@ export function LearnLabView({ courseSlug }: LearnLabViewProps) {
                        key={item.id}
                        ref={(el) => setItemRef(item.id, el)}
                        onClick={() => handleItemClick(item.id)}
-                       className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors text-left ${
+                       className={`w-full px-3 py-2 md:px-4 md:py-2.5 flex items-center gap-2 md:gap-3 transition-colors text-left ${
                          isSelected 
-                           ? `${colors.activeBg} border-l-4 ${colors.border}` 
-                           : 'hover:bg-slate-700/30 border-l-4 border-transparent'
+                           ? `${colors.activeBg} border-l-2 md:border-l-4 ${colors.border}` 
+                           : 'hover:bg-slate-700/30 border-l-2 md:border-l-4 border-transparent'
                        }`}
                      >
-                       <span className="text-lg overflow-hidden flex-shrink-0 w-6 text-center">
+                       <span className="text-base md:text-lg overflow-hidden flex-shrink-0 w-5 md:w-6 text-center">
                          {item.icon}
                        </span>
-                       <span className={`flex-1 text-sm truncate ${
+                       <span className={`flex-1 text-xs md:text-sm truncate ${
                          isSelected 
                            ? `${colors.text} font-medium` 
                            : 'text-gray-300'
@@ -247,48 +247,49 @@ export function LearnLabView({ courseSlug }: LearnLabViewProps) {
       {/* Toggle Sidebar Button */}
       <button
         onClick={() => setSidebarCollapsed(prev => !prev)}
-        className="absolute top-1/2 -translate-y-1/2 z-10 w-6 h-12 bg-slate-700 hover:bg-slate-600 rounded-r-lg flex items-center justify-center transition-all"
-        style={{ left: sidebarCollapsed ? 0 : '320px' }}
+        className="absolute top-1/2 -translate-y-1/2 z-10 w-4 h-10 md:w-6 md:h-12 bg-slate-700 hover:bg-slate-600 rounded-r-lg flex items-center justify-center transition-all"
+        style={{ left: sidebarCollapsed ? 0 : (typeof window !== 'undefined' && window.innerWidth < 768 ? '256px' : '320px') }}
       >
-        <span className={`text-xs text-white transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`}>▶</span>
+        <span className={`text-[10px] md:text-xs text-white transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`}>▶</span>
       </button>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-900 relative">
         {/* Header */}
-        <header className="flex-shrink-0 px-6 py-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+        <header className="flex-shrink-0 px-3 py-2 md:px-6 md:py-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
           <div>
             {activeItem ? (
               <>
                 {activeItem.group && activeItem.group !== "Default" && (
-                  <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+                  <div className="flex items-center gap-2 text-[10px] md:text-sm text-gray-400 mb-0.5 md:mb-1">
                     <span>{activeItem.group}</span>
                   </div>
                 )}
-                <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                  <span className="text-lg">{activeItem.icon}</span>
-                  {activeItem.title}
-                  <span className="text-xs px-2 py-0.5 rounded-full border border-slate-600 bg-slate-700 text-slate-300 ml-2">Lab</span>
+                <h1 className="text-sm md:text-xl font-bold text-white flex items-center gap-1.5 md:gap-2">
+                  <span className="text-base md:text-lg">{activeItem.icon}</span>
+                  <span className="truncate max-w-[120px] xs:max-w-[200px] md:max-w-none">{activeItem.title}</span>
+                  <span className="hidden xs:inline-block text-[10px] px-1.5 py-0.5 rounded-full border border-slate-600 bg-slate-700 text-slate-300 ml-1 md:ml-2">Lab</span>
                 </h1>
               </>
             ) : (
-               <div className="text-xl font-bold text-white flex items-center gap-2">
+               <div className="text-sm md:text-xl font-bold text-white flex items-center gap-2">
                   Lab Environment
                </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <button
               onClick={() => setShowPrintPreview(true)}
-              className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-lg text-sm transition-colors border border-green-600 flex items-center gap-2"
+              className="px-2 py-1.5 md:px-4 md:py-2 bg-green-700 hover:bg-green-600 text-white rounded-lg text-[10px] md:text-sm transition-colors border border-green-600 flex items-center gap-1.5 md:gap-2"
             >
-              <span>🖨️</span> Print
+              <span>🖨️</span> <span className="hidden xs:inline">Print</span>
             </button>
             <button
               onClick={handleExit}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors border border-slate-600 flex items-center gap-2"
+              className="px-2 py-1.5 md:px-4 md:py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-[10px] md:text-sm transition-colors border border-slate-600 flex items-center gap-1.5 md:gap-2"
             >
-              <span>🚪</span> ออกจาก Lab
+              <span>🚪</span> <span className="hidden xs:inline">ออกจาก Lab</span>
+              <span className="xs:hidden">ออก</span>
             </button>
           </div>
         </header>

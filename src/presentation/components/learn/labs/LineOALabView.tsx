@@ -64,7 +64,7 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
   }, []);
 
   return (
-    <div className="w-full h-full min-h-[600px] flex flex-col items-center justify-center p-4 lg:p-8 bg-[#111] overflow-hidden" 
+    <div className="w-full h-full min-h-0 flex flex-col items-center justify-center p-2 md:p-4 lg:p-8 bg-[#111] overflow-y-auto lg:overflow-hidden" 
          style={{ fontFamily: "'Sarabun', 'IBM Plex Sans Thai', sans-serif" }}>
 
       {/* Embedded CSS variables for the slides */}
@@ -84,11 +84,11 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
         
         .slide-frame {
           width: 100%;
-          max-width: 900px;
-          min-height: 506px;
+          max-width: min(900px, 100%);
+          min-height: auto;
           position: relative;
-          border-radius: 16px;
-          box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+          border-radius: 12px;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.4);
           overflow: hidden;
           background: var(--slate);
           animation: fadeIn 0.3s ease;
@@ -103,63 +103,74 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         .slide-tag {
           position: absolute;
-          top: 24px; right: 28px;
-          font-size: 11px;
+          top: 12px; right: 16px;
+          font-size: 9px;
           font-weight: 600;
-          letter-spacing: 2px;
+          letter-spacing: 1px;
           text-transform: uppercase;
-          opacity: 0.5;
+          opacity: 0.4;
           color: rgba(255,255,255,0.4);
         }
 
         .pill {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 30px;
-          padding: 8px 18px;
-          font-size: 14px;
+          gap: 6px;
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 20px;
+          padding: 6px 14px;
+          font-size: 12px;
           font-weight: 600;
         }
 
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
         .heading small {
           display: block;
-          font-size: 11px; font-weight: 700;
-          letter-spacing: 3px; text-transform: uppercase;
-          margin-bottom: 8px;
+          font-size: 10px; font-weight: 700;
+          letter-spacing: 2px; text-transform: uppercase;
+          margin-bottom: 4px;
         }
-        .heading h2 { font-size: 32px; font-weight: 700; margin-bottom: 28px; }
+        .heading h2 { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+
+        @media (min-width: 768px) {
+          .slide-frame { border-radius: 16px; min-height: 506px; box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
+          .slide-tag { top: 24px; right: 28px; font-size: 11px; letter-spacing: 2px; }
+          .pill { gap: 8px; padding: 8px 18px; font-size: 14px; }
+          .heading small { font-size: 11px; margin-bottom: 8px; letter-spacing: 3px; }
+          .heading h2 { font-size: 32px; margin-bottom: 28px; }
+        }
 
         .slide-nav {
           position: absolute;
-          bottom: 28px;
+          bottom: 16px;
           left: 50%;
           transform: translateX(-50%);
           z-index: 50;
           display: flex;
           align-items: center;
-          gap: 12px;
-          background: rgba(0,0,0,0.75);
+          gap: 8px;
+          background: rgba(0,0,0,0.8);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 40px;
-          padding: 10px 20px;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 30px;
+          padding: 6px 12px;
           color: #fff;
-          font-size: 14px;
+          font-size: 12px;
         }
         .slide-nav button {
-          background: rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.1);
           border: none;
           color: #fff;
-          width: 36px; height: 36px;
+          width: 32px; height: 32px;
           border-radius: 50%;
-          font-size: 18px;
+          font-size: 16px;
           cursor: pointer;
           transition: background 0.2s;
           display: flex; align-items: center; justify-content: center;
+        }
+        @media (min-width: 768px) {
+          .slide-nav { bottom: 28px; gap: 12px; padding: 10px 20px; font-size: 14px; }
+          .slide-nav button { width: 36px; height: 36px; font-size: 18px; }
         }
         .slide-nav button:hover:not(:disabled) { background: var(--green-mid); }
         .slide-nav button:disabled { opacity: 0.3; cursor: default; }
@@ -177,13 +188,13 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
               backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
               backgroundSize: '40px 40px'
             }}></div>
-            <div className="relative z-10 px-16 py-14 text-white">
-              <div className="w-14 h-14 bg-[var(--green-mid)] rounded-2xl flex items-center justify-center text-3xl mb-7 shadow-[0_8px_24px_rgba(0,165,80,0.4)]">💬</div>
-              <h1 className="text-5xl font-bold leading-tight mb-4 text-white">LINE <span className="text-[var(--green-light)]">Official</span><br/>Account</h1>
-              <p className="text-lg text-white/65 font-light mb-10 max-w-[500px] leading-relaxed">
+            <div className="relative z-10 px-6 py-8 md:px-16 md:py-14 text-white">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-[var(--green-mid)] rounded-xl md:rounded-2xl flex items-center justify-center text-xl md:text-3xl mb-4 md:mb-7 shadow-[0_8px_24px_rgba(0,165,80,0.4)]">💬</div>
+              <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-3 md:mb-4 text-white">LINE <span className="text-[var(--green-light)]">Official</span><br/>Account</h1>
+              <p className="text-sm md:text-lg text-white/65 font-light mb-6 md:mb-10 max-w-[500px] leading-relaxed">
                 คู่มือการอบรม: สร้าง ตั้งค่า และบริหาร LINE OA<br/>เพื่องานดูแลผู้รับบริการ จ.สงขลา
               </p>
-              <div className="flex gap-2.5 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 <div className="pill">📅 10 โมดูล</div>
                 <div className="pill">🎯 กลุ่มเป้าหมาย 4 คน</div>
                 <div className="pill">🔐 ปลอดภัย &amp; เป็นความลับ</div>
@@ -195,12 +206,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 2 - MODULE OVERVIEW */}
         {currentSlide === 1 && (
-          <div className="slide-frame bg-[var(--off-white)]! p-14 text-[var(--slate)]">
-            <div className="heading mb-8">
+          <div className="slide-frame bg-[var(--off-white)]! p-6 md:p-14 text-[var(--slate)]">
+            <div className="heading mb-4 md:mb-8">
               <small className="text-[var(--green-mid)]">ภาพรวม</small>
-              <h2 className="text-[var(--slate)]!">10 โมดูล ที่คุณจะได้เรียนวันนี้</h2>
+              <h2 className="text-[var(--slate)]!">10 โมดูล ที่คุณจะได้เรียน</h2>
             </div>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
               {[
                 { n: "01", icon: "💡", title: "รู้จัก LINE OA" },
                 { n: "02", icon: "🔧", title: "สร้างบัญชี" },
@@ -213,10 +224,10 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
                 { n: "09", icon: "🔗", title: "Online to Offline" },
                 { n: "10", icon: "📊", title: "วิเคราะห์ผล & KPI" }
               ].map(m => (
-                <div key={m.n} className="bg-white rounded-xl p-3.5 border border-[rgba(0,112,60,0.1)] flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
-                  <div className="text-[11px] font-bold text-[var(--green-mid)] tracking-[1.5px]">{m.n}</div>
-                  <div className="text-[22px]">{m.icon}</div>
-                  <div className="text-[13px] font-semibold text-[var(--slate)] leading-tight">{m.title}</div>
+                <div key={m.n} className="bg-white rounded-lg md:rounded-xl p-2.5 md:p-3.5 border border-[rgba(0,112,60,0.1)] flex flex-col gap-1.5 md:gap-2 transition-transform hover:-translate-y-0.5">
+                  <div className="text-[9px] md:text-[11px] font-bold text-[var(--green-mid)] tracking-[1px] md:tracking-[1.5px]">{m.n}</div>
+                  <div className="text-[18px] md:text-[22px]">{m.icon}</div>
+                  <div className="text-[11px] md:text-[13px] font-semibold text-[var(--slate)] leading-tight">{m.title}</div>
                 </div>
               ))}
             </div>
@@ -226,13 +237,13 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 3 - WHY LINE OA */}
         {currentSlide === 2 && (
-          <div className="slide-frame bg-[var(--slate)]! p-14">
+          <div className="slide-frame bg-[var(--slate)]! p-6 md:p-14">
             <div className="absolute -top-16 -right-16 w-[300px] h-[300px] rounded-full" style={{background: 'radial-gradient(circle, rgba(0,165,80,0.3), transparent 70%)'}}></div>
             <div className="heading relative z-10 text-white">
               <small className="text-[var(--green-light)]">โมดูล 01</small>
               <h2 className="text-white!">ทำไมต้องใช้ LINE OA ในงานนี้?</h2>
             </div>
-            <div className="grid grid-cols-2 gap-4 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 relative z-10">
               {[
                 { icon: "📡", title: "Broadcast — ส่งข้อมูลพร้อมกัน", desc: "แจ้งความรู้ HIV/HCV/HBV และกิจกรรมบริการถึงกลุ่มเป้าหมายได้พร้อมกันทีเดียว" },
                 { icon: "🗂️", title: "Rich Menu — เมนูเข้าถึงบริการ", desc: "ผู้รับบริการกดเมนูเพื่อนัดหมาย ขอรับอุปกรณ์ หรือดูข้อมูลได้ทันที ไม่ต้องพิมพ์" },
@@ -254,12 +265,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 4 - CREATE ACCOUNT */}
         {currentSlide === 3 && (
-          <div className="slide-frame bg-white! p-14 text-[var(--slate)]">
+          <div className="slide-frame bg-white! p-6 md:p-14 text-[var(--slate)]">
             <div className="heading">
               <small className="text-[var(--green-mid)]">โมดูล 02</small>
               <h2 className="text-[var(--slate)]!">สร้างบัญชี LINE OA</h2>
             </div>
-            <div className="two-col" style={{gridTemplateColumns: '1fr 1fr'}}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-start">
               <div>
                 <div className="text-[11px] font-bold tracking-[2px] uppercase text-[var(--green-mid)] mb-3">วิธีที่ 1 — แนะนำสำหรับองค์กร</div>
                 {[
@@ -309,12 +320,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 5 - PROFILE & ADMIN */}
         {currentSlide === 4 && (
-          <div className="slide-frame bg-[var(--green-deep)]! p-14 text-white">
+          <div className="slide-frame bg-[var(--green-deep)]! p-6 md:p-14 text-white">
             <div className="heading">
               <small className="text-[var(--green-light)]">โมดูล 03</small>
-              <h2 className="text-white!">ตั้งค่าโปรไฟล์ และจัดการสิทธิ์แอดมิน</h2>
+              <h2 className="text-white!">ตั้งค่าโปรไฟล์ และจัดการสิทธิ์</h2>
             </div>
-            <div className="grid grid-cols-2 gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-7">
               <div className="bg-white/10 border border-white/15 rounded-xl p-6">
                 <h3 className="text-base font-bold text-[var(--accent)] mb-4">✏️ โปรไฟล์ที่ควรตั้งค่า</h3>
                 {[
@@ -355,13 +366,13 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 6 - RICH MENU */}
         {currentSlide === 5 && (
-          <div className="slide-frame bg-[var(--off-white)]! p-14 text-[var(--slate)]">
+          <div className="slide-frame bg-[var(--off-white)]! p-6 md:p-14 text-[var(--slate)]">
             <div className="heading">
               <small className="text-[var(--green-mid)]">โมดูล 04</small>
-              <h2 className="text-[var(--slate)]! mb-2">ออกแบบ Rich Menu</h2>
-              <p className="text-sm text-[var(--muted)] mb-6">เมนูที่ปรากฏด้านล่างหน้าแชท ให้ผู้รับบริการกดเข้าถึงบริการได้ทันที</p>
+              <h2 className="text-[var(--slate)]! mb-1 md:mb-2">ออกแบบ Rich Menu</h2>
+              <p className="text-xs md:text-sm text-[var(--muted)] mb-4 md:mb-6">เมนูที่ปรากฏด้านล่างหน้าแชท ให้ผู้รับบริการกดเข้าถึงบริการได้ทันที</p>
             </div>
-            <div className="grid grid-cols-[1.1fr_0.9fr] gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-8">
               <div>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-black/5">
                   <div className="bg-[var(--slate)] px-4 py-3.5 flex items-center gap-2.5">
@@ -405,12 +416,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 7 - GREETING & AUTO-REPLY */}
         {currentSlide === 6 && (
-          <div className="slide-frame bg-[var(--slate)]! p-14 text-white">
+          <div className="slide-frame bg-[var(--slate)]! p-6 md:p-14 text-white">
             <div className="heading">
               <small className="text-[var(--green-light)]">โมดูล 05 — 06</small>
-              <h2 className="text-white!">Greeting Message & Auto-reply</h2>
+              <h2 className="text-white!">Greeting & Auto-reply</h2>
             </div>
-            <div className="grid grid-cols-2 gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-7">
               <div className="bg-white/10 border border-white/10 rounded-xl p-5">
                 <h3 className="text-[13px] font-bold text-[var(--accent)] tracking-[1px] uppercase mb-3.5">👋 ตัวอย่างข้อความทักทาย</h3>
                 <div className="bg-[var(--green-mid)] text-white rounded-[16px_16px_16px_4px] p-3.5 text-[13px] leading-relaxed">
@@ -450,12 +461,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 8 - BROADCAST & CONTENT */}
         {currentSlide === 7 && (
-          <div className="slide-frame bg-white! p-14 text-[var(--slate)]">
+          <div className="slide-frame bg-white! p-6 md:p-14 text-[var(--slate)]">
             <div className="heading">
               <small className="text-[var(--green-mid)]">โมดูล 07</small>
-              <h2 className="text-[var(--slate)]!">Broadcast & Content Calendar</h2>
+              <h2 className="text-[var(--slate)]!">Broadcast & Calendar</h2>
             </div>
-            <div className="grid grid-cols-[1.2fr_0.8fr] gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-6 md:gap-8">
               <div>
                 <div className="grid grid-cols-2 gap-2.5 mb-6">
                   {[
@@ -498,12 +509,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 9 - CHAT & COMMUNICATION */}
         {currentSlide === 8 && (
-          <div className="slide-frame bg-[var(--off-white)]! p-14 text-[var(--slate)]">
+          <div className="slide-frame bg-[var(--off-white)]! p-6 md:p-14 text-[var(--slate)]">
             <div className="heading">
               <small className="text-[var(--green-mid)]">โมดูล 08</small>
-              <h2 className="text-[var(--slate)]!">การสื่อสารและจัดการแชทอย่างมืออาชีพ</h2>
+              <h2 className="text-[var(--slate)]!">การจัดการแชทมืออาชีพ</h2>
             </div>
-            <div className="grid grid-cols-2 gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-7">
               <div className="flex flex-col gap-3.5">
                 <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden">
                   <div className="bg-[var(--green-mid)] text-white px-5 py-3.5 text-[13px] font-bold tracking-[1.5px] uppercase">✅ ควรทำ</div>
@@ -560,12 +571,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 10 - O2O FLOW */}
         {currentSlide === 9 && (
-          <div className="slide-frame bg-[var(--slate)]! p-14 text-white">
+          <div className="slide-frame bg-[var(--slate)]! p-6 md:p-14 text-white">
             <div className="heading">
               <small className="text-[var(--green-light)]">โมดูล 09</small>
-              <h2 className="text-white!">Online to Offline — จาก LINE สู่บริการจริง</h2>
+              <h2 className="text-white!">Online to Offline</h2>
             </div>
-            <div className="flex items-center flex-wrap mb-7 justify-between w-full">
+            <div className="flex items-center flex-wrap gap-y-4 mb-5 md:mb-7 justify-center md:justify-between w-full">
               {[
                 { icon: "👥", t: "เพิ่มเพื่อน LINE OA" },
                 { icon: "👋", t: "ได้รับ Greeting & Rich Menu" },
@@ -604,12 +615,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 11 - KPI & ANALYTICS */}
         {currentSlide === 10 && (
-          <div className="slide-frame bg-white! p-14 text-[var(--slate)]">
+          <div className="slide-frame bg-white! p-6 md:p-14 text-[var(--slate)]">
             <div className="heading">
               <small className="text-[var(--green-mid)]">โมดูล 10</small>
-              <h2 className="text-[var(--slate)]!">วิเคราะห์ผลและตัวชี้วัด (KPI)</h2>
+              <h2 className="text-[var(--slate)]!">วิเคราะห์ผลและตัวชี้วัด</h2>
             </div>
-            <div className="grid grid-cols-2 gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-7">
               <div>
                 <div className="text-[13px] font-bold text-[var(--muted)] tracking-[1.5px] uppercase mb-3">ตัวชี้วัดหลักที่ควรติดตาม</div>
                 <div className="grid grid-cols-2 gap-3">
@@ -652,12 +663,12 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 12 - SECURITY & ETHICS */}
         {currentSlide === 11 && (
-          <div className="slide-frame bg-[var(--green-deep)]! p-14 text-white">
+          <div className="slide-frame bg-[var(--green-deep)]! p-6 md:p-14 text-white">
             <div className="heading">
               <small className="text-[var(--green-light)]">สำคัญมาก</small>
-              <h2 className="text-white!">ความลับและจริยธรรมในการใช้งาน</h2>
+              <h2 className="text-white!">ความลับและจริยธรรมการใช้งาน</h2>
             </div>
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-3.5">
               {[
                 { icon: "🔕", title: "ห้ามระบุตัวตนในกลุ่ม", desc: "ไม่ระบุชื่อหรือข้อมูลผู้รับบริการในการสนทนากลุ่มหรือพื้นที่สาธารณะ" },
                 { icon: "📵", title: "ห้ามแชร์ Screenshot แชท", desc: "ไม่ถ่ายภาพหน้าจอแชทแล้วแชร์ต่อโดยไม่ได้รับอนุญาต" },
@@ -680,7 +691,7 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* SLIDE 13 - CLOSING */}
         {currentSlide === 12 && (
-          <div className="slide-frame bg-[var(--slate)]! items-center justify-center text-center p-14">
+          <div className="slide-frame bg-[var(--slate)]! items-center justify-center text-center p-6 md:p-14 min-h-[400px]">
             <div className="absolute inset-0" style={{background: 'radial-gradient(ellipse at center, rgba(0,165,80,0.25) 0%, transparent 65%)'}}></div>
             <div className="relative z-10 flex flex-col items-center">
               <div className="w-20 h-20 bg-[var(--green-mid)] rounded-full flex items-center justify-center text-[40px] mb-6 shadow-[0_12px_40px_rgba(0,165,80,0.4)] text-white">✓</div>
