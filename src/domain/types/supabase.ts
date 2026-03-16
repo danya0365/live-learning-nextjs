@@ -1360,6 +1360,85 @@ export type Database = {
           },
         ]
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          reference_type: string | null
+          status: string
+          type: string
+          updated_at: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1367,6 +1446,17 @@ export type Database = {
     Functions: {
       create_profile: {
         Args: { avatar_url?: string; full_name?: string; username: string }
+        Returns: string
+      }
+      credit_wallet: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_profile_id: string
+          p_reference_id?: string
+          p_reference_type?: string
+          p_type?: string
+        }
         Returns: string
       }
       fulfill_stripe_payment: {
@@ -1461,6 +1551,16 @@ export type Database = {
       is_instructor_or_admin: { Args: never; Returns: boolean }
       is_service_role: { Args: never; Returns: boolean }
       migrate_profile_roles: { Args: never; Returns: undefined }
+      pay_with_wallet: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_profile_id: string
+          p_reference_id?: string
+          p_reference_type?: string
+        }
+        Returns: string
+      }
       process_wizard_transaction: {
         Args: {
           p_coupon_code?: string
