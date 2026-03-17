@@ -20,8 +20,16 @@ export interface AchievementsViewModel {
 export class AchievementsPresenter {
   constructor(private readonly repository: IAchievementRepository) {}
 
+  // ============================================================
+  // VIEW MODEL METHODS (For Client/Server Components)
+  // ============================================================
+
+  /**
+   * Get view model for the page
+   * ⚠️ Use this ONLY for rendering UI views, NOT for API route responses
+   */
   async getViewModel(userId: string): Promise<AchievementsViewModel> {
-    const achievements = await this.repository.getByUserId(userId);
+    const achievements = await this.getByUserId(userId);
 
     const unlocked = achievements.filter((a) => a.unlockedAt !== null).length;
     const total = achievements.length;
@@ -37,5 +45,14 @@ export class AchievementsPresenter {
     const categories = Array.from(categoriesSet);
 
     return { achievements, stats, categories };
+  }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getByUserId(userId: string): Promise<AchievementDetail[]> {
+    return await this.repository.getByUserId(userId);
   }
 }

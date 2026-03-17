@@ -1,5 +1,4 @@
-import { SupabaseAchievementRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAchievementRepository';
-import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
+import { createServerAchievementsPresenter } from '@/src/presentation/presenters/achievements/AchievementsPresenterServerFactory';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -10,9 +9,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { userId } = await params;
 
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseAchievementRepository(supabase);
-    const achievements = await repository.getByUserId(userId);
+    const presenter = await createServerAchievementsPresenter();
+    const achievements = await presenter.getByUserId(userId);
     return NextResponse.json(achievements);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
