@@ -1,5 +1,5 @@
 import { StripeRepository } from '@/src/infrastructure/repositories/stripe/StripeRepository';
-import { SupabaseWalletRepository } from '@/src/infrastructure/repositories/supabase/SupabaseWalletRepository';
+import { createServerWalletPresenter } from '@/src/presentation/presenters/wallet/WalletPresenterServerFactory';
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextResponse } from 'next/server';
 
@@ -22,8 +22,8 @@ export async function POST(request: Request) {
 
     // Bypass for local testing without Stripe
     if (isTestMode && process.env.NODE_ENV !== 'production') {
-      const walletRepo = new SupabaseWalletRepository(supabase);
-      const result = await walletRepo.topUp(Number(amount), description || 'Test Top-up via UI');
+      const presenter = await createServerWalletPresenter();
+      const result = await presenter.topUp(Number(amount), description || 'Test Top-up via UI');
       return NextResponse.json({ success: true, ...result });
     }
 

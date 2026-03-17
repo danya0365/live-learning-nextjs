@@ -1,5 +1,4 @@
-import { SupabaseEnrollmentRepository } from '@/src/infrastructure/repositories/supabase/SupabaseEnrollmentRepository';
-import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
+import { createServerEnrollmentsPresenter } from '@/src/presentation/presenters/enrollments/EnrollmentsPresenterServerFactory';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -15,9 +14,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'courseId query parameter is required' }, { status: 400 });
     }
 
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseEnrollmentRepository(supabase);
-    const enrollment = await repository.checkEnrollment(courseId);
+    const presenter = await createServerEnrollmentsPresenter();
+    const enrollment = await presenter.checkEnrollment(courseId);
 
     return NextResponse.json({
       enrolled: !!enrollment,

@@ -1,17 +1,15 @@
-
-import { SupabaseConsultationRepository } from "@/src/infrastructure/repositories/supabase/SupabaseConsultationRepository";
+import { createServerConsultationsPresenter } from "@/src/presentation/presenters/consultations/ConsultationsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const instructorId = searchParams.get('instructorId');
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseConsultationRepository(supabase);
+  const presenter = await createServerConsultationsPresenter();
 
   try {
     if (instructorId) {
-        const results = await repository.getOffersByInstructorId(instructorId);
+        const results = await presenter.getOffersByInstructorId(instructorId);
         return NextResponse.json(results);
     }
     return NextResponse.json([]); // Or throw error?

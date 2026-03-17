@@ -1,4 +1,4 @@
-import { SupabaseAuthRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAuthRepository';
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { createServerAchievementsPresenter } from '@/src/presentation/presenters/achievements/AchievementsPresenterServerFactory';
 import { NextResponse } from 'next/server';
@@ -9,10 +9,10 @@ import { NextResponse } from 'next/server';
  */
 export async function GET() {
   const supabase = await createServerSupabaseClient();
-  const authRepo = new SupabaseAuthRepository(supabase);
+  const profilePresenter = await createServerProfilePresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     if (!profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

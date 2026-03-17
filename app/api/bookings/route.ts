@@ -1,5 +1,5 @@
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,10 +12,9 @@ export async function GET(request: NextRequest) {
 
   // Priority 1: Month/Year filtering (Efficient)
   if (month && year) {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseBookingRepository(supabase);
+    const presenter = await createServerMyBookingsPresenter();
     
-    const result = await repository.getByMonth(
+    const result = await presenter.getByMonth(
       parseInt(month), 
       parseInt(year), 
       { instructorId, studentId }
@@ -25,17 +24,16 @@ export async function GET(request: NextRequest) {
 
   // Priority 2: Filter by instructor/course (Still better than global getAll)
   if (instructorId || searchParams.get('courseId')) {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseBookingRepository(supabase);
+    const presenter = await createServerMyBookingsPresenter();
     
     if (instructorId) {
-       const result = await repository.getByInstructorId(instructorId);
+       const result = await presenter.getByInstructorId(instructorId);
        return NextResponse.json(result);
     }
     
     const courseId = searchParams.get('courseId');
     if (courseId) {
-      const result = await repository.getByCourseId(courseId);
+      const result = await presenter.getByCourseId(courseId);
       return NextResponse.json(result);
     }
   }
@@ -49,11 +47,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
-  const authRepo = new SupabaseAuthRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
+  const profilePresenter = await createServerProfilePresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
 
     if (!profile) {
       return NextResponse.json({ error: 'Unauthorized: No active profile found' }, { status: 401 });
@@ -62,7 +60,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // 🔒 Server-Injected Identity: pass studentId as separate parameter
-    const result = await repository.create(body, profile.id);
+    const result = await presenter.create(body, profile.id);
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

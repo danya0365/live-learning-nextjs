@@ -3,8 +3,7 @@
  * Creates a new feedback entry
  */
 
-import { SupabaseFeedbackRepository } from '@/src/infrastructure/repositories/supabase/SupabaseFeedbackRepository';
-import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
+import { createServerFeedbackPresenter } from '@/src/presentation/presenters/feedback/FeedbackPresenterServerFactory';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -19,15 +18,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseFeedbackRepository(supabase);
+    const presenter = await createServerFeedbackPresenter();
 
-    const feedback = await repository.create({
+    const feedback = await presenter.submitFeedback(
       topic,
       email,
       message,
-      category,
-    });
+      category
+    );
 
     return NextResponse.json(feedback, { status: 201 });
   } catch (error: any) {

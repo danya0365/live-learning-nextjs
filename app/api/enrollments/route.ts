@@ -1,5 +1,4 @@
-import { SupabaseEnrollmentRepository } from '@/src/infrastructure/repositories/supabase/SupabaseEnrollmentRepository';
-import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
+import { createServerEnrollmentsPresenter } from '@/src/presentation/presenters/enrollments/EnrollmentsPresenterServerFactory';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -10,9 +9,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseEnrollmentRepository(supabase);
-    const enrollments = await repository.getMyEnrollments();
+    const presenter = await createServerEnrollmentsPresenter();
+    const enrollments = await presenter.getMyEnrollments();
     return NextResponse.json({ data: enrollments });
   } catch (error) {
     console.error('API Error:', error);
@@ -27,8 +25,7 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseEnrollmentRepository(supabase);
+    const presenter = await createServerEnrollmentsPresenter();
     const body = await request.json();
 
     if (!body.courseId) {
@@ -36,12 +33,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already enrolled
-    const existing = await repository.checkEnrollment(body.courseId);
+    const existing = await presenter.checkEnrollment(body.courseId);
     if (existing) {
       return NextResponse.json({ error: 'Already enrolled in this course', enrollment: existing }, { status: 409 });
     }
 
-    const enrollment = await repository.createEnrollment({ courseId: body.courseId });
+    const enrollment = await presenter.createEnrollment({ courseId: body.courseId });
     return NextResponse.json(enrollment, { status: 201 });
   } catch (error) {
     console.error('API Error:', error);

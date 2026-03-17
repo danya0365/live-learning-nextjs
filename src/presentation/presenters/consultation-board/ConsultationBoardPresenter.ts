@@ -49,7 +49,7 @@ export class ConsultationBoardPresenter {
   }
 
   async submitOffer(data: CreateConsultationOfferData): Promise<ConsultationOffer> {
-    return this.repo.createOffer(data);
+    return this.repo.createOffer(data, data.instructorId);
   }
 
   async withdrawOffer(offerId: string): Promise<ConsultationOffer> {

@@ -1,28 +1,27 @@
-
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
-  const authRepo = new SupabaseAuthRepository(supabase);
-  const instructorRepo = new SupabaseInstructorRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
+  const profilePresenter = await createServerProfilePresenter();
+  const instructorsPresenter = await createServerInstructorsPresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     if (!profile) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const myInstructor = await instructorRepo.getByProfileId(profile.id);
+    const myInstructor = await instructorsPresenter.getByProfileId(profile.id);
     if (!myInstructor) {
         return NextResponse.json({ error: 'Unauthorized: No instructor profile found' }, { status: 403 });
     }
     
-    const result = await repository.getByInstructorId(myInstructor.id);
+    const result = await presenter.getByInstructorId(myInstructor.id);
     return NextResponse.json(result);
 
   } catch (error: any) {

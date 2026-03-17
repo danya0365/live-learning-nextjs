@@ -8,7 +8,7 @@ import {
     ConsultationRequest,
     ConsultationRequestStats,
     ConsultationRequestStatus,
-    CreateConsultationRequestData,
+    CreateConsultationRequestPayload,
     IConsultationRepository
 } from '@/src/application/repositories/IConsultationRepository';
 
@@ -71,7 +71,60 @@ export class ConsultationsPresenter {
     return this.repo.cancelRequest(requestId);
   }
 
-  async createRequest(data: CreateConsultationRequestData): Promise<ConsultationRequest> {
-    return this.repo.createRequest(data);
+  async createRequest(data: CreateConsultationRequestPayload, studentId: string): Promise<ConsultationRequest> {
+    return this.repo.createRequest(data, studentId);
+  }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getRequestsByCategory(categoryId: string) {
+    return await this.repo.getRequestsByCategory(categoryId);
+  }
+
+  async getOpenRequests() {
+    return await this.repo.getOpenRequests();
+  }
+
+  async getAllRequests() {
+    return await this.repo.getAllRequests();
+  }
+
+  async getOffersByInstructorId(instructorId: string) {
+    return await this.repo.getOffersByInstructorId(instructorId);
+  }
+
+  async getRequestById(requestId: string) {
+    return await this.repo.getRequestById(requestId);
+  }
+
+  async getRequestsByStudentId(studentId: string) {
+    return await this.repo.getRequestsByStudentId(studentId);
+  }
+
+  async getRequestStats(studentId: string) {
+    return await this.repo.getRequestStats(studentId);
+  }
+
+  async getOfferById(offerId: string) {
+    return await this.repo.getOfferById(offerId);
+  }
+
+  async getOffersByRequestId(requestId: string) {
+    return await this.repo.getOffersByRequestId(requestId);
+  }
+
+  async createOffer(data: any, instructorId: string) {
+    return await this.repo.createOffer(data, instructorId);
+  }
+
+  async withdrawOffer(offerId: string) {
+    return await this.repo.withdrawOffer(offerId);
+  }
+
+  async updateRequestStatus(requestId: string, status: ConsultationRequestStatus) {
+    return await this.repo.updateRequestStatus(requestId, status);
   }
 }

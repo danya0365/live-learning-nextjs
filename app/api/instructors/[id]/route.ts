@@ -1,5 +1,5 @@
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
 import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -25,8 +25,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const presenter = await createServerInstructorsPresenter();
   
   try {
-      const authRepo = new SupabaseAuthRepository(supabase);
-      const profile = await authRepo.getProfile();
+      const profilePresenter = await createServerProfilePresenter();
+      const profile = await profilePresenter.getProfile();
 
       if (!profile) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -52,8 +52,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const supabase = await createServerSupabaseClient();
   const presenter = await createServerInstructorsPresenter();
   
-  const authRepo = new SupabaseAuthRepository(supabase);
-  const profile = await authRepo.getProfile();
+  const profilePresenter = await createServerProfilePresenter();
+  const profile = await profilePresenter.getProfile();
 
   if (!profile) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

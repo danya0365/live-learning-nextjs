@@ -1,5 +1,6 @@
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
 import { createServerCoursesPresenter } from '@/src/presentation/presenters/courses/CoursesPresenterServerFactory';
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,25 +19,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json(course);
 }
 
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await request.json();
   const supabase = await createServerSupabaseClient();
   const presenter = await createServerCoursesPresenter();
-  const instructorRepo = new SupabaseInstructorRepository(supabase);
+  const instructorsPresenter = await createServerInstructorsPresenter();
   
   try {
-      const authRepo = new SupabaseAuthRepository(supabase);
-      const profile = await authRepo.getProfile();
+      const profilePresenter = await createServerProfilePresenter();
+      const profile = await profilePresenter.getProfile();
 
       if (!profile) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       // SECURE: Verify ownership
-      const instructor = await instructorRepo.getByProfileId(profile.id);
+      const instructor = await instructorsPresenter.getByProfileId(profile.id);
       if (!instructor) {
           return NextResponse.json({ error: 'Unauthorized: Only instructors can update courses' }, { status: 403 });
       }
@@ -65,18 +65,18 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
   const presenter = await createServerCoursesPresenter();
-  const instructorRepo = new SupabaseInstructorRepository(supabase);
+  const instructorsPresenter = await createServerInstructorsPresenter();
   
   try {
-      const authRepo = new SupabaseAuthRepository(supabase);
-      const profile = await authRepo.getProfile();
+      const profilePresenter = await createServerProfilePresenter();
+      const profile = await profilePresenter.getProfile();
 
       if (!profile) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       // SECURE: Verify ownership
-      const instructor = await instructorRepo.getByProfileId(profile.id);
+      const instructor = await instructorsPresenter.getByProfileId(profile.id);
       if (!instructor) {
           return NextResponse.json({ error: 'Unauthorized: Only instructors can delete courses' }, { status: 403 });
       }

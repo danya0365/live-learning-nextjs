@@ -74,7 +74,7 @@ export function useSettingsPresenter() {
     if (!user) return;
     try {
       const targetId = user.profileId || user.id;
-      const updatedUser = await presenter.updateProfile(targetId, name, bio);
+      const updatedUser = await presenter.updateProfile({ userId: targetId, name, bio });
       updateUser(updatedUser);
       
       showToast('บันทึกโปรไฟล์เรียบร้อยแล้ว ✅');
@@ -87,7 +87,8 @@ export function useSettingsPresenter() {
   const updatePassword = useCallback(async (current: string, next: string, confirm: string): Promise<boolean> => {
     if (!user) return false;
     try {
-      await presenter.updatePassword(user.id, current, next, confirm);
+      if (next !== confirm) throw new Error("รหัสผ่านใหม่ไม่ตรงกัน");
+      await presenter.updatePassword({ userId: user.id, current, new: next });
       showToast('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว ✅');
       return true;
     } catch (err) {
@@ -101,7 +102,7 @@ export function useSettingsPresenter() {
     if (!user) return;
     try {
       const targetId = user.profileId || user.id;
-      const newPrefs = await presenter.updatePreferences(targetId, data);
+      const newPrefs = await presenter.updatePreferences({ userId: targetId, ...data });
       setViewModel((prev) => prev ? { ...prev, ...newPrefs } : newPrefs as unknown as SettingsViewModel);
       showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว 💾');
     } catch (err) {

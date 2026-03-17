@@ -1,7 +1,7 @@
 import { CreateWizardBookingData } from '@/src/application/repositories/IBookingWizardRepository';
+import { createServerCoursesPresenter } from '@/src/presentation/presenters/courses/CoursesPresenterServerFactory';
+import { createServerBookingWizardPresenter } from '@/src/presentation/presenters/booking/BookingWizardPresenterServerFactory';
 import { StripeRepository } from '@/src/infrastructure/repositories/stripe/StripeRepository';
-import { SupabaseBookingWizardRepository } from '@/src/infrastructure/repositories/supabase/SupabaseBookingWizardRepository';
-import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Core Logic: Process metadata and create pending/free record
-    const wizardRepo = new SupabaseBookingWizardRepository(supabase);
+    const presenter = await createServerBookingWizardPresenter();
     // Overwrite the payment method parameter for process_wizard_transaction based on the frontend selection
     const paymentMethodToUse = body.paymentMethod === 'wallet' ? 'wallet' : 'stripe';
     
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // The previous implementation hardcoded 'free' as default, but we'll try to pass our intent. 
     // Since SupabaseBookingWizardRepository's createBooking hardcodes 'free', let's temporarily monkeypatch or directly call RPC here if we must, 
     // but the cleanest way is calling creatingBooking on repo and then handling the wallet logic.
-    const result = await wizardRepo.createBooking(body);
+    const result = await presenter.createBooking(body);
 
     // Update payment method in Payments table to reflect 'wallet' or 'stripe'
     if (result.paymentId && result.status === 'awaiting_payment') {
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
 
     // 2. Stripe Logic: If Price > 0 and method is stripe, generate checkout session
     if (result.status === 'awaiting_payment' && result.paymentId && paymentMethodToUse === 'stripe') {
-      const courseRepo = new SupabaseCourseRepository(supabase);
-      const course = await courseRepo.getById(body.courseId);
+      const coursesPresenter = await createServerCoursesPresenter();
+      const course = await coursesPresenter.getById(body.courseId);
       
       const stripeRepo = new StripeRepository(process.env.STRIPE_SECRET_KEY || '');
       const origin = req.nextUrl.origin;

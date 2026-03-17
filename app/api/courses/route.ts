@@ -1,6 +1,6 @@
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
 import { createServerCoursesPresenter } from '@/src/presentation/presenters/courses/CoursesPresenterServerFactory';
-import { SupabaseAuthRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAuthRepository';
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -47,16 +47,16 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const presenter = await createServerCoursesPresenter();
-    const authRepo = new SupabaseAuthRepository(supabase);
-    const instructorRepo = new SupabaseInstructorRepository(supabase);
-    const profile = await authRepo.getProfile();
+    const profilePresenter = await createServerProfilePresenter();
+    const instructorsPresenter = await createServerInstructorsPresenter();
+    const profile = await profilePresenter.getProfile();
     
     if (!profile) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // SECURE: Verify user is an instructor
-    const currentInstructor = await instructorRepo.getByProfileId(profile.id);
+    const currentInstructor = await instructorsPresenter.getByProfileId(profile.id);
     
     if (!currentInstructor) {
         return NextResponse.json({ error: 'Unauthorized: You must be a registered instructor to create courses' }, { status: 403 });

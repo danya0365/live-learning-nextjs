@@ -105,7 +105,7 @@ export interface IConsultationRepository {
   getOpenRequests(): Promise<ConsultationRequest[]>;
   getRequestsByStudentId(studentId: string): Promise<ConsultationRequest[]>;
   getRequestsByCategory(categoryId: string): Promise<ConsultationRequest[]>;
-  createRequest(data: CreateConsultationRequestPayload): Promise<ConsultationRequest>;
+  createRequest(data: CreateConsultationRequestPayload, studentId: string): Promise<ConsultationRequest>;
   updateRequestStatus(id: string, status: ConsultationRequestStatus): Promise<ConsultationRequest>;
   cancelRequest(id: string): Promise<ConsultationRequest>;
   getRequestStats(studentId?: string): Promise<ConsultationRequestStats>;
@@ -114,7 +114,7 @@ export interface IConsultationRepository {
   getOfferById(id: string): Promise<ConsultationOffer | null>;
   getOffersByRequestId(requestId: string): Promise<ConsultationOffer[]>;
   getOffersByInstructorId(instructorId: string): Promise<ConsultationOffer[]>;
-  createOffer(data: CreateConsultationOfferPayload): Promise<ConsultationOffer>;
+  createOffer(data: CreateConsultationOfferPayload, instructorId: string): Promise<ConsultationOffer>;
   acceptOffer(offerId: string): Promise<ConsultationOffer>;
   rejectOffer(offerId: string): Promise<ConsultationOffer>;
   withdrawOffer(offerId: string): Promise<ConsultationOffer>;

@@ -1,16 +1,16 @@
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
 import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
-  const authRepo = new SupabaseAuthRepository(supabase);
+  const profilePresenter = await createServerProfilePresenter();
   const presenter = await createServerInstructorsPresenter();
   
   try {
     // 1. Get the current active profile (handles multiple profiles context)
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     
     if (!profile) {
         return NextResponse.json({ error: 'Profile not found' }, { status: 404 });

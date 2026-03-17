@@ -71,7 +71,7 @@ export class ApiBookingRepository implements IBookingRepository {
     return res.json();
   }
 
-  async create(data: CreateBookingPayload): Promise<Booking> {
+  async create(data: CreateBookingPayload, studentId: string): Promise<Booking> {
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

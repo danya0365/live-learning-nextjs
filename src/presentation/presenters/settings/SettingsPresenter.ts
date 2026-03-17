@@ -28,24 +28,29 @@ export class SettingsPresenter {
     };
   }
 
-  async updateProfile(userId: string, name: string, bio: string) {
-    return this.repo.updateProfile({ userId, name, bio });
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+
+  async getPreferences(userId: string) {
+    return this.repo.getPreferences(userId);
   }
 
-  async updatePassword(userId: string, current: string, next: string, confirm: string) {
-    if (!current || !next || !confirm) {
+  async updateProfile(data: import('@/src/application/repositories/ISettingsRepository').UpdateProfileData) {
+    return this.repo.updateProfile(data);
+  }
+
+  async updatePassword(data: import('@/src/application/repositories/ISettingsRepository').UpdatePasswordData & { userId: string }) {
+    if (!data.current || !data.new) {
       throw new Error('กรุณากรอกข้อมูลให้ครบ');
     }
-    if (next !== confirm) {
-      throw new Error('รหัสผ่านใหม่ไม่ตรงกัน');
-    }
-    if (next.length < 6) {
+    if (data.new.length < 6) {
       throw new Error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
     }
-    return this.repo.updatePassword({ userId, current, new: next });
+    return this.repo.updatePassword(data);
   }
 
-  async updatePreferences(userId: string, data: SettingsViewModel) {
-    return this.repo.updatePreferences({ userId, ...data });
+  async updatePreferences(data: import('@/src/application/repositories/ISettingsRepository').UserPreferences & { userId: string }) {
+    return this.repo.updatePreferences(data);
   }
 }

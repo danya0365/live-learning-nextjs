@@ -1,4 +1,4 @@
-import { SupabaseCouponRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCouponRepository';
+import { createServerCouponPresenter } from '@/src/presentation/presenters/coupons/CouponPresenterServerFactory';
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ isValid: false, errorMessage: 'Missing required parameters' }, { status: 400 });
     }
 
-    const couponRepo = new SupabaseCouponRepository(supabase);
-    const result = await couponRepo.validateCoupon({
+    const presenter = await createServerCouponPresenter();
+    const result = await presenter.validateCoupon({
       code: code.trim().toUpperCase(),
       userId: user.id,
       purchaseAmount

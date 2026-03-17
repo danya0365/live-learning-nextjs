@@ -1,5 +1,4 @@
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
-import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -11,9 +10,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing month or year' }, { status: 400 });
   }
 
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
   
-  const result = await repository.getMyBookingsByMonth(parseInt(month), parseInt(year));
+  const result = await presenter.getMyBookingsByMonth(parseInt(month), parseInt(year));
   return NextResponse.json(result);
 }

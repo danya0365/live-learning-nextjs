@@ -18,4 +18,21 @@ export class LiveRoomPresenter {
   async sendMessage(roomId: string, profileId: string, text: string, isInstructor: boolean): Promise<ChatMessage> {
     return this.repo.sendMessage(roomId, profileId, text, isInstructor);
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getRoom(roomId: string) {
+    return await this.repo.getRoom(roomId);
+  }
+
+  async getMessages(roomId: string) {
+    return await this.repo.getMessages(roomId);
+  }
+
+  async getParticipants(roomId: string) {
+    return await this.repo.getParticipants(roomId);
+  }
 }

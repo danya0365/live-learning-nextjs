@@ -1,4 +1,4 @@
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,11 +8,10 @@ export async function GET(
 ) {
   const { studentId } = await params;
 
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
 
   try {
-    const result = await repository.getByStudentId(studentId);
+    const result = await presenter.getByStudentId(studentId);
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
