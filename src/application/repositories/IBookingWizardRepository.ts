@@ -40,6 +40,7 @@ export interface CreateWizardBookingData {
   date: string;
   action: 'new' | 'join';
   couponCode?: string;
+  paymentMethod?: 'stripe' | 'wallet';
 }
 
 export interface WizardBookingResult {

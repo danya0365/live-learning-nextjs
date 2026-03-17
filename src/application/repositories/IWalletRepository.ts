@@ -12,7 +12,7 @@ export interface IWalletRepository {
   getTransactions(limit?: number): Promise<WalletTransaction[]>;
 
   /**
-   * เติมเงินเข้า Wallet (เรียกใช้ RPC credit_wallet)
+   * เติมเงินเข้า Wallet (เรียกใช้ RPC credit_wallet หรือ สร้าง Stripe Checkout Session)
    */
-  topUp(amount: number, description?: string): Promise<{ transactionId: string }>;
+  topUp(amount: number, description?: string, isTestMode?: boolean): Promise<{ transactionId?: string, checkoutUrl?: string }>;
 }

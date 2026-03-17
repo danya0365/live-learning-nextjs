@@ -13,7 +13,7 @@ export interface WalletPresenterState {
 
 export interface WalletPresenterActions {
   loadData: () => Promise<void>;
-  topUp: (amount: number, description?: string) => Promise<void>;
+  topUp: (amount: number, description?: string, isTestMode?: boolean) => Promise<void>;
   setError: (error: string | null) => void;
 }
 
@@ -67,11 +67,17 @@ export function useWalletPresenter(
   }, []);
 
   const topUp = useCallback(
-    async (amount: number, description?: string) => {
+    async (amount: number, description?: string, isTestMode?: boolean) => {
       try {
         updateState({ isToppingUp: true, error: null });
-        await presenter.topUp(amount, description);
-        await loadData(); // Reload data after top up
+        const result = await presenter.topUp(amount, description, isTestMode);
+        
+        if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+          return; // Prevent clearing loading state while redirecting
+        }
+        
+        await loadData(); // Reload data after top up (for test mode bypass)
       } catch (error: any) {
         updateState({ error: error.message || "Failed to top up" });
         throw error;

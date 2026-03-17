@@ -41,11 +41,11 @@ export class ApiWalletRepository implements IWalletRepository {
     return data.transactions || [];
   }
 
-  async topUp(amount: number, description?: string): Promise<{ transactionId: string }> {
+  async topUp(amount: number, description?: string, isTestMode?: boolean): Promise<{ transactionId?: string, checkoutUrl?: string }> {
     const res = await fetch(`${this.baseUrl}/topup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, description }),
+      body: JSON.stringify({ amount, description, isTestMode }),
     });
     
     if (!res.ok) {

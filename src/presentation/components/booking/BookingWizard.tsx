@@ -63,7 +63,9 @@ export function BookingWizard() {
     couponError,
     discountAmount,
     finalPrice,
-    isEnrolled
+    isEnrolled,
+    walletBalance,
+    paymentMethod
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -170,6 +172,9 @@ export function BookingWizard() {
               onFinish={actions.handleFinish}
               onNewBooking={actions.handleNewBooking}
               isEnrolled={isEnrolled}
+              walletBalance={walletBalance}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={actions.setPaymentMethod}
             />
           )}
         </div>
@@ -595,6 +600,9 @@ function StepConfirm({
   setCouponCode,
   applyCoupon,
   isEnrolled,
+  walletBalance,
+  paymentMethod,
+  setPaymentMethod,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -615,6 +623,9 @@ function StepConfirm({
   setCouponCode: (c: string) => void;
   applyCoupon: () => void;
   isEnrolled: boolean;
+  walletBalance: number;
+  paymentMethod: 'stripe' | 'wallet';
+  setPaymentMethod: (method: 'stripe' | 'wallet') => void;
 }) {
   if (bookingDone) {
     return (
@@ -683,6 +694,10 @@ function StepConfirm({
       </div>
     );
   }
+
+  const currentPriceToPay = finalPrice !== null ? finalPrice : course.price;
+  const isFree = currentPriceToPay === 0 || isEnrolled;
+  const insufficientWalletBalance = paymentMethod === 'wallet' && walletBalance < currentPriceToPay;
 
   return (
     <div>
@@ -814,6 +829,72 @@ function StepConfirm({
         </div>
       )}
 
+      {/* Payment Selection (Only if not free) */}
+      {!isFree && (
+        <div className="mb-6 space-y-3">
+          <p className="text-sm font-bold text-text-primary">💳 เลือกวิธีชำระเงิน</p>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Stripe / CC Option */}
+            <button
+              onClick={() => setPaymentMethod('stripe')}
+              className={`flex-1 p-4 rounded-xl border text-left transition-all ${
+                paymentMethod === 'stripe'
+                  ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                  : 'border-border/50 bg-surface/50 hover:bg-surface hover:border-border'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-text-primary flex items-center gap-2">
+                  <span>💳</span> บัตรเครดิต / โอนเงิน
+                </span>
+                {paymentMethod === 'stripe' && <span className="text-primary">●</span>}
+              </div>
+              <p className="text-xs text-text-muted">ชำระผ่านระบบ Payment Gateway ที่ปลอดภัย</p>
+            </button>
+
+            {/* Wallet Option */}
+            <button
+              onClick={() => setPaymentMethod('wallet')}
+              className={`flex-1 p-4 rounded-xl border text-left transition-all relative overflow-hidden ${
+                paymentMethod === 'wallet'
+                  ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                  : 'border-border/50 bg-surface/50 hover:bg-surface hover:border-border'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-text-primary flex items-center gap-2">
+                  <span>💰</span> กระเป๋าเงิน
+                </span>
+                {paymentMethod === 'wallet' && <span className="text-primary">●</span>}
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-text-muted">ยอดเงินคงเหลือ</p>
+                <p className={`text-sm font-bold ${walletBalance >= currentPriceToPay ? 'text-success' : 'text-error'}`}>
+                  ฿{walletBalance.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* Wallet insufficient balance warning */}
+          {insufficientWalletBalance && (
+            <div className="glass p-3 rounded-lg border border-error/20 bg-error/5 flex items-start gap-2 animate-fadeIn">
+              <span className="text-error mt-0.5">⚠️</span>
+              <div>
+                <p className="text-xs font-bold text-error">ยอดเงินในกระเป๋าไม่เพียงพอ</p>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  กรุณาเติมเงินเพิ่มอีก ฿{(currentPriceToPay - walletBalance).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} หรือเปลี่ยนวิธีชำระเงิน
+                </p>
+                <a href="/wallet" className="text-[10px] text-primary font-bold mt-1 inline-block hover:underline">
+                  👉 ไปที่หน้ากระเป๋าเงินเพื่อเติมเงิน
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Price Breakdown */}
       <div className={`glass rounded-2xl p-5 border mb-6 shadow-lg transition-all duration-500 ${
         isEnrolled 
@@ -838,7 +919,7 @@ function StepConfirm({
             <span className={`text-2xl font-black animate-fadeIn ${
               isEnrolled ? 'text-success' : 'text-primary'
             }`}>
-              ฿0
+              ฿{isEnrolled ? 0 : currentPriceToPay.toLocaleString()}
             </span>
           </div>
         </div>
@@ -854,24 +935,25 @@ function StepConfirm({
         </button>
         <button
           onClick={onConfirm}
-          disabled={isBooking}
+          disabled={isBooking || insufficientWalletBalance}
           className={`flex-1 px-4 py-3 rounded-xl text-white text-sm font-bold transition-all ${
-            (finalPrice === 0 || (course.price - discountAmount === 0))
+             isFree
               ? 'bg-success hover:bg-success/90 hover:scale-[1.02] active:scale-95'
               : 'btn-game hover:scale-[1.02] active:scale-95'
-          } disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-primary/20`}
+          } disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 relative overflow-hidden`}
         >
           {isBooking ? (
             <span className="flex items-center justify-center gap-2">
               <span className="animate-spin text-lg">⏳</span> กำลังดำเนินการ...
             </span>
-          ) : (finalPrice === 0 || (course.price - discountAmount === 0)) ? (
+          ) : isFree ? (
             '✅ ยืนยันจองฟรี'
           ) : (
-            `💳 ชำระเงิน ฿${(finalPrice !== null ? finalPrice : course.price).toLocaleString()}`
+            `ชำระเงิน ฿${currentPriceToPay.toLocaleString()}`
           )}
         </button>
       </div>
     </div>
   );
 }
+

@@ -2,7 +2,8 @@
 
 import { useWalletPresenter } from '@/src/presentation/presenters/wallet/useWalletPresenter';
 import { WalletViewModel } from '@/src/presentation/presenters/wallet/WalletPresenter';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import WalletSkeleton from './WalletSkeleton';
 
 interface WalletViewProps {
@@ -12,8 +13,24 @@ interface WalletViewProps {
 export function WalletView({ initialViewModel }: WalletViewProps) {
   const [{ viewModel, loading, error, isToppingUp }, { topUp, loadData }] = useWalletPresenter(initialViewModel);
   
-  // Top-up state for UI input
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [showTopUpOptions, setShowTopUpOptions] = useState(false);
+  const [customAmount, setCustomAmount] = useState<string>('');
+  
+  // Top-up state for UI input (Test Bypass)
   const [topUpAmount, setTopUpAmount] = useState<string>('');
+
+  useEffect(() => {
+    if (searchParams.get('success')) {
+      alert('เติมเงินลงกระเป๋าสำเร็จ!');
+      router.replace('/wallet'); // Clear search params
+    } else if (searchParams.get('canceled')) {
+      alert('คุณได้ยกเลิกการเติมเงิน');
+      router.replace('/wallet');
+    }
+  }, [searchParams, router]);
 
   const wallet = viewModel?.wallet;
   const transactions = viewModel?.transactions || [];
@@ -27,11 +44,23 @@ export function WalletView({ initialViewModel }: WalletViewProps) {
     }
 
     try {
-      await topUp(amount, 'Test Top-up via UI');
+      await topUp(amount, 'Test Top-up via UI', true); // Pass isTestMode=true
       setTopUpAmount('');
       alert(`Successfully topped up ${amount} ฿`);
     } catch (err: any) {
       alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleRealTopUp = async (amount: number) => {
+    if (!amount || amount <= 0) {
+      alert('กรุณาระบุจำนวนเงินที่ถูกต้อง');
+      return;
+    }
+    try {
+      await topUp(amount, 'เติมเงินเข้ากระเป๋า');
+    } catch (err: any) {
+      alert(`ไม่สามารถทำรายการได้: ${err.message}`);
     }
   };
 
@@ -73,12 +102,52 @@ export function WalletView({ initialViewModel }: WalletViewProps) {
                <span className="text-2xl font-bold text-text-secondary">฿</span>
              </div>
              
-             <button
-               className="w-full btn-game px-4 py-3 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-               onClick={() => alert('Future Feature: Real Payment Gateway Integration')}
-             >
-               <span>➕</span> เติมเงินเข้ากระเป๋า
-             </button>
+             {showTopUpOptions ? (
+               <div className="space-y-4 mt-2 animate-fadeIn">
+                 <p className="text-sm font-bold text-text-primary">เลือกจำนวนเงินเริ่มต้น (บาท)</p>
+                 <div className="grid grid-cols-3 gap-2">
+                   {[100, 300, 500, 1000, 2000, 5000].map(amount => (
+                     <button
+                       key={amount}
+                       onClick={() => handleRealTopUp(amount)}
+                       disabled={isToppingUp}
+                       className="py-2 text-sm font-bold rounded-lg border border-border/50 hover:border-primary hover:bg-primary/10 text-text-primary transition-all disabled:opacity-50"
+                     >
+                       {amount.toLocaleString()}
+                     </button>
+                   ))}
+                 </div>
+                 <div className="flex gap-2 isolate pt-2">
+                   <input
+                     type="number"
+                     placeholder="ระบุจำนวนเงิน..."
+                     value={customAmount}
+                     onChange={(e) => setCustomAmount(e.target.value)}
+                     className="w-full px-3 py-2 rounded-lg text-text-primary bg-surface/50 border border-border/50 focus:outline-none focus:border-primary text-sm font-medium"
+                   />
+                   <button
+                     onClick={() => handleRealTopUp(Number(customAmount))}
+                     disabled={isToppingUp || !customAmount || Number(customAmount) <= 0}
+                     className="px-4 py-2 btn-game text-white rounded-lg text-sm font-bold whitespace-nowrap disabled:opacity-50"
+                   >
+                     {isToppingUp ? '...' : 'ยืนยัน'}
+                   </button>
+                 </div>
+                 <button
+                   onClick={() => setShowTopUpOptions(false)}
+                   className="w-full py-2 text-sm text-text-muted hover:text-text-primary transition-colors mt-2"
+                 >
+                   ยกเลิก
+                 </button>
+               </div>
+             ) : (
+               <button
+                 className="w-full btn-game px-4 py-3 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                 onClick={() => setShowTopUpOptions(true)}
+               >
+                 <span>➕</span> เติมเงินเข้ากระเป๋า
+               </button>
+             )}
 
              {/* TEST BTN: Only visible in dev/test */}
              {process.env.NODE_ENV !== 'production' && (

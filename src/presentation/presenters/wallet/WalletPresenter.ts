@@ -34,9 +34,9 @@ export class WalletPresenter {
     };
   }
 
-  async topUp(amount: number, description?: string): Promise<{ transactionId: string }> {
+  async topUp(amount: number, description?: string, isTestMode?: boolean): Promise<{ transactionId?: string, checkoutUrl?: string }> {
     try {
-      return await this.repository.topUp(amount, description);
+      return await this.repository.topUp(amount, description, isTestMode);
     } catch (error) {
       console.error('Error topping up:', error);
       throw error;
