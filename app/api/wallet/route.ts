@@ -1,4 +1,4 @@
-import { SupabaseWalletRepository } from '@/src/infrastructure/repositories/supabase/SupabaseWalletRepository';
+import { createServerWalletPresenter } from '@/src/presentation/presenters/wallet/WalletPresenterServerFactory';
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextResponse } from 'next/server';
 
@@ -12,17 +12,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const walletRepo = new SupabaseWalletRepository(supabase);
+    const presenter = await createServerWalletPresenter();
     
     // Fetch wallet and transactions in parallel
     const [wallet, transactions] = await Promise.all([
-      walletRepo.getWallet(),
-      walletRepo.getTransactions(50) // Fetch latest 50 transactions
+      presenter.getWallet(),
+      presenter.getTransactions(50) // Fetch latest 50 transactions
     ]);
 
     return NextResponse.json({
       wallet: wallet || { balance: 0 },
-      transactions
+      transactions: transactions
     });
     
   } catch (error: any) {

@@ -13,8 +13,8 @@ export class WalletPresenter {
   async getViewModel(): Promise<WalletViewModel> {
     try {
       const [wallet, transactions] = await Promise.all([
-        this.repository.getWallet(),
-        this.repository.getTransactions()
+        this.getWallet(),
+        this.getTransactions()
       ]);
 
       return {
@@ -23,6 +23,24 @@ export class WalletPresenter {
       };
     } catch (error) {
       console.error('Error getting view model:', error);
+      throw error;
+    }
+  }
+
+  async getWallet(): Promise<Wallet | null> {
+    try {
+      return await this.repository.getWallet();
+    } catch (error) {
+      console.error('Error getting wallet:', error);
+      throw error;
+    }
+  }
+
+  async getTransactions(limit?: number): Promise<WalletTransaction[]> {
+    try {
+      return await this.repository.getTransactions(limit);
+    } catch (error) {
+      console.error('Error getting transactions:', error);
       throw error;
     }
   }
