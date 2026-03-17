@@ -1,5 +1,4 @@
-
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,8 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseInstructorRepository(supabase);
+    const presenter = await createServerInstructorsPresenter();
     
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -19,21 +17,21 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
 
     if (page && perPage) {
-        const paginated = await repository.getPaginated(Number(page), Number(perPage));
+        const paginated = await presenter.getPaginated(Number(page), Number(perPage));
         return NextResponse.json(paginated);
     }
     
     if (available) {
-        const result = await repository.getAvailable();
+        const result = await presenter.getAvailable();
         return NextResponse.json(result);
     }
     
     if (topRated) {
-        const result = await repository.getTopRated(Number(limit) || 4);
+        const result = await presenter.getTopRated(Number(limit) || 4);
         return NextResponse.json(result);
     }
 
-    const instructors = await repository.getAll();
+    const instructors = await presenter.getAll();
     return NextResponse.json(instructors);
   } catch (error) {
     console.error('API Error:', error);
@@ -51,12 +49,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const repository = new SupabaseInstructorRepository(supabase);
+    const presenter = await createServerInstructorsPresenter();
     
     // TODO: Add stricter Admin check here if this is an admin-only endpoint
     
     const body = await request.json();
-    const instructor = await repository.create(body);
+    const instructor = await presenter.create(body);
     
     return NextResponse.json(instructor);
   } catch (error) {

@@ -1,5 +1,4 @@
-
-import { SupabaseCategoryRepository } from "@/src/infrastructure/repositories/supabase/SupabaseCategoryRepository";
+import { createServerCategoriesPresenter } from "@/src/presentation/presenters/categories/CategoriesPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,10 +6,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseCategoryRepository(supabase);
+  const presenter = await createServerCategoriesPresenter();
   
-  const category = await repository.getById(id);
+  const category = await presenter.getById(id);
   
   if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
@@ -22,13 +20,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await request.json();
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseCategoryRepository(supabase);
+  const presenter = await createServerCategoriesPresenter();
   
   try {
       // TODO: Permissions check
       
-      const updated = await repository.update(id, body);
+      const updated = await presenter.update(id, body);
       return NextResponse.json(updated);
   } catch (error) {
       console.error('Update failed', error);
@@ -38,12 +35,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseCategoryRepository(supabase);
+  const presenter = await createServerCategoriesPresenter();
   
   // TODO: Permissions check
   
-  const success = await repository.delete(id);
+  const success = await presenter.delete(id);
   
   if (!success) {
       return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 });

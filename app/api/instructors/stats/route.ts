@@ -1,15 +1,12 @@
-
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
-import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseInstructorRepository(supabase);
+  const presenter = await createServerInstructorsPresenter();
   
-  const stats = await repository.getStats();
+  const stats = await presenter.getStats();
   
   return NextResponse.json(stats);
 }

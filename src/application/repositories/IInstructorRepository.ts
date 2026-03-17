@@ -70,6 +70,7 @@ export interface UpdateInstructorData {
 
 export interface IInstructorRepository {
   getById(id: string): Promise<Instructor | null>;
+  getAll(): Promise<Instructor[]>;
   getPaginated(page: number, perPage: number): Promise<{ data: Instructor[]; total: number; page: number; perPage: number }>;
   getAvailable(): Promise<Instructor[]>;
   getTopRated(limit: number): Promise<Instructor[]>;
@@ -80,6 +81,7 @@ export interface IInstructorRepository {
   getReviews(instructorId: string): Promise<InstructorReview[]>;
   create(data: CreateInstructorData): Promise<Instructor>;
   update(id: string, data: UpdateInstructorData): Promise<Instructor>;
+  delete(id: string): Promise<boolean>;
   deleteAvailability(id: string): Promise<boolean>;
   addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string): Promise<InstructorAvailability>;
   getStats(): Promise<InstructorStats>;

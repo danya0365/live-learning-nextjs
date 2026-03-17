@@ -1,6 +1,5 @@
-
+import { createServerCoursesPresenter } from '@/src/presentation/presenters/courses/CoursesPresenterServerFactory';
 import { SupabaseAuthRepository } from '@/src/infrastructure/repositories/supabase/SupabaseAuthRepository';
-import { SupabaseCourseRepository } from '@/src/infrastructure/repositories/supabase/SupabaseCourseRepository';
 import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,8 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseCourseRepository(supabase);
+    const presenter = await createServerCoursesPresenter();
     
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -21,20 +19,20 @@ export async function GET(request: NextRequest) {
     const perPage = searchParams.get('perPage');
 
     if (page && perPage) {
-        const paginated = await repository.getPaginated(Number(page), Number(perPage));
+        const paginated = await presenter.getPaginated(Number(page), Number(perPage));
         return NextResponse.json(paginated);
     }
 
     let courses;
 
     if (featured) {
-      courses = await repository.getFeatured();
+      courses = await presenter.getFeatured();
     } else if (categoryId) {
-      courses = await repository.getByCategory(categoryId);
+      courses = await presenter.getByCategory(categoryId);
     } else if (instructorId) {
-      courses = await repository.getByInstructorId(instructorId);
+      courses = await presenter.getByInstructorId(instructorId);
     } else {
-      courses = await repository.getAll();
+      courses = await presenter.getAll();
     }
 
     return NextResponse.json(courses);
@@ -48,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseCourseRepository(supabase);
+    const presenter = await createServerCoursesPresenter();
     const authRepo = new SupabaseAuthRepository(supabase);
     const instructorRepo = new SupabaseInstructorRepository(supabase);
     const profile = await authRepo.getProfile();
@@ -72,7 +70,7 @@ export async function POST(request: NextRequest) {
         instructorId: currentInstructor.id
     };
     
-    const course = await repository.create(safeBody);
+    const course = await presenter.create(safeBody);
     
     return NextResponse.json(course);
   } catch (error) {

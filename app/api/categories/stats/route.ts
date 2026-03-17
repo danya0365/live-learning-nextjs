@@ -1,15 +1,11 @@
-
-import { SupabaseCategoryRepository } from "@/src/infrastructure/repositories/supabase/SupabaseCategoryRepository";
-import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
+import { createServerCategoriesPresenter } from "@/src/presentation/presenters/categories/CategoriesPresenterServerFactory";
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseCategoryRepository(supabase);
-  
-  const stats = await repository.getStats();
+  const presenter = await createServerCategoriesPresenter();
+  const stats = await presenter.getStats();
   
   return NextResponse.json(stats);
 }

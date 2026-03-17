@@ -102,4 +102,49 @@ export class CoursesPresenter {
       description: 'สำรวจคอร์สเรียนสดออนไลน์ทั้งหมด เลือกหมวดหมู่ ระดับ และอาจารย์ที่ต้องการ',
     };
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getPaginated(page: number, perPage: number) {
+    return await this.courseRepository.getPaginated(page, perPage);
+  }
+
+  async getFeatured() {
+    return await this.courseRepository.getFeatured();
+  }
+
+  async getByCategory(categoryId: string) {
+    return await this.courseRepository.getByCategory(categoryId);
+  }
+
+  async getByInstructorId(instructorId: string) {
+    return await this.courseRepository.getByInstructorId(instructorId);
+  }
+
+  async getAll(): Promise<Course[]> {
+    return await this.courseRepository.getAll();
+  }
+
+  async getById(id: string): Promise<Course | null> {
+    return await this.courseRepository.getById(id);
+  }
+
+  async create(data: any): Promise<Course> {
+    return await this.courseRepository.create(data);
+  }
+
+  async update(id: string, data: any): Promise<Course> {
+    return await this.courseRepository.update(id, data);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    return await this.courseRepository.delete(id);
+  }
+
+  async getStats(): Promise<CourseStats> {
+    return await this.courseRepository.getStats();
+  }
 }

@@ -93,4 +93,61 @@ export class InstructorsPresenter {
       description: 'รวมอาจารย์ผู้เชี่ยวชาญจากสาขาต่างๆ พร้อมสอนสดออนไลน์',
     };
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getPaginated(page: number, perPage: number) {
+    return await this.instructorRepository.getPaginated(page, perPage);
+  }
+
+  async getAvailable(): Promise<Instructor[]> {
+    return await this.instructorRepository.getAvailable();
+  }
+
+  async getTopRated(limit: number): Promise<Instructor[]> {
+    return await this.instructorRepository.getTopRated(limit);
+  }
+
+  async getAll(): Promise<Instructor[]> {
+    return await this.instructorRepository.getAll();
+  }
+
+  async getById(id: string): Promise<Instructor | null> {
+    return await this.instructorRepository.getById(id);
+  }
+
+  async getByProfileId(profileId: string): Promise<Instructor | null> {
+    return await this.instructorRepository.getByProfileId(profileId);
+  }
+
+  async create(data: any): Promise<Instructor> {
+    return await this.instructorRepository.create(data);
+  }
+
+  async update(id: string, data: any): Promise<Instructor> {
+    return await this.instructorRepository.update(id, data);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    return await this.instructorRepository.delete(id);
+  }
+
+  async getStats() {
+    return await this.instructorRepository.getStats();
+  }
+
+  async addAvailability(instructorId: string, dayOfWeek: number, startTime: string, endTime: string) {
+    return await this.instructorRepository.addAvailability(instructorId, dayOfWeek, startTime, endTime);
+  }
+
+  async getAvailabilities(instructorId: string) {
+    return await this.instructorRepository.getAvailabilities(instructorId);
+  }
+
+  async deleteAvailability(availabilityId: string) {
+    return await this.instructorRepository.deleteAvailability(availabilityId);
+  }
 }
