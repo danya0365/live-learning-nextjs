@@ -22,17 +22,25 @@
 
 ## 🛠️ Technology Stack & Constraints รหัสหลักสูตร
 - **Framework:** Next.js 14+ (App Router เท่านั้น)
-- **Database & Auth:** Supabase
+- **Database & Auth:** Supabase (SSR/Server Client)
 - **Language:** TypeScript (Strict Mode)
-- **Styling:** TailwindCSS (ห้ามใช้ UI Library อื่น เว้นแต่จะระบุเพิ่ม)
-- **Animation:** `[ระบุ Library เช่น react-spring, framer-motion หรือเอาออกถ้าไม่ใช้]`
+- **Styling:** ให้ใช้ TailwindCSS และเขียน Global CSS หรือ Custom CSS ชั้นนำไว้ที่ไฟล์ `public/styles/index.css` เท่านั้น (ห้ามใช้ UI Library อื่น เว้นแต่จะระบุเพิ่ม)
+- **State Management:** Zustand (สร้าง store ไว้ที่ `src/presentation/stores/`)
+- **Form & Validation:** React Hook Form คู่กับ Zod เท่านั้น
+- **Data Fetching:** ยึดหลัก Server Components คู่กับ Presenter Pattern (หรือ React Query ถ้าระบุเพิ่ม)
+- **Animation:** `[ระบุ Library เช่น @react-spring/web, framer-motion หรือเอาออกถ้าไม่ใช้]`
 - **Fonts:** `[ระบุ Font เช่น Noto_Sans_Thai จาก next/font/google]`
 
 ## 🚨 กฎเหล็ก (Core Rules)
-1. **Architecture:** โครงสร้างโค้ดต้องอิงตามฟอร์แมต SOLID & Clean Architecture (แบ่ง Layer: Domain, Application, Infrastructure, Presentation) อย่างเคร่งครัด
+1. **Architecture:** โครงสร้างโค้ดต้องอิงตามฟอร์แมต SOLID & Clean Architecture อย่างเคร่งครัด
+   - `/app` - มีหน้าที่แค่ Routing, ฝัง Metadata และเรียกใช้ View Components
+   - `/src/domain` - เก็บ Types (รวมถึง Supabase Types) และ Entities หลัก
+   - `/src/application` - เก็บ Interfaces ของ Repositories
+   - `/src/infrastructure` - เก็บ Implementation ของ Repository (เช่น Supabase Call)
+   - `/src/presentation` - เก็บ UI Components, Hooks, Stores และ Presenters
 2. **Page Creation:** ทุกครั้งที่สร้าง Page/Feature ใหม่ **ต้อง**ทำตาม Pattern ที่กำหนดไว้ใน `[ระบุ Path ของไฟล์ CREATE_PAGE_PATTERN.md ของคุณ เช่น /prompt/CREATE_PAGE_PATTERN.md]`
 3. **Feature Requirements:** ยึดความต้องการและขอบเขตของระบบจากไฟล์ `[ระบุ Path ของไฟล์ FEATURE.md เช่น /prompt/FEATURE.md]` เสมอ
-4. **No Assumption:** ห้ามคิดฟีเจอร์เพิ่มเองนอกเหนือจากที่ระบุในไฟล์ Requirement หากมีข้อสงสัยให้ถามก่อนเสมอ
+4. **No Assumption & No Floating Code:** ห้ามคิดฟีเจอร์เพิ่มเองนอกเหนือจากที่ระบุ และห้ามนำ Business Logic ไปผูกติดกับ UI Component โดยตรง ต้องผ่าน Presenter หรือ Hook เสมอ
 
 ---
 
