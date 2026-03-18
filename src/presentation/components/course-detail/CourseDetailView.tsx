@@ -1,12 +1,9 @@
 'use client';
 
-import { ApiEnrollmentRepository } from '@/src/infrastructure/repositories/api/ApiEnrollmentRepository';
-import { ApiPaymentRepository } from '@/src/infrastructure/repositories/api/ApiPaymentRepository';
 import { CourseDetailViewModel } from '@/src/presentation/presenters/course-detail/CourseDetailPresenter';
 import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/useCourseDetailPresenter';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import CourseDetailSkeleton from './CourseDetailSkeleton';
 import { EasyBookingModal } from './EasyBookingModal';
 
@@ -21,10 +18,6 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
   const router = useRouter();
   const state = useCourseDetailPresenter(courseId, initialViewModel);
   const vm = state.viewModel;
-
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | undefined>(undefined);
-  const [isEnrolling, setIsEnrolling] = useState(false);
 
   if (state.loading && !vm) {
     return <CourseDetailSkeleton />;
@@ -51,36 +44,6 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
 
   const levelLabel = (l: string) =>
     l === 'beginner' ? '🟢 เริ่มต้น' : l === 'intermediate' ? '🟡 ปานกลาง' : '🔴 ขั้นสูง';
-
-  const handleOpenBooking = (slotId?: string) => {
-    if (!isEnrolled) return; // Payment gate
-    setSelectedSlotId(slotId);
-    setIsBookingModalOpen(true);
-  };
-
-  const handleEnroll = async () => {
-    setIsEnrolling(true);
-    try {
-      const enrollmentRepo = new ApiEnrollmentRepository();
-      const newEnrollment = await enrollmentRepo.createEnrollment({ courseId: course.id });
-
-      if (course.price > 0) {
-        // Redirect to Stripe checkout for enrollment payment
-        const paymentRepo = new ApiPaymentRepository();
-        const result = await paymentRepo.createCheckoutSession(newEnrollment.id);
-        if (result.url) {
-          window.location.href = result.url;
-          return;
-        }
-      }
-
-      // Free course → reload to show enrolled state
-      window.location.reload();
-    } catch (err) {
-      console.error('Enrollment error:', err);
-      setIsEnrolling(false);
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -186,7 +149,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                     
                     {isEnrolled && hasRemainingHours ? (
                         <button
-                          onClick={() => handleOpenBooking(slot.id)}
+                          onClick={() => state.openBookingModal(slot.id)}
                           className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
                         >
                           📅 จองเวลานี้
@@ -388,34 +351,18 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             ) : enrollment?.status === 'pending' ? (
               /* Pending payment */
               <button
-                onClick={handleEnroll}
-                disabled={isEnrolling}
-                className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform disabled:opacity-50"
+                onClick={state.enrollCourse}
+                className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
               >
-                {isEnrolling ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    กำลังดำเนินการ...
-                  </span>
-                ) : (
-                  '💳 ชำระเงินเพื่อเริ่มเรียน'
-                )}
+                💳 ชำระเงินเพื่อเริ่มเรียน
               </button>
             ) : (
               /* Not enrolled — Show enroll button */
               <button
-                onClick={handleEnroll}
-                disabled={isEnrolling}
-                className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform disabled:opacity-50"
+                onClick={state.enrollCourse}
+                className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
               >
-                {isEnrolling ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    กำลังดำเนินการ...
-                  </span>
-                ) : (
-                  '🎓 ลงทะเบียนเรียน'
-                )}
+                🎓 ลงทะเบียนเรียน
               </button>
             )}
 
@@ -479,13 +426,13 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
         </div>
       </div>
 
-      {isBookingModalOpen && (
+      {state.isBookingModalOpen && (
         <EasyBookingModal
           course={course}
           instructor={instructor}
           enrollment={enrollment!}
-          initialSlotId={selectedSlotId}
-          onClose={() => setIsBookingModalOpen(false)}
+          initialSlotId={state.selectedSlotId}
+          onClose={state.closeBookingModal}
         />
       )}
     </div>
