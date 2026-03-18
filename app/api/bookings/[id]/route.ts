@@ -1,25 +1,24 @@
-
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
-  const authRepo = new SupabaseAuthRepository(supabase);
-  const instructorRepo = new SupabaseInstructorRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
+  const profilePresenter = await createServerProfilePresenter();
+  const instructorsPresenter = await createServerInstructorsPresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     if (!profile) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const result = await repository.getById(id);
+    const result = await presenter.getById(id);
     if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     // SECURE: Check ownership (Student OR Instructor)
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // 2. Is Instructor?
-    const instructor = await instructorRepo.getByProfileId(profile.id);
+    const instructor = await instructorsPresenter.getByProfileId(profile.id);
     if (instructor && result.instructorId === instructor.id) {
         return NextResponse.json(result);
     }
@@ -48,14 +47,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
-  const authRepo = new SupabaseAuthRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
+  const profilePresenter = await createServerProfilePresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const existing = await repository.getById(id);
+    const existing = await presenter.getById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     // Only allow Student (Owner) to update? Or Instructor?
@@ -69,7 +68,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json();
-    const result = await repository.update(id, body);
+    const result = await presenter.update(id, body);
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -79,21 +78,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
-  const authRepo = new SupabaseAuthRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
+  const profilePresenter = await createServerProfilePresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     if (!profile) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const existing = await repository.getById(id);
+    const existing = await presenter.getById(id);
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (existing.studentId !== profile.id) {
          return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const success = await repository.delete(id);
+    const success = await presenter.delete(id);
     if (!success) {
         return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
     }

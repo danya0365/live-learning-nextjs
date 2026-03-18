@@ -1,5 +1,4 @@
-import { SupabaseInstructorRepository } from "@/src/infrastructure/repositories/supabase/SupabaseInstructorRepository";
-import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
+import { createServerInstructorsPresenter } from "@/src/presentation/presenters/instructors/InstructorsPresenterServerFactory";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -8,10 +7,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const { id } = await params;
 
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseInstructorRepository(supabase);
+    const presenter = await createServerInstructorsPresenter();
     
-    const success = await repository.deleteAvailability(id);
+    const success = await presenter.deleteAvailability(id);
     
     if (success) {
       return NextResponse.json({ success: true });

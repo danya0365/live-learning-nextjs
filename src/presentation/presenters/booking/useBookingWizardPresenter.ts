@@ -3,6 +3,8 @@ import { Level } from '@/src/application/repositories/IConfigRepository';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClientConfigPresenter } from '../config/ConfigPresenterClientFactory';
+import { createServerWalletPresenter } from '../wallet/WalletPresenterServerFactory'; // We need a way to get wallet from client, we'll use API or a separate fetch
+// Since it's a client component, we'll fetch wallet via API
 import { createClientBookingWizardPresenter } from './BookingWizardPresenterClientFactory';
 
 export type BookingWizardStep = 'course' | 'instructor' | 'calendar' | 'confirm';
@@ -25,6 +27,8 @@ export interface BookingWizardState {
   discountAmount: number;
   finalPrice: number | null;
   isEnrolled: boolean;
+  walletBalance: number;
+  paymentMethod: 'stripe' | 'wallet';
 }
 
 export interface BookingWizardActions {
@@ -37,6 +41,7 @@ export interface BookingWizardActions {
   handleNewBooking: () => void;
   setCouponCode: (code: string) => void;
   applyCoupon: () => Promise<void>;
+  setPaymentMethod: (method: 'stripe' | 'wallet') => void;
 }
 
 export function useBookingWizardPresenter() {
@@ -68,18 +73,32 @@ export function useBookingWizardPresenter() {
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
 
+  // Wallet State
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet'>('stripe');
+
   // Initial Load
   useEffect(() => {
     async function loadInitialData() {
       setLoading(true);
       try {
         const configPresenter = createClientConfigPresenter();
+        
+        // Fetch wallet balance
+        const walletRes = await fetch('/api/wallet');
+        let initialWalletBalance = 0;
+        if (walletRes.ok) {
+           const walletData = await walletRes.json();
+           initialWalletBalance = walletData.wallet?.balance || 0;
+        }
+
         const [c, l] = await Promise.all([
             presenter.getCourses(),
             configPresenter.getLevels()
         ]);
         setCourses(c);
         setLevels(l);
+        setWalletBalance(initialWalletBalance);
       } catch (error) {
         console.error("Failed to load data", error);
       } finally {
@@ -161,22 +180,34 @@ export function useBookingWizardPresenter() {
             slotId: selectedSlot.id, // This is the instructor_availability_id
             date: targetDate.toISOString(),
             action: bookingAction,
-            couponCode: couponCode ? couponCode : undefined
+            couponCode: couponCode ? couponCode : undefined,
+            paymentMethod: paymentMethod // Pass the selected payment method
         });
 
-        if (result.status === 'awaiting_payment' && result.checkoutUrl) {
+        if (result.status === 'awaiting_payment' && result.checkoutUrl && paymentMethod === 'stripe') {
             // Redirect to Stripe
             window.location.href = result.checkoutUrl;
             return;
         }
+
+        // If returned status is awaiting_payment but no checkout URL is here for Stripe,
+        // or if it was wallet but error was thrown, it's caught in catch.
+        // If wallet pays successfully, the backend sets status = 'succeeded' and finishes the flow, so we land here.
         
         setIsBooking(false);
         setBookingDone(true);
-    } catch (error) {
+
+        // Update local wallet balance after successful wallet payment
+        if (paymentMethod === 'wallet' && result.status !== 'awaiting_payment' && finalPrice !== 0 && (finalPrice || selectedCourse.price)) {
+            setWalletBalance(prev => prev - (finalPrice !== null ? finalPrice : selectedCourse.price));
+        }
+
+    } catch (error: any) {
         console.error('Booking failed', error);
+        alert(error.message || 'เกิดข้อผิดพลาดในการทำการจอง');
         setIsBooking(false);
     }
-  }, [selectedCourse, selectedInstructor, selectedSlot, bookingAction, presenter, couponCode]);
+  }, [selectedCourse, selectedInstructor, selectedSlot, bookingAction, presenter, couponCode, paymentMethod, finalPrice]);
 
   const goBack = useCallback(() => {
     if (step === 'instructor') { setStep('course'); setSelectedInstructor(null); setAvailableInstructors([]); }
@@ -201,6 +232,7 @@ export function useBookingWizardPresenter() {
     setFinalPrice(null);
     setCouponError(null);
     setIsEnrolled(false);
+    setPaymentMethod('stripe'); // Reset to default
   }, []);
 
   const applyCoupon = useCallback(async () => {
@@ -258,7 +290,9 @@ export function useBookingWizardPresenter() {
       couponError,
       discountAmount,
       finalPrice,
-      isEnrolled
+      isEnrolled,
+      walletBalance,
+      paymentMethod
     },
     actions: {
       handleCourseSelect,
@@ -269,7 +303,8 @@ export function useBookingWizardPresenter() {
       handleFinish,
       handleNewBooking,
       setCouponCode,
-      applyCoupon
+      applyCoupon,
+      setPaymentMethod
     }
   };
 }

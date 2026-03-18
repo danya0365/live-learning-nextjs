@@ -276,36 +276,57 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             <div>
               <h2 className="text-xl font-bold text-text-primary mb-4">📋 เนื้อหาหลักสูตร</h2>
               <div className="space-y-3">
-                {course.syllabus.map((module: any, i: number) => (
-                  <details key={i} className="group glass rounded-2xl overflow-hidden cursor-pointer" open={i === 0}>
-                    <summary className="flex items-center justify-between p-5 font-bold text-text-primary hover:bg-white/5 transition-colors list-none">
-                      <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm">
-                          {i + 1}
-                        </span>
-                        <span>{module.title}</span>
+                {course.syllabus.map((module: any, i: number) => {
+                  const hasLessons = module.lessons && module.lessons.length > 0;
+                  
+                  if (!hasLessons) {
+                    return (
+                      <div key={i} className="glass rounded-2xl overflow-hidden">
+                        <div className="flex items-center justify-between p-5 font-bold text-text-primary">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm">
+                              {i + 1}
+                            </span>
+                            <span>{module.title}</span>
+                          </div>
+                          {module.duration && (
+                            <span className="text-sm text-text-muted font-normal">{module.duration}</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-text-muted font-normal">
-                        <span>{module.lessons?.length || 0} บทเรียน</span>
-                        <span>{module.duration}</span>
-                        <span className="text-primary group-open:rotate-180 transition-transform">▼</span>
+                    );
+                  }
+
+                  return (
+                    <details key={i} className="group glass rounded-2xl overflow-hidden cursor-pointer" open={i === 0}>
+                      <summary className="flex items-center justify-between p-5 font-bold text-text-primary hover:bg-white/5 transition-colors list-none">
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm">
+                            {i + 1}
+                          </span>
+                          <span>{module.title}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-text-muted font-normal">
+                          <span>{module.lessons?.length || 0} บทเรียน</span>
+                          {module.duration && <span>{module.duration}</span>}
+                          <span className="text-primary group-open:rotate-180 transition-transform">▼</span>
+                        </div>
+                      </summary>
+                      <div className="p-5 pt-0 border-t border-white/5">
+                        <ul className="space-y-3 mt-4">
+                          {module.lessons?.map((lesson: string, j: number) => (
+                            <li key={j} className="flex items-start justify-between text-sm text-text-secondary group/lesson">
+                              <div className="flex items-start gap-3">
+                                <span className="mt-0.5 opacity-50">▶</span>
+                                <span className="group-hover/lesson:text-primary transition-colors">{lesson}</span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </summary>
-                    <div className="p-5 pt-0 border-t border-white/5">
-                      <ul className="space-y-3 mt-4">
-                        {module.lessons?.map((lesson: any, j: number) => (
-                          <li key={j} className="flex items-start justify-between text-sm text-text-secondary group/lesson">
-                            <div className="flex items-start gap-3">
-                              <span className="mt-0.5 opacity-50">▶</span>
-                              <span className="group-hover/lesson:text-primary transition-colors">{lesson.title}</span>
-                            </div>
-                            <span className="text-xs text-text-muted">{lesson.duration}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </details>
-                ))}
+                    </details>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,9 +12,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   const resolvedParams = await params;
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
   
-  const result = await repository.getByMonthByProfile(resolvedParams.profileId, parseInt(month), parseInt(year));
+  const result = await presenter.getByMonthByProfile(resolvedParams.profileId, parseInt(month), parseInt(year));
   return NextResponse.json(result);
 }

@@ -68,7 +68,7 @@ export interface IBookingRepository {
   /** Get bookings for a specific instructor by explicit instructorId */
   getByInstructorId(instructorId: string): Promise<Booking[]>;
   getByCourseId(courseId: string): Promise<Booking[]>;
-  create(data: CreateBookingPayload): Promise<Booking>;
+  create(data: CreateBookingPayload, studentId: string): Promise<Booking>;
   update(id: string, data: UpdateBookingData): Promise<Booking>;
   delete(id: string): Promise<boolean>;
   getStats(): Promise<BookingStats>;

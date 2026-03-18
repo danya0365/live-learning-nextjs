@@ -1,30 +1,29 @@
-
-import { SupabaseConsultationRepository } from "@/src/infrastructure/repositories/supabase/SupabaseConsultationRepository";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
+import { createServerConsultationsPresenter } from "@/src/presentation/presenters/consultations/ConsultationsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { SupabaseAuthRepository } from "@/src/infrastructure/repositories/supabase/SupabaseAuthRepository";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseConsultationRepository(supabase);
-  const authRepo = new SupabaseAuthRepository(supabase);
+  const presenter = await createServerConsultationsPresenter();
+  const profilePresenter = await createServerProfilePresenter();
 
   try {
-    const profile = await authRepo.getProfile();
+    const profile = await profilePresenter.getProfile();
     if (!profile) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 1. Get the offer to find the request ID
-    const offer = await repository.getOfferById(id);
+    const offer = await presenter.getOfferById(id);
     if (!offer) {
         return NextResponse.json({ error: 'Offer not found' }, { status: 404 });
     }
 
     // 2. Get the request to check student ownership
-    const consultationRequest = await repository.getRequestById(offer.requestId);
+    const consultationRequest = await presenter.getRequestById(offer.requestId);
     if (!consultationRequest) {
         return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ error: 'Unauthorized: You can only accept offers for your own requests' }, { status: 403 });
     }
 
-    const result = await repository.acceptOffer(id);
+    const result = await presenter.acceptOffer(id);
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

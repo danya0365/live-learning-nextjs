@@ -53,4 +53,61 @@ export class MyBookingsPresenter {
       upcomingCount,
     };
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getByMonth(month: number, year: number, filters?: { instructorId?: string; studentId?: string; courseId?: string }) {
+    return await this.bookingRepository.getByMonth(month, year, filters);
+  }
+
+  async getByMonthByProfile(profileId: string, month: number, year: number) {
+    return await this.bookingRepository.getByMonthByProfile(profileId, month, year);
+  }
+
+  async getByInstructorId(instructorId: string) {
+    return await this.bookingRepository.getByInstructorId(instructorId);
+  }
+
+  async getByCourseId(courseId: string) {
+    return await this.bookingRepository.getByCourseId(courseId);
+  }
+
+  async create(data: any, studentId: string) {
+    return await this.bookingRepository.create(data, studentId);
+  }
+
+  async getById(id: string) {
+    return await this.bookingRepository.getById(id);
+  }
+
+  async update(id: string, updates: Partial<Booking>) {
+    return await this.bookingRepository.update(id, updates);
+  }
+
+  async delete(id: string) {
+    return await this.bookingRepository.delete(id);
+  }
+
+  async getMyBookingsByMonth(month: number, year: number) {
+    return await this.bookingRepository.getMyBookingsByMonth(month, year);
+  }
+
+  async getByStudentId(studentId: string) {
+    return await this.bookingRepository.getByStudentId(studentId);
+  }
+
+  async getStatsByProfile(profileId: string) {
+    return await this.bookingRepository.getStatsByProfile(profileId);
+  }
+
+  async getMyStats() {
+    return await this.bookingRepository.getMyStats();
+  }
+
+  async getStats() {
+    return await this.bookingRepository.getStats();
+  }
 }

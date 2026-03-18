@@ -129,4 +129,25 @@ export class ProfilePresenter {
       recommendedCourses,
     };
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getProfiles() {
+    return await this.profileRepository.getProfiles();
+  }
+
+  async getProfile() {
+    return await this.profileRepository.getProfile();
+  }
+
+  async getById(id: string) {
+    return await this.profileRepository.getById(id);
+  }
+
+  async switchProfile(profileId: string): Promise<boolean> {
+    return await this.profileRepository.switchProfile(profileId);
+  }
 }

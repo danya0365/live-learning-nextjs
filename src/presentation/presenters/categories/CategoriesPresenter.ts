@@ -55,4 +55,37 @@ export class CategoriesPresenter {
       totalCourses: allCourses.filter((c) => c.isActive).length,
     };
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getAll(): Promise<Category[]> {
+    return await this.categoryRepository.getAll();
+  }
+
+  async getPaginated(page: number, perPage: number) {
+    return await this.categoryRepository.getPaginated(page, perPage);
+  }
+
+  async getById(id: string): Promise<Category | null> {
+    return await this.categoryRepository.getById(id);
+  }
+
+  async create(data: any): Promise<Category> {
+    return await this.categoryRepository.create(data);
+  }
+
+  async update(id: string, data: any): Promise<Category> {
+    return await this.categoryRepository.update(id, data);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    return await this.categoryRepository.delete(id);
+  }
+
+  async getStats() {
+    return await this.categoryRepository.getStats();
+  }
 }

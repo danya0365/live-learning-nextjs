@@ -6,9 +6,8 @@ import { Noto_Sans_Thai } from 'next/font/google';
 
 const notoSansThai = Noto_Sans_Thai({
   subsets: ['thai', 'latin'],
-  display: 'swap',
   variable: '--font-noto-sans-thai',
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {

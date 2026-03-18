@@ -76,7 +76,6 @@ export function useNewConsultationPresenter() {
     try {
       const presenter = createClientConsultationsPresenter();
       await presenter.createRequest({
-        studentId: '', // Handled by Server
         categoryId,
         title: title.trim(),
         description: description.trim(),
@@ -85,7 +84,7 @@ export function useNewConsultationPresenter() {
         budgetMax: parseInt(budgetMax) || 0,
         preferredDates: preferredDates.filter((d) => d),
         preferredTimes,
-      });
+      }, ''); // Handled by Server
       router.push('/consultations');
     } catch (err) {
       console.error(err);

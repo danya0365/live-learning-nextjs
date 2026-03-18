@@ -1,15 +1,13 @@
-import { SupabaseLiveSessionRepository } from '@/src/infrastructure/repositories/supabase/SupabaseLiveSessionRepository';
-import { createServerSupabaseClient } from '@/src/infrastructure/supabase/server';
+import { createServerLiveSessionsPresenter } from '@/src/presentation/presenters/live/LiveSessionsPresenterServerFactory';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseLiveSessionRepository(supabase);
+    const presenter = await createServerLiveSessionsPresenter();
     
-    const sessions = await repository.getActiveSessions();
+    const sessions = await presenter.getActiveSessions();
     
     return NextResponse.json(sessions);
   } catch (error) {

@@ -1,5 +1,4 @@
-
-import { SupabaseCategoryRepository } from "@/src/infrastructure/repositories/supabase/SupabaseCategoryRepository";
+import { createServerCategoriesPresenter } from "@/src/presentation/presenters/categories/CategoriesPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,8 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseCategoryRepository(supabase);
+    const presenter = await createServerCategoriesPresenter();
     
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -16,11 +14,11 @@ export async function GET(request: NextRequest) {
     const perPage = searchParams.get('perPage');
 
     if (page && perPage) {
-        const paginated = await repository.getPaginated(Number(page), Number(perPage));
+        const paginated = await presenter.getPaginated(Number(page), Number(perPage));
         return NextResponse.json(paginated);
     }
 
-    const categories = await repository.getAll();
+    const categories = await presenter.getAll();
     return NextResponse.json(categories);
   } catch (error) {
     console.error('API Error:', error);
@@ -39,11 +37,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const repository = new SupabaseCategoryRepository(supabase);
+    const presenter = await createServerCategoriesPresenter();
     
     // TODO: Add Admin role check here
     
-    const category = await repository.create(body);
+    const category = await presenter.create(body);
     
     return NextResponse.json(category);
   } catch (error) {

@@ -1,6 +1,4 @@
-
-import { SupabaseProfileRepository } from "@/src/infrastructure/repositories/supabase/SupabaseProfileRepository";
-import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
+import { createServerProfilePresenter } from "@/src/presentation/presenters/profile/ProfilePresenterServerFactory";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -11,10 +9,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 });
   }
 
-  const supabase = await createServerSupabaseClient();
-  const repo = new SupabaseProfileRepository(supabase);
-  
-  const success = await repo.switchProfile(profileId);
+  const presenter = await createServerProfilePresenter();
+  const success = await presenter.switchProfile(profileId);
   
   if (!success) {
       return NextResponse.json({ error: 'Failed to switch profile' }, { status: 500 });

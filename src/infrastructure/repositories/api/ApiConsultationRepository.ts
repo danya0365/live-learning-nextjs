@@ -79,7 +79,7 @@ export class ApiConsultationRepository implements IConsultationRepository {
   // REQUESTS - WRITE
   // ============================================================
 
-  async createRequest(data: CreateConsultationRequestPayload): Promise<ConsultationRequest> {
+  async createRequest(data: CreateConsultationRequestPayload, studentId: string): Promise<ConsultationRequest> {
     const res = await fetch(this.baseUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -130,7 +130,7 @@ export class ApiConsultationRepository implements IConsultationRepository {
   // OFFERS - WRITE
   // ============================================================
 
-  async createOffer(data: CreateConsultationOfferPayload): Promise<ConsultationOffer> {
+  async createOffer(data: CreateConsultationOfferPayload, instructorId: string): Promise<ConsultationOffer> {
     const res = await fetch(`${this.baseUrl}/${data.requestId}/offers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

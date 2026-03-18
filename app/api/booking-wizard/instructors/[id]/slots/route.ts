@@ -1,4 +1,4 @@
-import { SupabaseBookingWizardRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingWizardRepository";
+import { createServerBookingWizardPresenter } from "@/src/presentation/presenters/booking/BookingWizardPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,9 +8,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const supabase = await createServerSupabaseClient();
-    const repository = new SupabaseBookingWizardRepository(supabase);
+    const presenter = await createServerBookingWizardPresenter();
     
-    const slots = await repository.getSlotsByInstructor(id);
+    const slots = await presenter.getSlotsByInstructor(id);
     
     return NextResponse.json(slots);
   } catch (error) {

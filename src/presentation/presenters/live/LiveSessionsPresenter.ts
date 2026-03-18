@@ -46,4 +46,13 @@ export class LiveSessionsPresenter {
       totalLive: sessions.length,
     };
   }
+
+  // ============================================================
+  // GRANULAR DATA METHODS (For API Routes & Individual Actions)
+  // ============================================================
+  // ⚠️ API Routes MUST call these methods individually rather than using getViewModel()
+
+  async getActiveSessions() {
+    return await this.liveSessionRepository.getActiveSessions();
+  }
 }

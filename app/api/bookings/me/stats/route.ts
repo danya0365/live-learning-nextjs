@@ -1,11 +1,10 @@
-import { SupabaseBookingRepository } from "@/src/infrastructure/repositories/supabase/SupabaseBookingRepository";
+import { createServerMyBookingsPresenter } from "@/src/presentation/presenters/my-bookings/MyBookingsPresenterServerFactory";
 import { createServerSupabaseClient } from "@/src/infrastructure/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const repository = new SupabaseBookingRepository(supabase);
+  const presenter = await createServerMyBookingsPresenter();
   
-  const result = await repository.getMyStats();
+  const result = await presenter.getMyStats();
   return NextResponse.json(result);
 }
