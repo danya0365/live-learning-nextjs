@@ -31,6 +31,7 @@ export interface WizardSlot {
   status: 'available' | 'booked' | 'none';
   bookedCourseName?: string;
   bookedCourseId?: string;
+  bookedByCurrentUser?: boolean;
 }
 
 export interface CreateWizardBookingData {

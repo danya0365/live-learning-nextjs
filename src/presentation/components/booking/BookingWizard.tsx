@@ -500,6 +500,10 @@ function StepCalendar({
           <span className="text-text-secondary">คอร์สเดียวกัน — เข้าร่วม</span>
         </div>
         <div className="flex items-center gap-1.5">
+          <div className="w-4 h-4 rounded bg-primary/20 border border-primary/50" />
+          <span className="text-text-secondary">จองแล้ว</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-surface border border-border" />
           <span className="text-text-secondary">ติดสอนคลาสอื่น / ไม่มีคลาส</span>
         </div>
@@ -529,8 +533,9 @@ function StepCalendar({
                 <div className="space-y-2">
                   {daySlots.map((slot) => {
                     const isAvailable = slot.status === 'available';
-                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id;
-                    const isUnavailable = slot.status === 'booked' && slot.bookedCourseId !== course.id;
+                    const isBookedByMe = slot.bookedByCurrentUser;
+                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id && !isBookedByMe;
+                    const isUnavailable = (slot.status === 'booked' && slot.bookedCourseId !== course.id) || isBookedByMe;
                     
                     return (
                     <button
@@ -548,27 +553,29 @@ function StepCalendar({
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm ${isAvailable ? 'text-success' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
-                              {isAvailable ? '🟢' : isJoinable ? '🟡' : '🔴'}
+                            <span className={`text-sm ${isAvailable ? 'text-success' : isBookedByMe ? 'text-primary' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              {isAvailable ? '🟢' : isBookedByMe ? '🔵' : isJoinable ? '🟡' : '🔴'}
                             </span>
                             <span className={`text-sm font-bold ${isUnavailable ? 'text-text-muted' : 'text-text-primary'}`}>
                               {slot.startTime} — {slot.endTime}
                             </span>
                           </div>
                           {slot.status === 'booked' && slot.bookedCourseName && (
-                            <p className={`text-[10px] ml-5 mt-0.5 ${isJoinable ? 'text-warning' : 'text-text-muted'}`}>
-                              📌 {slot.bookedCourseName}
+                            <p className={`text-[10px] ml-5 mt-0.5 ${isBookedByMe ? 'text-primary' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              📌 {slot.bookedCourseName} {isBookedByMe && '(คุณจองแล้ว)'}
                             </p>
                           )}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           isAvailable
                             ? 'bg-success/20 text-success'
+                            : isBookedByMe
+                            ? 'bg-primary/20 text-primary'
                             : isJoinable
                             ? 'bg-warning/20 text-warning'
                             : 'bg-surface text-text-muted'
                         }`}>
-                          {isAvailable ? 'จองใหม่' : isJoinable ? 'เข้าร่วม' : 'ไม่ว่าง'}
+                          {isAvailable ? 'จองใหม่' : isBookedByMe ? 'จองแล้ว' : isJoinable ? 'เข้าร่วม' : 'ไม่ว่าง'}
                         </span>
                       </div>
                     </button>

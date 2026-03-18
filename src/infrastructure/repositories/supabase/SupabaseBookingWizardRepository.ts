@@ -31,6 +31,20 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         this.bookingRepo = new SupabaseBookingRepository(supabase);
     }
 
+    private async getActiveProfileId(): Promise<string | undefined> {
+        const { data: activeProfiles, error } = await this.supabase.rpc('get_active_profile');
+        if (error) {
+            console.error('Error fetching active profile:', error);
+            return undefined;
+        }
+        
+        type ProfileResult = { id?: string };
+        const profiles = activeProfiles as ProfileResult[] | ProfileResult | null;
+        
+        if (!profiles) return undefined;
+        return Array.isArray(profiles) ? profiles[0]?.id : profiles.id;
+    }
+
     async getCourses(): Promise<WizardCourse[]> {
         const courses = await this.courseRepo.getAll();
         
@@ -66,6 +80,9 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
     }
 
     async getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]> {
+        // Get current active profile to check for duplicate bookings
+        const activeProfileId = await this.getActiveProfileId();
+
         // 1. Get the base template availabilities
         const availabilities = await this.instructorRepo.getAvailabilities(instructorId);
         
@@ -104,6 +121,7 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             let status: 'available' | 'booked' | 'none' = 'available';
             let bookedCourseId: string | undefined = undefined;
             let bookedCourseName: string | undefined = undefined;
+            let bookedByCurrentUser = false;
 
             // Check if this slot time generally overlaps with an active live session 
             // (very rough check - ideal logic should map specific dates)
@@ -118,16 +136,22 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
                  bookedCourseId = isLive.course_id;
                  // Type coercion due to Supabase nested selection typing
                  bookedCourseName = (isLive.course as unknown as { title: string })?.title || 'Live Session';
+                 
+                 // Check if the current user has already booked for this availability
+                 bookedByCurrentUser = activeProfileId ? activeBookings?.some(b => 
+                     b.instructor_availability_id === a.id && 
+                     b.student_profile_id === activeProfileId
+                 ) ?? false : false;
             } else {
                  // Check if it's booked
-                 const isBooked = activeBookings?.find(b => {
-                     // Check if booking is for the same daily template
-                     return b.instructor_availability_id === a.id;
-                 });
-                 if (isBooked) {
+                 const overlappingBookings = activeBookings?.filter(b => b.instructor_availability_id === a.id) || [];
+                 if (overlappingBookings.length > 0) {
                      status = 'booked';
-                     bookedCourseId = isBooked.course_id;
-                     bookedCourseName = (isBooked.course as unknown as { title: string })?.title || 'Booked Class';
+                     bookedCourseId = overlappingBookings[0].course_id;
+                     bookedCourseName = (overlappingBookings[0].course as unknown as { title: string })?.title || 'Booked Class';
+                     
+                     // Check if any of these overlapping bookings belong to the current user
+                     bookedByCurrentUser = activeProfileId ? overlappingBookings.some(b => b.student_profile_id === activeProfileId) : false;
                  }
             }
 
@@ -138,7 +162,8 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
                 endTime: a.endTime,
                 status: status,
                 bookedCourseId: bookedCourseId,
-                bookedCourseName: bookedCourseName
+                bookedCourseName: bookedCourseName,
+                bookedByCurrentUser: bookedByCurrentUser
             };
         });
     }
