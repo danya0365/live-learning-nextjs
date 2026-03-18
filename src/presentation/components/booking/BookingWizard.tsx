@@ -65,7 +65,8 @@ export function BookingWizard() {
     finalPrice,
     isEnrolled,
     walletBalance,
-    paymentMethod
+    paymentMethod,
+    enrolledCourseIds
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -130,7 +131,7 @@ export function BookingWizard() {
         {/* Step content */}
         <div className="animate-fadeIn">
           {step === 'course' && (
-            <StepCourse courses={courses} levels={levels} onSelect={actions.handleCourseSelect} />
+            <StepCourse courses={courses} levels={levels} enrolledCourseIds={enrolledCourseIds} onSelect={actions.handleCourseSelect} />
           )}
           {step === 'instructor' && selectedCourse && (
             <StepInstructor
@@ -186,7 +187,7 @@ export function BookingWizard() {
 /* ════════════════════════════════════════════
    Step 1: เลือกคอร์ส
    ════════════════════════════════════════════ */
-function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; levels: Level[]; onSelect: (c: WizardCourse) => void }) {
+function StepCourse({ courses, levels, enrolledCourseIds, onSelect }: { courses: WizardCourse[]; levels: Level[]; enrolledCourseIds: string[]; onSelect: (c: WizardCourse) => void }) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -252,10 +253,16 @@ function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; le
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-lg font-extrabold text-primary">
-                    ฿{course.price.toLocaleString()}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
+                  {enrolledCourseIds.includes(course.id) ? (
+                    <div className="px-2 py-1 rounded-lg bg-success/10 border border-success/30 text-[10px] font-bold text-success animate-pulse inline-block mb-1">
+                      👑 OWNED
+                    </div>
+                  ) : (
+                    <div className="text-lg font-extrabold text-primary">
+                      ฿{course.price.toLocaleString()}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-xs text-text-muted mt-1 justify-end">
                     <span>⭐ {course.rating}</span>
                     <span>•</span>
                     <span>👥 {course.totalStudents.toLocaleString()}</span>
@@ -263,7 +270,9 @@ function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; le
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-xs text-primary font-medium">เลือกคอร์สนี้ →</span>
+                <span className={`text-xs font-medium ${enrolledCourseIds.includes(course.id) ? 'text-success' : 'text-primary'}`}>
+                  {enrolledCourseIds.includes(course.id) ? 'จองเวลาเรียน →' : 'เลือกคอร์สนี้ →'}
+                </span>
               </div>
             </button>
           );

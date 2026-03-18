@@ -33,4 +33,8 @@ export class BookingWizardPresenter {
   async checkEnrollment(courseId: string): Promise<Enrollment | null> {
     return this.enrollmentRepo.checkEnrollment(courseId);
   }
+
+  async getMyEnrollments(): Promise<Enrollment[]> {
+    return this.enrollmentRepo.getMyEnrollments();
+  }
 }

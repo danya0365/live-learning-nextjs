@@ -29,6 +29,7 @@ export interface BookingWizardState {
   isEnrolled: boolean;
   walletBalance: number;
   paymentMethod: 'stripe' | 'wallet';
+  enrolledCourseIds: string[];
 }
 
 export interface BookingWizardActions {
@@ -76,6 +77,7 @@ export function useBookingWizardPresenter() {
   // Wallet State
   const [walletBalance, setWalletBalance] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet'>('stripe');
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
 
   // Initial Load
   useEffect(() => {
@@ -92,13 +94,15 @@ export function useBookingWizardPresenter() {
            initialWalletBalance = walletData.wallet?.balance || 0;
         }
 
-        const [c, l] = await Promise.all([
+        const [c, l, enrollments] = await Promise.all([
             presenter.getCourses(),
-            configPresenter.getLevels()
+            configPresenter.getLevels(),
+            presenter.getMyEnrollments().catch(() => [])
         ]);
         setCourses(c);
         setLevels(l);
         setWalletBalance(initialWalletBalance);
+        setEnrolledCourseIds(enrollments.map(e => e.courseId));
       } catch (error) {
         console.error("Failed to load data", error);
       } finally {
@@ -292,7 +296,8 @@ export function useBookingWizardPresenter() {
       finalPrice,
       isEnrolled,
       walletBalance,
-      paymentMethod
+      paymentMethod,
+      enrolledCourseIds
     },
     actions: {
       handleCourseSelect,
