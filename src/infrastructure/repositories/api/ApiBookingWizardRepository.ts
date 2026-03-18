@@ -58,8 +58,17 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         }));
     }
 
-    async getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]> {
-        const res = await fetch(`/api/booking-wizard/instructors/${instructorId}/slots`);
+    async getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]> {
+        const url = new URL(`/api/booking-wizard/instructors/${instructorId}/slots`, window.location.origin);
+        if (startDateIso) url.searchParams.append('startDateIso', startDateIso);
+        if (endDateIso) url.searchParams.append('endDateIso', endDateIso);
+
+        const res = await fetch(url.toString(), {
+            // It's important not to cache date-specific requests by default across differing environments
+            // if we are jumping dates fast.
+            cache: 'no-store'
+        });
+        
         if (!res.ok) throw new Error('Failed to fetch wizard slots');
         return res.json();
     }

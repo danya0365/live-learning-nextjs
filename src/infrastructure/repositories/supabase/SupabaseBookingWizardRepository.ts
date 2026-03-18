@@ -79,7 +79,7 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         }));
     }
 
-    async getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]> {
+    async getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]> {
         // Get current active profile to check for duplicate bookings
         const activeProfileId = await this.getActiveProfileId();
 
@@ -91,7 +91,7 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         // dynamically based on overlapping bookings for the upcoming dates.
         
         // Get all active bookings for this instructor
-        const { data: activeBookings } = await this.supabase
+        let bookingsQuery = this.supabase
             .from('bookings')
             .select(`
                 *,
@@ -100,8 +100,16 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             .eq('instructor_profile_id', instructorId)
             .in('status', ['pending', 'confirmed']);
             
+        if (startDateIso && endDateIso) {
+            bookingsQuery = bookingsQuery
+                .gte('scheduled_date', startDateIso.split('T')[0])
+                .lte('scheduled_date', endDateIso.split('T')[0]);
+        }
+            
+        const { data: activeBookings } = await bookingsQuery;
+            
         // Get active live sessions for this instructor
-        const { data: liveSessions } = await this.supabase
+        let liveSessionsQuery = this.supabase
             .from('live_sessions')
             .select(`
                 *,
@@ -109,10 +117,18 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             `)
             .eq('instructor_profile_id', instructorId)
             .in('status', ['scheduled', 'live']);
+            
+        if (startDateIso && endDateIso) {
+            liveSessionsQuery = liveSessionsQuery
+                .gte('scheduled_start', startDateIso)
+                .lte('scheduled_start', endDateIso);
+        }
+            
+        const { data: liveSessions } = await liveSessionsQuery;
 
-        // Since the wizard currently works on a weekly template level (dayOfWeek), 
-        // we'll check if there's ANY upcoming booking that blocks this template slot
-        // in the near future (e.g., this week)
+        // Note: The previous logic relied heavily on finding ANY active bookings matching the day of the week.
+        // With date-bounded filtering, the queries correctly scope to the requested week!
+        // Ensure week logic
         const today = new Date();
         const nextWeek = new Date(today);
         nextWeek.setDate(today.getDate() + 7);
@@ -123,7 +139,7 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             let bookedCourseName: string | undefined = undefined;
             let bookedByCurrentUser = false;
 
-            // Check if this slot time generally overlaps with an active live session 
+            // Check if there's a live session already scheduled
             // (very rough check - ideal logic should map specific dates)
             const isLive = liveSessions?.find(ls => {
                 const lsDate = new Date(ls.scheduled_start);
@@ -138,10 +154,11 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
                  bookedCourseName = (isLive.course as unknown as { title: string })?.title || 'Live Session';
                  
                  // Check if the current user has already booked for this availability
-                 bookedByCurrentUser = activeProfileId ? activeBookings?.some(b => 
+                 const userBooking = activeProfileId ? activeBookings?.find(b => 
                      b.instructor_availability_id === a.id && 
                      b.student_profile_id === activeProfileId
-                 ) ?? false : false;
+                 ) : undefined;
+                 bookedByCurrentUser = !!userBooking;
             } else {
                  // Check if it's booked
                  const overlappingBookings = activeBookings?.filter(b => b.instructor_availability_id === a.id) || [];
@@ -151,7 +168,8 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
                      bookedCourseName = (overlappingBookings[0].course as unknown as { title: string })?.title || 'Booked Class';
                      
                      // Check if any of these overlapping bookings belong to the current user
-                     bookedByCurrentUser = activeProfileId ? overlappingBookings.some(b => b.student_profile_id === activeProfileId) : false;
+                     const userBooking = activeProfileId ? overlappingBookings.find(b => b.student_profile_id === activeProfileId) : undefined;
+                     bookedByCurrentUser = !!userBooking;
                  }
             }
 

@@ -31,14 +31,23 @@ const STEP_META: Record<Step, { number: number; label: string; icon: string }> =
 };
 
 /* ── Helper: Get next dates for day of week ── */
-function getNextDateForDay(dayOfWeek: number): string {
-  const now = new Date();
-  const currentDay = now.getDay();
-  let diff = dayOfWeek - currentDay;
-  if (diff <= 0) diff += 7;
-  const nextDate = new Date(now);
-  nextDate.setDate(now.getDate() + diff);
-  return nextDate.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+function getNextDateForDay(dayOfWeek: number, weekOffset: number = 0): string {
+  const today = new Date();
+  const currentDay = today.getDay();
+  let daysUntil = dayOfWeek - currentDay;
+  
+  if (daysUntil < 0) {
+    daysUntil += 7;
+  }
+  
+  const nextDate = new Date(today);
+  nextDate.setDate(today.getDate() + daysUntil + (weekOffset * 7));
+  
+  return nextDate.toLocaleDateString('th-TH', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 }
 
 /* ── Component ─────────────────────────────── */
@@ -67,7 +76,8 @@ export function BookingWizard() {
     walletBalance,
     paymentMethod,
     enrolledCourseIds,
-    enrollmentRemainingHours
+    enrollmentRemainingHours,
+    weekOffset
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -152,6 +162,9 @@ export function BookingWizard() {
               onBack={actions.goBack}
               isEnrolled={isEnrolled}
               enrollmentRemainingHours={enrollmentRemainingHours}
+              weekOffset={weekOffset}
+              onNextWeek={actions.nextWeek}
+              onPrevWeek={actions.prevWeek}
             />
           )}
           {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
@@ -178,6 +191,7 @@ export function BookingWizard() {
               walletBalance={walletBalance}
               paymentMethod={paymentMethod}
               setPaymentMethod={actions.setPaymentMethod}
+              weekOffset={weekOffset}
             />
           )}
         </div>
@@ -408,6 +422,9 @@ function StepCalendar({
   onBack,
   isEnrolled,
   enrollmentRemainingHours,
+  weekOffset,
+  onNextWeek,
+  onPrevWeek,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -416,6 +433,9 @@ function StepCalendar({
   onBack: () => void;
   isEnrolled: boolean;
   enrollmentRemainingHours: number | null;
+  weekOffset: number;
+  onNextWeek: () => void;
+  onPrevWeek: () => void;
 }) {
   // Group slots by day of week
   const slotsByDay = useMemo(() => {
@@ -473,6 +493,28 @@ function StepCalendar({
           📅 เลือกเวลาเรียน
         </h2>
         <p className="text-text-secondary text-sm">คลิกช่องเพื่อจองหรือเข้าร่วม</p>
+      </div>
+
+      {/* Week Navigator */}
+      <div className="flex items-center justify-between mb-6 bg-surface/30 p-2 rounded-xl border border-border">
+        <button 
+          onClick={onPrevWeek} 
+          disabled={weekOffset === 0}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold ${weekOffset === 0 ? 'text-text-muted cursor-not-allowed opacity-50' : 'hover:bg-surface text-text-primary hover:shadow-sm'}`}
+        >
+          <span>←</span> <span className="hidden sm:inline">สัปดาห์ก่อนหน้า</span>
+        </button>
+        
+        <span className="text-sm font-extrabold text-primary px-4 py-1.5 bg-primary/10 rounded-lg">
+          {weekOffset === 0 ? 'สัปดาห์ปัจจุบัน' : weekOffset === 1 ? 'สัปดาห์หน้า' : `อีก ${weekOffset} สัปดาห์`}
+        </span>
+        
+        <button 
+          onClick={onNextWeek} 
+          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold hover:bg-surface text-text-primary hover:shadow-sm"
+        >
+          <span className="hidden sm:inline">สัปดาห์ถัดไป</span> <span>→</span>
+        </button>
       </div>
 
       {isEnrolled && enrollmentRemainingHours !== null && (
@@ -535,7 +577,7 @@ function StepCalendar({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-text-primary">{DAY_LABELS[day]}</p>
-                  <p className="text-[10px] text-text-muted">{getNextDateForDay(day)}</p>
+                  <p className="text-[10px] text-text-muted">{getNextDateForDay(day, weekOffset)}</p>
                 </div>
               </div>
 
@@ -576,9 +618,11 @@ function StepCalendar({
                             </span>
                           </div>
                           {slot.status === 'booked' && slot.bookedCourseName && (
-                            <p className={`text-[10px] ml-5 mt-0.5 ${isBookedByMe ? 'text-primary' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
-                              📌 {slot.bookedCourseName} {isBookedByMe && '(คุณจองแล้ว)'}
-                            </p>
+                            <div className={`text-[10px] ml-5 mt-0.5 ${isBookedByMe ? 'text-primary' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              <p>
+                                📌 {slot.bookedCourseName} {isBookedByMe && '(คุณจองแล้ว)'}
+                              </p>
+                            </div>
                           )}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -634,6 +678,7 @@ function StepConfirm({
   walletBalance,
   paymentMethod,
   setPaymentMethod,
+  weekOffset,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -657,6 +702,7 @@ function StepConfirm({
   walletBalance: number;
   paymentMethod: 'stripe' | 'wallet';
   setPaymentMethod: (method: 'stripe' | 'wallet') => void;
+  weekOffset: number;
 }) {
   if (bookingDone) {
     return (
@@ -702,7 +748,7 @@ function StepConfirm({
                 <p className="text-sm font-bold text-text-primary">
                   {DAY_LABELS[slot.dayOfWeek]} {slot.startTime} — {slot.endTime}
                 </p>
-                <p className="text-[10px] text-text-muted">{getNextDateForDay(slot.dayOfWeek)}</p>
+                <p className="text-[10px] text-text-muted">{getNextDateForDay(slot.dayOfWeek, weekOffset)}</p>
               </div>
             </div>
           </div>
@@ -788,7 +834,7 @@ function StepConfirm({
             <p className="font-bold text-text-primary">
               {DAY_LABELS[slot.dayOfWeek]} {slot.startTime} — {slot.endTime}
             </p>
-            <p className="text-xs text-text-muted mt-0.5">{getNextDateForDay(slot.dayOfWeek)}</p>
+            <p className="text-xs text-text-muted mt-0.5">{getNextDateForDay(slot.dayOfWeek, weekOffset)}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">

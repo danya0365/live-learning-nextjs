@@ -55,6 +55,6 @@ export interface WizardBookingResult {
 export interface IBookingWizardRepository {
   getCourses(): Promise<WizardCourse[]>;
   getInstructorsByCourse(courseId: string): Promise<WizardInstructor[]>;
-  getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]>;
+  getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]>;
   createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult>;
 }

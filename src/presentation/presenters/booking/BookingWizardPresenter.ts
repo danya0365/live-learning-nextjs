@@ -22,8 +22,8 @@ export class BookingWizardPresenter {
     return this.repo.getInstructorsByCourse(courseId);
   }
 
-  async getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]> {
-     return this.repo.getSlotsByInstructor(instructorId);
+  async getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]> {
+     return this.repo.getSlotsByInstructor(instructorId, startDateIso, endDateIso);
   }
 
   async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
