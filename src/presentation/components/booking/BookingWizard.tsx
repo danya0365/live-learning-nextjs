@@ -66,7 +66,8 @@ export function BookingWizard() {
     isEnrolled,
     walletBalance,
     paymentMethod,
-    enrolledCourseIds
+    enrolledCourseIds,
+    enrollmentRemainingHours
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -150,6 +151,7 @@ export function BookingWizard() {
               onSelect={actions.handleSlotSelect}
               onBack={actions.goBack}
               isEnrolled={isEnrolled}
+              enrollmentRemainingHours={enrollmentRemainingHours}
             />
           )}
           {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
@@ -405,6 +407,7 @@ function StepCalendar({
   onSelect,
   onBack,
   isEnrolled,
+  enrollmentRemainingHours,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -412,6 +415,7 @@ function StepCalendar({
   onSelect: (slot: WizardSlot) => void;
   onBack: () => void;
   isEnrolled: boolean;
+  enrollmentRemainingHours: number | null;
 }) {
   // Group slots by day of week
   const slotsByDay = useMemo(() => {
@@ -470,6 +474,16 @@ function StepCalendar({
         </h2>
         <p className="text-text-secondary text-sm">คลิกช่องเพื่อจองหรือเข้าร่วม</p>
       </div>
+
+      {isEnrolled && enrollmentRemainingHours !== null && (
+        <div className={`glass rounded-2xl p-4 border text-center mb-6 ${enrollmentRemainingHours > 0 ? 'border-primary/30 bg-primary/5' : 'border-error/30 bg-error/5 animate-pulse'}`}>
+           <p className={`font-bold text-sm ${enrollmentRemainingHours > 0 ? 'text-primary' : 'text-error'}`}>
+             {enrollmentRemainingHours > 0 
+               ? `🎓 โควตาคงเหลือ: ${enrollmentRemainingHours} ชั่วโมง` 
+               : '🚨 โควตาชั่วโมงเรียนของคุณสำหรับคอร์สนี้หมดแล้ว ไม่สามารถจองเพิ่มได้'}
+           </p>
+        </div>
+      )}
 
       {slots.length === 0 ? (
         <div className="glass rounded-2xl p-8 border border-warning/30 bg-warning/5 text-center my-8 animate-fadeIn">
@@ -532,10 +546,11 @@ function StepCalendar({
               ) : (
                 <div className="space-y-2">
                   {daySlots.map((slot) => {
-                    const isAvailable = slot.status === 'available';
+                    const isHoursExhausted = isEnrolled && enrollmentRemainingHours !== null && enrollmentRemainingHours <= 0;
+                    const isAvailable = slot.status === 'available' && !isHoursExhausted;
                     const isBookedByMe = slot.bookedByCurrentUser;
-                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id && !isBookedByMe;
-                    const isUnavailable = (slot.status === 'booked' && slot.bookedCourseId !== course.id) || isBookedByMe;
+                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id && !isBookedByMe && !isHoursExhausted;
+                    const isUnavailable = (slot.status === 'booked' && slot.bookedCourseId !== course.id) || isBookedByMe || isHoursExhausted;
                     
                     return (
                     <button

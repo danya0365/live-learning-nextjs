@@ -30,6 +30,7 @@ export interface BookingWizardState {
   walletBalance: number;
   paymentMethod: 'stripe' | 'wallet';
   enrolledCourseIds: string[];
+  enrollmentRemainingHours: number | null;
 }
 
 export interface BookingWizardActions {
@@ -78,6 +79,7 @@ export function useBookingWizardPresenter() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet'>('stripe');
   const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
+  const [enrollmentRemainingHours, setEnrollmentRemainingHours] = useState<number | null>(null);
 
   // Initial Load
   useEffect(() => {
@@ -132,10 +134,16 @@ export function useBookingWizardPresenter() {
         setIsEnrolled(true);
         setFinalPrice(0);
         setDiscountAmount(course.price);
+        
+        // Compute remaining hours (handle mapping if it comes back as snake_case from direct API calls)
+        const total = enrollment.totalHours ?? (enrollment as any).total_hours ?? 0;
+        const used = enrollment.usedHours ?? (enrollment as any).used_hours ?? 0;
+        setEnrollmentRemainingHours(total - used);
     } else {
         setIsEnrolled(false);
         setFinalPrice(null);
         setDiscountAmount(0);
+        setEnrollmentRemainingHours(null);
     }
 
     setStep('instructor');
@@ -236,6 +244,7 @@ export function useBookingWizardPresenter() {
     setFinalPrice(null);
     setCouponError(null);
     setIsEnrolled(false);
+    setEnrollmentRemainingHours(null);
     setPaymentMethod('stripe'); // Reset to default
   }, []);
 
@@ -297,7 +306,8 @@ export function useBookingWizardPresenter() {
       isEnrolled,
       walletBalance,
       paymentMethod,
-      enrolledCourseIds
+      enrolledCourseIds,
+      enrollmentRemainingHours
     },
     actions: {
       handleCourseSelect,

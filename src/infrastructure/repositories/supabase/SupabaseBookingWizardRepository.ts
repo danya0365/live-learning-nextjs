@@ -169,9 +169,27 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
     }
 
     async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
-        // 🔒 Server-Injected Identity: resolve studentId from auth session
-        const { data: { user } } = await this.supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
+        // Get current active profile to resolve studentId from auth session
+        const activeProfileId = await this.getActiveProfileId();
+        if (!activeProfileId) throw new Error('Not authenticated');
+
+        // Check enrollment remaining hours
+        const { data: enrollment, error: enrollError } = await this.supabase
+            .from('enrollments')
+            .select('total_hours, used_hours')
+            .eq('student_profile_id', activeProfileId)
+            .eq('course_id', data.courseId)
+            .eq('is_active', true)
+            .single();
+
+        if (enrollError) {
+            console.error('Enrollment fetch error:', enrollError);
+            throw new Error('ไม่พบข้อมูลการลงทะเบียนสำหรับคอร์สนี้ (Enrollment not found)');
+        }
+
+        if (enrollment && enrollment.used_hours >= enrollment.total_hours) {
+            throw new Error('โควตาชั่วโมงเรียนสำหรับคอร์สนี้หมดแล้ว (Learning hours exhausted)');
+        }
 
         // 1. Execute Atomic Transaction via RPC
         // This handles: Coupon Validation -> Payment (Pending/Succeeded) -> Enrollment -> Booking
