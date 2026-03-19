@@ -308,9 +308,11 @@ export function Header() {
                         <span>📅</span> ตารางสอนของฉัน
                       </Link>
                     )}
-                    <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                      <span>💳</span> กระเป๋าเงิน
-                    </Link>
+                    {(role === 'student' || role === 'instructor') && (
+                      <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
+                        <span>💳</span> กระเป๋าเงิน
+                      </Link>
+                    )}
                     <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
                       <span>⚙️</span> ตั้งค่า
                     </Link>
@@ -536,9 +538,11 @@ export function Header() {
                   <span className="text-lg">📅</span><span className="text-sm">ตารางสอนของฉัน</span>
                 </Link>
               )}
-              <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
-                <span className="text-lg">💳</span><span className="text-sm">กระเป๋าเงิน (Wallet)</span>
-              </Link>
+              {(role === 'student' || role === 'instructor') && (
+                <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
+                  <span className="text-lg">💳</span><span className="text-sm">กระเป๋าเงิน (Wallet)</span>
+                </Link>
+              )}
               <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
                 <span className="text-lg">⚙️</span><span className="text-sm">ตั้งค่า</span>
               </Link>

@@ -22,7 +22,6 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
     { href: '/', label: 'หน้าหลัก', icon: '🏠' },
     { href: '/book', label: 'จองคลาส', icon: '➕' },
     { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    // { href: '/resources', label: 'แจกฟรี', icon: '🎁' },
     { href: '/quizzes', label: 'ประลอง', icon: '🧠' },
   ],
   instructor: [
@@ -42,7 +41,6 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
     { href: '/', label: 'หน้าหลัก', icon: '🏠' },
     { href: '/schedule', label: 'ตารางเรียน', icon: '📅' },
     { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    // { href: '/resources', label: 'แจกฟรี', icon: '🎁' },
     { href: '/quizzes', label: 'ประลอง', icon: '🧠' },
   ],
 };
@@ -55,6 +53,7 @@ const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
     // { href: '/study-room', label: 'ห้องอ่านหนังสือ', icon: '☕', desc: 'ห้องสำหรับนั่งโฟกัสร่วมกัน' },
     // { href: '/shorts', label: 'คลิปสั้น', icon: '📱', desc: 'เรียนรู้เทคนิคผ่านวิดีโอสั้น' },
+    
   ],
   instructor: [
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },

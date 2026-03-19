@@ -7,13 +7,18 @@
 'use client';
 
 import { AuthGuard } from '@/src/presentation/components/auth/AuthGuard';
+import { UnauthorizedAccessView } from '@/src/presentation/components/auth/UnauthorizedAccessView';
 import { BookingWizard } from '@/src/presentation/components/booking/BookingWizard';
 
 import BookingSkeleton from '@/src/presentation/components/booking/BookingSkeleton';
 
 export default function BookingPage() {
   return (
-    <AuthGuard fallback={<BookingSkeleton />}>
+    <AuthGuard 
+      fallback={<BookingSkeleton />}
+      allowedRoles={['student']}
+      unauthorizedFallback={<UnauthorizedAccessView message="หน้านี้สงวนสิทธิ์เฉพาะโปรไฟล์ประเภทนักเรียน (Student) เท่านั้น" />}
+    >
       <BookingWizard />
     </AuthGuard>
   );
