@@ -93,4 +93,20 @@ export class SupabaseWalletRepository implements IWalletRepository {
 
     return { transactionId: data as string };
   }
+
+  async fulfillTopUp(profileId: string, amount: number): Promise<string> {
+    const { data, error } = await this.supabase.rpc('credit_wallet', {
+      p_profile_id: profileId,
+      p_amount: amount,
+      p_type: 'topup',
+      p_description: 'เติมเงินผ่านระบบออนไลน์ (Stripe)'
+    });
+
+    if (error) {
+       console.error('fulfillTopUp Error:', error);
+       throw new Error(`Failed to fulfill top up: ${error.message}`);
+    }
+
+    return data as string;
+  }
 }

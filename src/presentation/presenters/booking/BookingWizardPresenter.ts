@@ -116,4 +116,14 @@ export class BookingWizardPresenter {
     // 4. Free Booking: Return success immediately
     return result;
   }
+
+  async fulfillWalletPayment(
+    paymentId: string,
+    txId: string,
+    instructorId: string,
+    slotId: string,
+    date: string
+  ): Promise<{ bookingId?: string; enrollmentId?: string }> {
+    return this.repo.fulfillWalletPayment(paymentId, txId, instructorId, slotId, date);
+  }
 }

@@ -55,4 +55,8 @@ export class ApiWalletRepository implements IWalletRepository {
     
     return res.json();
   }
+
+  async fulfillTopUp(profileId: string, amount: number): Promise<string> {
+    throw new Error('Method fulfillTopUp is server-side only.');
+  }
 }

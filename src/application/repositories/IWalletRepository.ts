@@ -15,4 +15,9 @@ export interface IWalletRepository {
    * เติมเงินเข้า Wallet (เรียกใช้ RPC credit_wallet หรือ สร้าง Stripe Checkout Session)
    */
   topUp(amount: number, description?: string, isTestMode?: boolean): Promise<{ transactionId?: string, checkoutUrl?: string }>;
+
+  /**
+   * Fulfill a Wallet Top-up after successful Stripe Payment (Server/Webhook only)
+   */
+  fulfillTopUp(profileId: string, amount: number): Promise<string>;
 }
