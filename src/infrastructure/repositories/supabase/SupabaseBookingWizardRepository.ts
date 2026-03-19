@@ -191,20 +191,21 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         const activeProfileId = await this.getActiveProfileId();
         if (!activeProfileId) throw new Error('Not authenticated');
 
-        // Check enrollment remaining hours
+        // Check finding existing enrollment
         const { data: enrollment, error: enrollError } = await this.supabase
             .from('enrollments')
             .select('total_hours, used_hours')
             .eq('student_profile_id', activeProfileId)
             .eq('course_id', data.courseId)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
         if (enrollError) {
             console.error('Enrollment fetch error:', enrollError);
-            throw new Error('ไม่พบข้อมูลการลงทะเบียนสำหรับคอร์สนี้ (Enrollment not found)');
+            throw new Error('เกิดข้อผิดพลาดในการตรวจสอบข้อมูลการลงทะเบียน (Fetch error)');
         }
 
+        // Only check quota if an active enrollment actually exists
         if (enrollment && enrollment.used_hours >= enrollment.total_hours) {
             throw new Error('โควตาชั่วโมงเรียนสำหรับคอร์สนี้หมดแล้ว (Learning hours exhausted)');
         }

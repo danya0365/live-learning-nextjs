@@ -5,7 +5,6 @@ import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-d
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CourseDetailSkeleton from './CourseDetailSkeleton';
-import { EasyBookingModal } from './EasyBookingModal';
 
 const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
@@ -149,7 +148,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
                     
                     {isEnrolled && hasRemainingHours ? (
                         <button
-                          onClick={() => state.openBookingModal(slot.id)}
+                          onClick={() => router.push('/book?courseId=' + course.id)}
                           className="mt-2 w-full btn-game py-1.5 text-xs text-white rounded-lg font-medium"
                         >
                           📅 จองเวลานี้
@@ -351,7 +350,7 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             ) : enrollment?.status === 'pending' ? (
               /* Pending payment */
               <button
-                onClick={state.enrollCourse}
+                onClick={() => router.push('/book?courseId=' + course.id)}
                 className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
               >
                 💳 ชำระเงินเพื่อเริ่มเรียน
@@ -359,10 +358,10 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
             ) : (
               /* Not enrolled — Show enroll button */
               <button
-                onClick={state.enrollCourse}
+                onClick={() => router.push('/book?courseId=' + course.id)}
                 className="w-full btn-game py-3 text-white rounded-xl font-bold text-lg mb-3 hover:scale-105 transition-transform"
               >
-                🎓 ลงทะเบียนเรียน
+                🎓 ซื้อคอร์สนี้
               </button>
             )}
 
@@ -425,16 +424,6 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
           </Link>
         </div>
       </div>
-
-      {state.isBookingModalOpen && (
-        <EasyBookingModal
-          course={course}
-          instructor={instructor}
-          enrollment={enrollment!}
-          initialSlotId={state.selectedSlotId}
-          onClose={state.closeBookingModal}
-        />
-      )}
     </div>
   );
 }

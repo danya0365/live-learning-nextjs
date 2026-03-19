@@ -50,7 +50,7 @@ export interface BookingWizardActions {
   setPaymentMethod: (method: 'stripe' | 'wallet') => void;
 }
 
-export function useBookingWizardPresenter() {
+export function useBookingWizardPresenter(initialCourseId?: string | null) {
   const router = useRouter();
   const presenter = useMemo(() => createClientBookingWizardPresenter(), []);
 
@@ -153,6 +153,16 @@ export function useBookingWizardPresenter() {
 
     setStep('instructor');
   }, [presenter]);
+
+  // Auto-select course if passed from URL
+  useEffect(() => {
+    if (initialCourseId && courses.length > 0 && !selectedCourse) {
+      const match = courses.find(c => c.id === initialCourseId);
+      if (match) {
+        handleCourseSelect(match);
+      }
+    }
+  }, [initialCourseId, courses, selectedCourse, handleCourseSelect]);
 
   const getWeekDates = useCallback((offset: number) => {
       const today = new Date();

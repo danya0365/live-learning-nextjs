@@ -3,7 +3,8 @@
 import { WizardCourse, WizardInstructor, WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
 import { Level } from '@/src/application/repositories/IConfigRepository';
 import { useBookingWizardPresenter } from '@/src/presentation/presenters/booking/useBookingWizardPresenter';
-import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 import BookingSkeleton from './BookingSkeleton';
 
 /* ── UI Constants ──────────────────────────── */
@@ -51,8 +52,10 @@ function getNextDateForDay(dayOfWeek: number, weekOffset: number = 0): string {
 }
 
 /* ── Component ─────────────────────────────── */
-export function BookingWizard() {
-  const { state, actions } = useBookingWizardPresenter();
+function BookingWizardContent() {
+  const searchParams = useSearchParams();
+  const initialCourseId = searchParams?.get('courseId');
+  const { state, actions } = useBookingWizardPresenter(initialCourseId);
   
   const {
     step,
@@ -197,6 +200,14 @@ export function BookingWizard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function BookingWizard() {
+  return (
+    <Suspense fallback={<BookingSkeleton />}>
+      <BookingWizardContent />
+    </Suspense>
   );
 }
 
