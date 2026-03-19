@@ -1,7 +1,7 @@
 import {
-    CreateWizardBookingData,
+    InitiateWizardTransactionData,
     IBookingWizardRepository,
-    WizardBookingResult,
+    WizardTransactionResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot,
@@ -25,9 +25,9 @@ export class MockBookingWizardRepository implements IBookingWizardRepository {
     return ALL_SLOTS[instructorId] || [];
   }
 
-  async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
+  async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log('Mock createBooking:', data);
+    console.log('Mock initiateBookingTransaction:', data);
     
     const course = ALL_COURSES.find(c => c.id === data.courseId);
     

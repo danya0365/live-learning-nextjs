@@ -250,7 +250,7 @@ export function useBookingWizardPresenter(initialCourseId?: string | null) {
              ? selectedSlot.bookedCourseId
              : selectedCourse.id;
 
-        const result = await presenter.createBooking({
+        const result = await presenter.initiateBookingTransaction({
             courseId: courseIdPayload,
             instructorId: selectedInstructor.id,
             slotId: selectedSlot.id, // This is the instructor_availability_id

@@ -1,4 +1,4 @@
-import { CreateWizardBookingData } from '@/src/application/repositories/IBookingWizardRepository';
+import { InitiateWizardTransactionData } from '@/src/application/repositories/IBookingWizardRepository';
 import { createServerCoursesPresenter } from '@/src/presentation/presenters/courses/CoursesPresenterServerFactory';
 import { createServerBookingWizardPresenter } from '@/src/presentation/presenters/booking/BookingWizardPresenterServerFactory';
 import { StripeRepository } from '@/src/infrastructure/repositories/stripe/StripeRepository';
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body: CreateWizardBookingData = await req.json();
+    const body: InitiateWizardTransactionData = await req.json();
 
     if (!body.courseId || !body.instructorId || !body.slotId || !body.date) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // The previous implementation hardcoded 'free' as default, but we'll try to pass our intent. 
     // Since SupabaseBookingWizardRepository's createBooking hardcodes 'free', let's temporarily monkeypatch or directly call RPC here if we must, 
     // but the cleanest way is calling creatingBooking on repo and then handling the wallet logic.
-    const result = await presenter.createBooking(body);
+    const result = await presenter.initiateBookingTransaction(body);
 
     // Update payment method in Payments table to reflect 'wallet' or 'stripe'
     if (result.paymentId && result.status === 'awaiting_payment') {

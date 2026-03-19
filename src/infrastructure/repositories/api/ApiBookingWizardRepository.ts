@@ -8,9 +8,9 @@
 'use client';
 
 import {
-    CreateWizardBookingData,
+    InitiateWizardTransactionData,
     IBookingWizardRepository,
-    WizardBookingResult,
+    WizardTransactionResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot
@@ -73,8 +73,8 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         return res.json();
     }
 
-    async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
-        const res = await fetch('/api/booking-wizard/bookings', {
+    async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
+        const res = await fetch('/api/booking-wizard/transactions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -82,7 +82,7 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to create wizard booking');
+            throw new Error(errorData.error || 'Failed to initiate wizard transaction');
         }
         
         return res.json();

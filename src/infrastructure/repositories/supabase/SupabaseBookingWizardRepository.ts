@@ -5,11 +5,10 @@
  * 
  * ✅ For SERVER-SIDE use only (API Routes, Server Components)
  */
-
 import {
-    CreateWizardBookingData,
+    InitiateWizardTransactionData,
     IBookingWizardRepository,
-    WizardBookingResult,
+    WizardTransactionResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot
@@ -186,7 +185,7 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         });
     }
 
-    async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
+    async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
         // Get current active profile to resolve studentId from auth session
         const activeProfileId = await this.getActiveProfileId();
         if (!activeProfileId) throw new Error('Not authenticated');

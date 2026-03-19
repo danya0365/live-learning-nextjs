@@ -1,7 +1,7 @@
 import {
-  CreateWizardBookingData,
+  InitiateWizardTransactionData,
   IBookingWizardRepository,
-  WizardBookingResult,
+  WizardTransactionResult,
   WizardCourse,
   WizardInstructor,
   WizardSlot,
@@ -26,8 +26,8 @@ export class BookingWizardPresenter {
      return this.repo.getSlotsByInstructor(instructorId, startDateIso, endDateIso);
   }
 
-  async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
-    return this.repo.createBooking(data);
+  async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
+    return this.repo.initiateBookingTransaction(data);
   }
 
   async checkEnrollment(courseId: string): Promise<Enrollment | null> {
