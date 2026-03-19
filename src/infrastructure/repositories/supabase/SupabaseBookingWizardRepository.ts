@@ -234,4 +234,51 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             status: typedResult.status
         };
     }
+
+    async updatePaymentMethod(paymentId: string, method: string): Promise<void> {
+        await this.supabase.from('payments').update({ payment_method: method }).eq('id', paymentId);
+    }
+
+    async failPayment(paymentId: string): Promise<void> {
+        await this.supabase.from('payments').update({ status: 'failed' }).eq('id', paymentId);
+    }
+
+    async payWithWallet(amount: number, paymentId: string, description: string): Promise<string> {
+        const activeProfileId = await this.getActiveProfileId();
+        if (!activeProfileId) throw new Error('Not authenticated');
+
+        const { data: txId, error: walletError } = await this.supabase.rpc('pay_with_wallet', {
+            p_profile_id: activeProfileId,
+            p_amount: amount,
+            p_reference_type: 'wizard_payment',
+            p_reference_id: paymentId,
+            p_description: description
+        });
+
+        if (walletError || !txId) {
+            throw new Error(walletError?.message || 'Insufficient wallet balance');
+        }
+
+        return txId as unknown as string;
+    }
+
+    async fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string; }> {
+        const { data: fulfillment, error: fulfillmentError } = await this.supabase.rpc('fulfill_stripe_payment', {
+            p_payment_id: paymentId,
+            p_transaction_id: txId,
+            p_instructor_id: instructorId,
+            p_slot_id: slotId,
+            p_scheduled_date: date
+        });
+
+        if (fulfillmentError) {
+            console.error("Wallet Fulfillment Error:", fulfillmentError);
+            throw new Error('Failed to fulfill booking after wallet deduction');
+        }
+
+        return {
+            bookingId: (fulfillment as any)?.booking_id,
+            enrollmentId: (fulfillment as any)?.enrollment_id
+        };
+    }
 }

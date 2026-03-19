@@ -57,4 +57,10 @@ export interface IBookingWizardRepository {
   getInstructorsByCourse(courseId: string): Promise<WizardInstructor[]>;
   getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]>;
   initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult>;
+  
+  // Checkout & Wallet Methods
+  updatePaymentMethod(paymentId: string, method: string): Promise<void>;
+  failPayment(paymentId: string): Promise<void>;
+  payWithWallet(amount: number, paymentId: string, description: string): Promise<string>;
+  fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string }>;
 }

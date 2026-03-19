@@ -87,4 +87,20 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         
         return res.json();
     }
+
+    async updatePaymentMethod(paymentId: string, method: string): Promise<void> {
+        throw new Error('Method updatePaymentMethod is server-side only.');
+    }
+
+    async failPayment(paymentId: string): Promise<void> {
+        throw new Error('Method failPayment is server-side only.');
+    }
+
+    async payWithWallet(amount: number, paymentId: string, description: string): Promise<string> {
+        throw new Error('Method payWithWallet is server-side only.');
+    }
+
+    async fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string; }> {
+        throw new Error('Method fulfillWalletPayment is server-side only.');
+    }
 }
