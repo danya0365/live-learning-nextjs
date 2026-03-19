@@ -1,4 +1,5 @@
 import { AuthGuard } from '@/src/presentation/components/auth/AuthGuard';
+import { UnauthorizedAccessView } from '@/src/presentation/components/auth/UnauthorizedAccessView';
 import { WalletView } from '@/src/presentation/components/wallet/WalletView';
 import { createServerWalletPresenter } from '@/src/presentation/presenters/wallet/WalletPresenterServerFactory';
 import Link from 'next/link';
@@ -24,7 +25,14 @@ export default async function WalletPage() {
     const viewModel = await presenter.getViewModel();
 
     return (
-      <AuthGuard>
+      <AuthGuard 
+        allowedRoles={['student', 'instructor']}
+        unauthorizedFallback={
+          <UnauthorizedAccessView 
+            message="หน้านี้สงวนสิทธิ์เฉพาะโปรไฟล์ประเภทนักเรียน (Student) หรือผู้สอน (Instructor) เท่านั้น" 
+          />
+        }
+      >
         <WalletView initialViewModel={viewModel} />
       </AuthGuard>
     );
