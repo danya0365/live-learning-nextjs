@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuthStore } from "@/src/stores/authStore";
 import { WalletPresenter, WalletViewModel } from "./WalletPresenter";
 import { createClientWalletPresenter } from "./WalletPresenterClientFactory";
 
@@ -27,6 +28,8 @@ export function useWalletPresenter(
   );
   
   const isMountedRef = useRef(true);
+  const { user } = useAuthStore();
+  const prevProfileIdRef = useRef(user?.profileId);
   
   const [state, setState] = useState<WalletPresenterState>({
     viewModel: initialViewModel ?? null,
@@ -63,8 +66,18 @@ export function useWalletPresenter(
 
   // Load data on mount if we don't have initial view model
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!initialViewModel) {
+      loadData();
+    }
+  }, [initialViewModel, loadData]);
+
+  // Reactive profile switching: reload data when user.profileId changes
+  useEffect(() => {
+    if (user?.profileId && prevProfileIdRef.current && user.profileId !== prevProfileIdRef.current) {
+      loadData();
+    }
+    prevProfileIdRef.current = user?.profileId;
+  }, [user?.profileId, loadData]);
 
   const topUp = useCallback(
     async (amount: number, description?: string, isTestMode?: boolean) => {
