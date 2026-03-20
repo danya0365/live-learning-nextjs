@@ -36,10 +36,20 @@ export function useProfilePresenter(
     }
   }, [presenter, user?.role]);
 
+  const prevProfileIdRef = useRef(user?.profileId);
+
   useEffect(() => {
     // โหลดครั้งแรกถ้าไม่มี initialViewModel
     if (!initialViewModel) loadData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    // โหลดซ้ำอัตโนมัติเมื่อไอดีโปรไฟล์ของผู้ใช้ในโกลเบิลสโตร์เปลี่ยนแปลง (Reactive by Design)
+    if (user?.profileId && prevProfileIdRef.current && user.profileId !== prevProfileIdRef.current) {
+      loadData();
+    }
+    prevProfileIdRef.current = user?.profileId;
+  }, [user?.profileId, loadData]);
 
   useEffect(() => {
     isMountedRef.current = true;

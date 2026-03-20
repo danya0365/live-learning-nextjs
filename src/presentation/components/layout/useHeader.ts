@@ -135,9 +135,6 @@ export function useHeader() {
       
       // 2. Router Refresh
       router.refresh();
-
-      // 3. Dispatch global event so other pages can react immediately
-      window.dispatchEvent(new CustomEvent('onProfileSwitched', { detail: { profileId } }));
     } catch (err) {
       console.error(err);
       alert('ไม่สามารถสลับโปรไฟล์ได้ ลองใหม่อีกครั้ง');

@@ -3,11 +3,10 @@
 import { ProfileViewModel } from '@/src/presentation/presenters/profile/ProfilePresenter';
 import { useProfilePresenter } from '@/src/presentation/presenters/profile/useProfilePresenter';
 import { useAuthStore, type AuthUser } from '@/src/stores/authStore';
-import { useEffect } from 'react';
-import ProfileSkeleton from './ProfileSkeleton';
-import { ProfileHeader } from './ProfileHeader';
 import { AdminProfileSection } from './AdminProfileSection';
 import { InstructorProfileSection } from './InstructorProfileSection';
+import { ProfileHeader } from './ProfileHeader';
+import ProfileSkeleton from './ProfileSkeleton';
 import { StudentProfileSection } from './StudentProfileSection';
 
 interface ProfileViewProps {
@@ -21,16 +20,6 @@ export function ProfileView({ initialViewModel, authUser }: ProfileViewProps) {
   const vm = state.viewModel;
   const { user: storeUser } = useAuthStore();
   
-  useEffect(() => {
-    const handleProfileSwitch = () => {
-      // Re-fetch profile data when the header switches profiles
-      state.loadData();
-    };
-
-    window.addEventListener('onProfileSwitched', handleProfileSwitch);
-    return () => window.removeEventListener('onProfileSwitched', handleProfileSwitch);
-  }, [state]);
-
   if (state.loading && !vm) {
     return <ProfileSkeleton />;
   }
