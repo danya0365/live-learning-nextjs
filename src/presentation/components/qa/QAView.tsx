@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useQAChecklistStore } from '@/src/stores/useQAChecklistStore';
+import { useQAChecklistStore, TestCase } from '@/src/stores/useQAChecklistStore';
+import Link from 'next/link';
 
 export function QAView() {
   const store = useQAChecklistStore();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setIsLoaded(true);
@@ -13,14 +15,19 @@ export function QAView() {
 
   if (!isLoaded) return null; // Prevent hydration mismatch
 
-  const { testCases, toggleTest, resetAll, getProgress, getCategoryProgress } = store;
+  const { testCases, toggleTest, resetAll, getProgress, getCategoryProgress, addNote } = store;
   const progress = getProgress();
 
   // Group by category, preserve order of appearance
   const categories = Array.from(new Set(testCases.map(tc => tc.category)));
 
+  const handleSaveNote = (id: string, currentNote: string) => {
+    addNote(id, currentNote);
+    // don't clear it so the input stays in sync, or just rely on the store
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 animate-fade-in-up">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 animate-fade-in-up pb-32">
       {/* Page Header */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
         <div>
@@ -65,7 +72,9 @@ export function QAView() {
             </div>
           </div>
           <button 
-            onClick={resetAll}
+            onClick={() => {
+              if (confirm('คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตผลการทดสอบทั้งหมด?')) resetAll();
+            }}
             className="text-xs font-bold px-3 py-1.5 rounded-lg bg-error/10 text-error hover:bg-error/20 hover:scale-105 transition-all w-fit"
           >
             Reset
@@ -115,20 +124,18 @@ export function QAView() {
                 {catTests.map((test) => (
                   <div 
                     key={test.id} 
-                    onClick={() => toggleTest(test.id)}
-                    className={`p-5 rounded-2xl border transition-all cursor-pointer group ${
+                    className={`p-5 rounded-2xl border transition-all ${
                         test.completed 
                           ? 'bg-success/5 border-success/30 shadow-[inset_0_0_20px_rgba(0,255,100,0.05)]' 
-                          : 'bg-surface/60 border-border/40 hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5'
+                          : 'bg-surface/60 border-border/40 hover:border-primary/40 hover:shadow-lg'
                     }`}
                   >
                     <div className="flex items-start gap-4 h-full">
-                        <div className="mt-1">
-                            {/* Controlled via parent div click, but input keeps standard behavior */}
+                        <div className="mt-1 cursor-pointer" onClick={() => toggleTest(test.id)}>
                             <div className={`w-6 h-6 rounded-md flex items-center justify-center border-2 transition-colors ${
                                 test.completed 
                                     ? 'bg-success border-success text-white' 
-                                    : 'border-border group-hover:border-primary/50'
+                                    : 'border-border hover:border-primary/50'
                             }`}>
                                 {test.completed && (
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -137,13 +144,17 @@ export function QAView() {
                                 )}
                             </div>
                         </div>
+
                         <div className="flex-1 flex flex-col h-full">
-                            <h4 className={`text-lg font-bold mb-1 transition-colors ${test.completed ? 'text-success/90 line-through opacity-80' : 'text-text-primary group-hover:text-primary'}`}>
+                            <h4 
+                              className={`text-lg font-bold mb-1 cursor-pointer transition-colors ${test.completed ? 'text-success/90 line-through opacity-80' : 'text-text-primary hover:text-primary'}`}
+                              onClick={() => toggleTest(test.id)}
+                            >
                                 {test.title}
                             </h4>
                             <p className="text-sm text-text-secondary mb-4">{test.description}</p>
                             
-                            <div className="bg-background/80 rounded-xl p-3 border border-border/30 mb-auto mt-auto">
+                            <div className="bg-background/80 rounded-xl p-3 border border-border/30 mb-4">
                                 <p className="text-[10px] font-extrabold text-text-muted mb-2 uppercase tracking-widest">🧪 Steps to Test</p>
                                 <ul className="list-decimal list-inside text-xs sm:text-sm text-text-secondary space-y-1.5 marker:text-text-muted marker:font-bold">
                                     {test.steps.map((step, i) => (
@@ -152,13 +163,41 @@ export function QAView() {
                                 </ul>
                             </div>
 
-                            <div className="flex items-start gap-2 text-sm mt-4 pt-3 border-t border-border/40">
+                            <div className="flex items-start gap-2 text-sm mb-4">
                                 <span className={test.completed ? 'text-success grayscale-0' : 'text-text-muted grayscale'}>🎯</span>
                                 <div>
                                     <p className="font-extrabold text-text-muted text-[10px] uppercase tracking-widest">Expected Result</p>
                                     <p className={`font-medium text-sm ${test.completed ? 'text-success' : 'text-text-primary'}`}>{test.expectedResult}</p>
                                 </div>
                             </div>
+
+                            {/* Note Section */}
+                            <div className="mt-auto pt-4 border-t border-border/40">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="font-extrabold text-text-muted text-[10px] uppercase tracking-widest">📝 Testing Notes</p>
+                                {test.testedAt && (
+                                  <p className="text-[10px] text-text-muted">
+                                    ทดสอบเมื่อ: {new Date(test.testedAt).toLocaleString('th-TH')}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={noteInputs[test.id] !== undefined ? noteInputs[test.id] : (test.notes || '')}
+                                  onChange={(e) => setNoteInputs(prev => ({ ...prev, [test.id]: e.target.value }))}
+                                  placeholder="บันทึกย่อ หรือปัญหาที่เจอ..."
+                                  className="flex-1 bg-background/50 border border-border/50 rounded-lg px-3 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary/50 transition-colors"
+                                />
+                                <button
+                                  onClick={() => handleSaveNote(test.id, noteInputs[test.id] || '')}
+                                  className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold rounded-lg hover:bg-primary/20 transition-colors"
+                                >
+                                  บันทึก
+                                </button>
+                              </div>
+                            </div>
+
                         </div>
                     </div>
                   </div>
@@ -180,6 +219,28 @@ export function QAView() {
             </div>
           </div>
       )}
+
+      {/* Floating Shortcuts Menu */}
+      <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">
+        <div className="glass rounded-2xl p-4 shadow-2xl border border-primary/20 flex flex-col gap-3 min-w-[150px]">
+          <p className="text-[10px] font-extrabold text-primary uppercase tracking-widest mb-1">⚡ Shortcuts Menu</p>
+          <Link href="/" target="_blank" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+            <span>🏠</span> หน้าหลัก (Home)
+          </Link>
+          <Link href="/auth/login" target="_blank" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+            <span>🔐</span> เข้าสู่ระบบ
+          </Link>
+          <Link href="/courses" target="_blank" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+            <span>📚</span> คอร์สทั้งหมด
+          </Link>
+          <Link href="/consultations" target="_blank" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+            <span>🤝</span> บอร์ดคำปรึกษา
+          </Link>
+          <Link href="/my-bookings" target="_blank" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-2">
+            <span>📅</span> ตารางเรียน
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
