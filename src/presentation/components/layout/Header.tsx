@@ -2,10 +2,11 @@
 
 import { HydrationGuard } from '@/src/presentation/components/common/HydrationGuard';
 import { LoadingOverlay } from '@/src/presentation/components/common/LoadingOverlay';
+import { Portal } from '@/src/presentation/components/common/Portal';
 import { ThemeToggle } from '@/src/presentation/components/common/ThemeToggle';
+import { cn } from '@/src/presentation/utils/cn';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { cn } from '@/src/presentation/utils/cn';
 import { useHeader } from './useHeader';
 
 /* ── Component ─────────────────────────────── */
@@ -51,14 +52,32 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Portal positioning
+  const [morePos, setMorePos] = useState<{ top: number; right: number } | null>(null);
+  const [authPos, setAuthPos] = useState<{ top: number; right: number } | null>(null);
+
+  useEffect(() => {
+    if (moreOpen && moreRef.current) {
+      const rect = moreRef.current.getBoundingClientRect();
+      setMorePos({ top: rect.bottom, right: window.innerWidth - rect.right });
+    }
+  }, [moreOpen, moreRef]);
+
+  useEffect(() => {
+    if (authMenuOpen && authRef.current) {
+      const rect = authRef.current.getBoundingClientRect();
+      setAuthPos({ top: rect.bottom, right: window.innerWidth - rect.right });
+    }
+  }, [authMenuOpen, authRef]);
+
   return (
     <header
       id="main-header"
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? "backdrop-blur-[20px] backdrop-saturate-[1.4] bg-[var(--header-bg-scrolled,rgba(var(--header-rgb,255,255,255),0.85))] shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]"
-          : "backdrop-blur-[12px] backdrop-saturate-[1.2] bg-[var(--header-bg,rgba(var(--header-rgb,255,255,255),0.4))] shadow-none"
+          ? "backdrop-blur-[14px] backdrop-saturate-[1.4] bg-transparent shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]"
+          : "backdrop-blur-[12px] backdrop-saturate-[1.2] bg-transparent shadow-none"
       )}
     >
       {/* Main bar */}
@@ -138,38 +157,47 @@ export function Header() {
                   </svg>
                 </button>
 
-                {/* Dropdown */}
-                <div
-                  className={cn(
-                    "absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-[24px] backdrop-saturate-[1.5] bg-[var(--glass-bg)]",
-                    moreOpen
-                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-                  )}
-                >
-                  <div className="p-2">
-                    {moreLinks.map((link) => (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={cn(
-                          "flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-150 group/more",
-                          isActive(link.href)
-                            ? "bg-primary/10 text-primary"
-                            : "text-text-secondary hover:bg-surface/80 hover:text-text-primary"
-                        )}
-                      >
-                        <span className="text-xl mt-0.5 group-hover/more:scale-110 transition-transform duration-200">
-                          {link.icon}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold">{link.label}</p>
-                          <p className="text-xs text-text-muted mt-0.5">{link.desc}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+                {/* Dropdown in Portal */}
+                {moreOpen && (
+                  <Portal>
+                    <div
+                      className={cn(
+                        "fixed z-[100] mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right",
+                        "backdrop-blur-[14px] backdrop-saturate-[1.4] bg-transparent",
+                        moreOpen
+                          ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                          : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                      )}
+                      style={{
+                        top: morePos?.top ?? 0,
+                        right: morePos?.right ?? 0,
+                      }}
+                    >
+                      <div className="p-2">
+                        {moreLinks.map((link) => (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            className={cn(
+                              "flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-150 group/more",
+                              isActive(link.href)
+                                ? "bg-primary/10 text-primary"
+                                : "text-text-secondary hover:bg-surface/80 hover:text-text-primary"
+                            )}
+                          >
+                            <span className="text-xl mt-0.5 group-hover/more:scale-110 transition-transform duration-200">
+                              {link.icon}
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold">{link.label}</p>
+                              <p className="text-xs text-text-muted mt-0.5">{link.desc}</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </Portal>
+                )}
               </div>
             )}
           </nav>
@@ -201,143 +229,152 @@ export function Header() {
                   </div>
                 </button>
 
-                {/* Auth dropdown */}
-                <div
-                  className={cn(
-                    "absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-[24px] backdrop-saturate-[1.5] bg-[var(--glass-bg)]",
-                    authMenuOpen
-                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-                  )}
-                >
-                  {/* User info */}
-                  <div className="px-4 py-3.5 border-b border-border/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-md">
-                        {user.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-text-primary truncate">{user.name}</p>
-                        <div className="mt-1">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${
-                            user.role === 'instructor' 
-                              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' 
-                              : user.role === 'admin'
-                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300'
-                              : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
-                          }`}>
-                            <span>{user.role === 'instructor' ? '👨‍🏫' : user.role === 'admin' ? '🛡️' : '🎓'}</span>
-                            <span>{roleInfo.label}</span>
-                          </span>
+                {/* Auth dropdown in Portal */}
+                {authMenuOpen && (
+                  <Portal>
+                    <div
+                      className={cn(
+                        "fixed z-[100] mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right",
+                        "backdrop-blur-[14px] backdrop-saturate-[1.4] bg-transparent",
+                        authMenuOpen
+                          ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                          : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                      )}
+                      style={{
+                        top: authPos?.top ?? 0,
+                        right: authPos?.right ?? 0,
+                      }}
+                    >
+                      {/* User info */}
+                      <div className="px-4 py-3.5 border-b border-border/30">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-md">
+                            {user.avatar}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-text-primary truncate">{user.name}</p>
+                            <div className="mt-1">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium ${
+                                user.role === 'instructor' 
+                                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' 
+                                  : user.role === 'admin'
+                                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300'
+                                  : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'
+                              }`}>
+                                <span>{user.role === 'instructor' ? '👨‍🏫' : user.role === 'admin' ? '🛡️' : '🎓'}</span>
+                                <span>{roleInfo.label}</span>
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Profile Switcher (if multiple profiles exist) */}
-                  {profiles.length > 1 && (
-                    <div className="p-2 border-b border-border/30">
-                      <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-2 mb-1.5 flex items-center justify-between">
-                        <span>สลับโปรไฟล์</span>
-                        <span className="text-[10px] bg-surface-elevated px-1.5 py-0.5 rounded text-text-muted">{profiles.length}</span>
-                      </p>
-                      <div className="space-y-1">
-                        {profiles.map((p) => {
-                          const isCurrent = user.role === p.role;
-                          const roleLabel = p.role === 'instructor' ? 'อาจารย์' : p.role === 'admin' ? 'แอดมิน' : 'นักเรียน';
-                          const roleIcon = p.role === 'instructor' ? '👨‍🏫' : p.role === 'admin' ? '🛡️' : '🎓';
-                          
-                          return (
-                            <button
-                              key={p.role}
-                              onClick={() => {
-                                if (p.profileId) {
-                                  handleSwitchProfile(p.profileId);
-                                }
-                              }}
-                              className={cn(
-                                "w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group",
-                                isCurrent
-                                  ? "bg-primary/5 ring-1 ring-primary/20"
-                                  : "hover:bg-surface"
-                              )}
-                            >
-                              {/* Avatar */}
-                              <div className="relative shrink-0">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm ${
-                                  isCurrent ? 'bg-gradient-to-br from-primary to-secondary text-white' : 'bg-surface-elevated text-text-secondary grayscale group-hover:grayscale-0 transition-all'
-                                }`}>
-                                  {p.avatar}
-                                </div>
-                                {isCurrent && (
-                                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background" />
-                                )}
-                              </div>
+                      {/* Profile Switcher (if multiple profiles exist) */}
+                      {profiles.length > 1 && (
+                        <div className="p-2 border-b border-border/30">
+                          <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold px-2 mb-1.5 flex items-center justify-between">
+                            <span>สลับโปรไฟล์</span>
+                            <span className="text-[10px] bg-surface-elevated px-1.5 py-0.5 rounded text-text-muted">{profiles.length}</span>
+                          </p>
+                          <div className="space-y-1">
+                            {profiles.map((p) => {
+                              const isCurrent = user.role === p.role;
+                              const roleLabel = p.role === 'instructor' ? 'อาจารย์' : p.role === 'admin' ? 'แอดมิน' : 'นักเรียน';
+                              const roleIcon = p.role === 'instructor' ? '👨‍🏫' : p.role === 'admin' ? '🛡️' : '🎓';
                               
-                              {/* Info */}
-                              <div className="flex-1 text-left min-w-0">
-                                <p className={`text-xs font-bold truncate ${isCurrent ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
-                                  {p.name}
-                                </p>
-                                <div className="flex items-center gap-1 mt-0.5">
-                                  <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded-md ${
-                                    p.role === 'instructor' 
-                                      ? 'bg-purple-100/50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300' 
-                                      : 'bg-blue-100/50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
-                                  }`}>
-                                    <span>{roleIcon}</span>
-                                    <span>{roleLabel}</span>
-                                  </span>
-                                </div>
-                              </div>
-                              
-                              {/* Checkmark */}
-                              {isCurrent && (
-                                <div className="text-primary shrink-0">
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
+                              return (
+                                <button
+                                  key={p.role}
+                                  onClick={() => {
+                                    if (p.profileId) {
+                                      handleSwitchProfile(p.profileId);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group",
+                                    isCurrent
+                                      ? "bg-primary/5 ring-1 ring-primary/20"
+                                      : "hover:bg-surface"
+                                  )}
+                                >
+                                  {/* Avatar */}
+                                  <div className="relative shrink-0">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm ${
+                                      isCurrent ? 'bg-gradient-to-br from-primary to-secondary text-white' : 'bg-surface-elevated text-text-secondary grayscale group-hover:grayscale-0 transition-all'
+                                    }`}>
+                                      {p.avatar}
+                                    </div>
+                                    {isCurrent && (
+                                      <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background" />
+                                    )}
+                                  </div>
+                                  
+                                  {/* Info */}
+                                  <div className="flex-1 text-left min-w-0">
+                                    <p className={`text-xs font-bold truncate ${isCurrent ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                                      {p.name}
+                                    </p>
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                      <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded-md ${
+                                        p.role === 'instructor' 
+                                          ? 'bg-purple-100/50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300' 
+                                          : 'bg-blue-100/50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
+                                      }`}>
+                                        <span>{roleIcon}</span>
+                                        <span>{roleLabel}</span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Checkmark */}
+                                  {isCurrent && (
+                                    <div className="text-primary shrink-0">
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="p-2">
+                        {role === 'student' && (
+                          <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
+                            <span>📋</span> การจองของฉัน
+                          </Link>
+                        )}
+                        {role === 'instructor' && (
+                          <Link href="/schedule" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
+                            <span>📅</span> ตารางสอนของฉัน
+                          </Link>
+                        )}
+                        {(role === 'student' || role === 'instructor') && (
+                          <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
+                            <span>💳</span> กระเป๋าเงิน
+                          </Link>
+                        )}
+                        <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
+                          <span>⚙️</span> ตั้งค่า
+                        </Link>
+                      </div>
+
+                      <div className="p-2 border-t border-border/30">
+                        <button
+                          onClick={handleLogout}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
+                          )}
+                        >
+                          <span>🚪</span> ออกจากระบบ
+                        </button>
                       </div>
                     </div>
-                  )}
-
-                  <div className="p-2">
-                    {role === 'student' && (
-                      <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                        <span>📋</span> การจองของฉัน
-                      </Link>
-                    )}
-                    {role === 'instructor' && (
-                      <Link href="/schedule" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                        <span>📅</span> ตารางสอนของฉัน
-                      </Link>
-                    )}
-                    {(role === 'student' || role === 'instructor') && (
-                      <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                        <span>💳</span> กระเป๋าเงิน
-                      </Link>
-                    )}
-                    <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                      <span>⚙️</span> ตั้งค่า
-                    </Link>
-                  </div>
-
-                  <div className="p-2 border-t border-border/30">
-                    <button
-                      onClick={handleLogout}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
-                      )}
-                    >
-                      <span>🚪</span> ออกจากระบบ
-                    </button>
-                  </div>
-                </div>
+                  </Portal>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -390,7 +427,7 @@ export function Header() {
           opacity: mobileMenuOpen ? 1 : 0,
           backdropFilter: 'blur(24px) saturate(1.5)',
           WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
-          background: 'var(--glass-bg)',
+          background: 'transparent',
         }}
       >
         <div className="border-t border-border/30" />
