@@ -5,6 +5,7 @@ import { LoadingOverlay } from '@/src/presentation/components/common/LoadingOver
 import { ThemeToggle } from '@/src/presentation/components/common/ThemeToggle';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { cn } from '@/src/presentation/utils/cn';
 import { useHeader } from './useHeader';
 
 /* ── Component ─────────────────────────────── */
@@ -53,11 +54,12 @@ export function Header() {
   return (
     <header
       id="main-header"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? 'backdrop-blur-[20px] backdrop-saturate-[1.4] bg-[var(--header-bg-scrolled,rgba(var(--header-rgb,255,255,255),0.85))] shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]'
-          : 'backdrop-blur-[12px] backdrop-saturate-[1.2] bg-[var(--header-bg,rgba(var(--header-rgb,255,255,255),0.4))] shadow-none'
-      }`}
+          ? "backdrop-blur-[20px] backdrop-saturate-[1.4] bg-[var(--header-bg-scrolled,rgba(var(--header-rgb,255,255,255),0.85))] shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]"
+          : "backdrop-blur-[12px] backdrop-saturate-[1.2] bg-[var(--header-bg,rgba(var(--header-rgb,255,255,255),0.4))] shadow-none"
+      )}
     >
       {/* Main bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -84,11 +86,12 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 group/link ${
+                className={cn(
+                  "relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 group/link",
                   isActive(link.href)
-                    ? 'text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                )}
               >
                 {/* Active indicator pill */}
                 {isActive(link.href) && (
@@ -137,22 +140,24 @@ export function Header() {
 
                 {/* Dropdown */}
                 <div
-                  className={`absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-xl backdrop-saturate-[1.5] bg-[var(--glass-bg)] ${
+                  className={cn(
+                    "absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-[24px] backdrop-saturate-[1.5] bg-[var(--glass-bg)]",
                     moreOpen
-                      ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-                  }`}
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                  )}
                 >
                   <div className="p-2">
                     {moreLinks.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
-                        className={`flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-150 group/more ${
+                        className={cn(
+                          "flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-150 group/more",
                           isActive(link.href)
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-text-secondary hover:bg-surface/80 hover:text-text-primary'
-                        }`}
+                            ? "bg-primary/10 text-primary"
+                            : "text-text-secondary hover:bg-surface/80 hover:text-text-primary"
+                        )}
                       >
                         <span className="text-xl mt-0.5 group-hover/more:scale-110 transition-transform duration-200">
                           {link.icon}
@@ -183,7 +188,9 @@ export function Header() {
               <div ref={authRef} className="relative">
                 <button
                   onClick={() => setAuthMenuOpen(!authMenuOpen)}
-                  className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-elevated transition-all duration-200 group/auth ring-2 ring-transparent hover:ring-primary/20"
+                  className={cn(
+                    "flex items-center gap-2 p-1 rounded-full hover:bg-surface-elevated transition-all duration-200 group/auth ring-2 ring-transparent hover:ring-primary/20"
+                  )}
                 >
                   <div className="relative">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-md transition-transform duration-200 group-hover/auth:scale-105">
@@ -196,11 +203,12 @@ export function Header() {
 
                 {/* Auth dropdown */}
                 <div
-                  className={`absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-xl backdrop-saturate-[1.5] bg-[var(--glass-bg)] ${
+                  className={cn(
+                    "absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-[24px] backdrop-saturate-[1.5] bg-[var(--glass-bg)]",
                     authMenuOpen
-                      ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-                  }`}
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                  )}
                 >
                   {/* User info */}
                   <div className="px-4 py-3.5 border-b border-border/30">
@@ -247,11 +255,12 @@ export function Header() {
                                   handleSwitchProfile(p.profileId);
                                 }
                               }}
-                              className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group ${
+                              className={cn(
+                                "w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group",
                                 isCurrent
-                                  ? 'bg-primary/5 ring-1 ring-primary/20'
-                                  : 'hover:bg-surface'
-                              }`}
+                                  ? "bg-primary/5 ring-1 ring-primary/20"
+                                  : "hover:bg-surface"
+                              )}
                             >
                               {/* Avatar */}
                               <div className="relative shrink-0">
@@ -321,7 +330,9 @@ export function Header() {
                   <div className="p-2 border-t border-border/30">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
+                      )}
                     >
                       <span>🚪</span> ออกจากระบบ
                     </button>
@@ -392,11 +403,12 @@ export function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150 ${
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150",
                 isActive(link.href)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-text-primary hover:bg-surface/60'
-              }`}
+                  ? "bg-primary/10 text-primary"
+                  : "text-text-primary hover:bg-surface/60"
+              )}
             >
               <span className="text-lg">{link.icon}</span>
               <span className="text-sm">{link.label}</span>
@@ -417,11 +429,12 @@ export function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150 ${
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150",
                     isActive(link.href)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-text-primary hover:bg-surface/60'
-                  }`}
+                      ? "bg-primary/10 text-primary"
+                      : "text-text-primary hover:bg-surface/60"
+                  )}
                 >
                   <span className="text-lg">{link.icon}</span>
                   <span className="text-sm">{link.label}</span>
@@ -485,11 +498,12 @@ export function Header() {
                               handleSwitchProfile(p.profileId);
                             }
                           }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 border ${
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 border",
                             isCurrent
-                              ? 'bg-primary/5 border-primary/20 shadow-sm'
-                              : 'bg-surface/50 border-transparent hover:bg-surface'
-                          }`}
+                              ? "bg-primary/5 border-primary/20 shadow-sm"
+                              : "bg-surface/50 border-transparent hover:bg-surface"
+                          )}
                         >
                           {/* Avatar */}
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base shadow-sm shrink-0 ${
@@ -548,7 +562,9 @@ export function Header() {
               </Link>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 font-medium transition-all duration-150"
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 font-medium transition-all duration-150"
+                )}
               >
                 <span className="text-lg">🚪</span><span className="text-sm">ออกจากระบบ</span>
               </button>
