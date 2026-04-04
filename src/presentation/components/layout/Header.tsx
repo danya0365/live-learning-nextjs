@@ -1,5 +1,6 @@
 'use client';
 
+import { AdminChatBadge } from '@/src/presentation/components/chat/AdminChatBadge';
 import { HydrationGuard } from '@/src/presentation/components/common/HydrationGuard';
 import { LoadingOverlay } from '@/src/presentation/components/common/LoadingOverlay';
 import { ThemeToggle } from '@/src/presentation/components/common/ThemeToggle';
@@ -110,9 +111,12 @@ export function Header() {
                     style={{ background: 'var(--gradient-primary)' }}
                   />
                 )}
-                <span className="relative z-10 text-base group-hover/link:scale-110 transition-transform duration-200">
-                  {link.icon}
-                </span>
+                <div className="relative">
+                  <span className="relative z-10 text-base group-hover/link:scale-110 transition-transform duration-200">
+                    {link.icon}
+                  </span>
+                  {link.href === '/admin/chat' && <AdminChatBadge />}
+                </div>
                 <span className="relative z-10">{link.label}</span>
                 {/* Active bottom dot */}
                 {isActive(link.href) && (

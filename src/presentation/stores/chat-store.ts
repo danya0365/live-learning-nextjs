@@ -268,7 +268,7 @@ export const useChatStore = create<ChatStore>()(
       },
     }),
     {
-      name: "clean-code-chat-storage",
+      name: "live-learning-chat-storage",
       partialize: (state) => ({ 
         sessionId: state.sessionId, 
         messages: state.messages,

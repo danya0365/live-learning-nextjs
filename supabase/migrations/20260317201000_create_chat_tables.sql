@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS public.chat_sessions (
     customer_phone TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true,
     auto_reply BOOLEAN DEFAULT true,
+    status TEXT DEFAULT 'new' CHECK (status IN ('new', 'active', 'follow_up', 'resolved', 'spam')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

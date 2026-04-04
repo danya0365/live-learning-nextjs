@@ -34,6 +34,7 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
   ],
   admin: [
     { href: '/', label: 'หน้าหลัก', icon: '🏠' },
+    { href: '/admin/chat', label: 'แชท', icon: '💬' },
     { href: '/schedule', label: 'ตาราง', icon: '📅' },
     { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
     { href: '/profile', label: 'โปรไฟล์', icon: '👤' },

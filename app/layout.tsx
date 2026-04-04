@@ -1,4 +1,5 @@
 import '@/public/styles/index.css';
+import { AIChatBubble } from '@/src/presentation/components/chat/AIChatBubble';
 import { AuthProvider } from '@/src/presentation/providers/AuthProvider';
 import { ThemeProvider } from '@/src/presentation/providers/ThemeProvider';
 import type { Metadata } from "next";
@@ -26,8 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider>
             {children}
-            {/* <AIHelperWidget /> */}
-            {/* <AIChatBubble /> */}
+            <AIChatBubble />
           </ThemeProvider>
         </AuthProvider>
       </body>

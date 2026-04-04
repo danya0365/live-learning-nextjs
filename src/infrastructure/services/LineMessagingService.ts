@@ -1,3 +1,4 @@
+import { MagicLinkService } from "@/src/infrastructure/security/MagicLinkService";
 import * as line from "@line/bot-sdk";
 export class LineMessagingService {
   private client: line.messagingApi.MessagingApiClient | null = null;
@@ -31,19 +32,24 @@ export class LineMessagingService {
       return;
     }
 
-    const shortId = sessionId.slice(0, 4).toUpperCase();
-
-    // Generate a secure token or use Supabase Auth Link (simplified for MVP)
-    const token = "admin-pending-token"; // TODO: Implement real magic link
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
+    const shortId = sessionId.slice(0, 8).toUpperCase();
+    
+    // Generate a secure HMAC-signed token for the magic link
+    const expiresAt = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
+    const token = MagicLinkService.generateToken(sessionId, expiresAt);
+    
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    
+    const magicLink = `${baseUrl}/admin/chat/${sessionId}?token=${token}&expires=${expiresAt}`;
+    
     try {
       await this.client!.pushMessage({
         to: this.adminUserId!,
         messages: [
           {
             type: "text",
-            text: `[💬 ลูกค้าใหม่]\nรหัสห้อง: ${shortId}\nข้อความ: ${message}\n\n👉 คลิกเพื่อตอบกลับ:\n${baseUrl}/admin/chat?sessionId=${sessionId}`,
+            text: `[💬 ลูกค้าใหม่]\nรหัสห้อง: ${shortId}\nข้อความ: ${message}\n\n👉 คลิกเพื่อตอบกลับแบบ Full Chat:\n${magicLink}`,
           },
         ],
       });
