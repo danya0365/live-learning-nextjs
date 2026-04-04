@@ -196,9 +196,7 @@ export function AdminChatView({ sessionId, customerName }: AdminChatViewProps) {
                 className={`flex w-full animate-in fade-in slide-in-from-bottom-2 duration-500`}
                 style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
               >
-                  <div className={`flex w-full ${message.role === 'admin' || message.role === 'assistant' ? 'justify-end' : 'justify-start'}`}>
-                    <ChatMessage message={message} />
-                  </div>
+                  <ChatMessage message={message} isMe={message.role === "admin"} />
               </div>
             ))}
             {isLoading && !searchResults && (
