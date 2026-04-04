@@ -12,6 +12,7 @@ interface Tab {
 
 interface AdminChatTabSwitcherProps {
   activeTab: string;
+  counts: Record<string, number>;
 }
 
 const TABS = [
@@ -22,12 +23,13 @@ const TABS = [
   { id: "all", label: "ทั้งหมด", icon: Bot },
 ];
 
-export function AdminChatTabSwitcher({ activeTab }: AdminChatTabSwitcherProps) {
+export function AdminChatTabSwitcher({ activeTab, counts }: AdminChatTabSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   const currentTab = TABS.find(t => t.id === activeTab) || TABS[0];
   const CurrentIcon = currentTab.icon;
+  const currentCount = counts[activeTab] || 0;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -47,18 +49,28 @@ export function AdminChatTabSwitcher({ activeTab }: AdminChatTabSwitcherProps) {
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
+          const count = counts[tab.id] || 0;
           return (
             <Link
               key={tab.id}
               href={`/admin/chat?status=${tab.id}`}
-              className={`flex items-center gap-2.5 px-8 py-4 rounded-[1.5rem] text-sm font-black transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2.5 px-6 py-4 rounded-[1.5rem] text-sm font-black transition-all group whitespace-nowrap ${
                 isActive 
                 ? "btn-game scale-105 shadow-xl shadow-primary/30" 
                 : "text-text-muted hover:bg-white/10 hover:text-text-primary"
               }`}
             >
               <Icon className={`w-4.5 h-4.5 ${isActive ? "text-white" : "text-text-muted"}`} />
-              {tab.label}
+              <span>{tab.label}</span>
+              {count > 0 && (
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                  isActive 
+                  ? "bg-white text-primary ring-2 ring-white/20" 
+                  : "bg-primary/10 text-primary group-hover:bg-primary/20"
+                }`}>
+                  {count}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -75,7 +87,14 @@ export function AdminChatTabSwitcher({ activeTab }: AdminChatTabSwitcherProps) {
                <CurrentIcon className="w-5 h-5 text-primary" />
             </div>
             <div className="text-left">
-               <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1">หมวดหมู่ปัจจุบัน</p>
+               <div className="flex items-center gap-2 mb-1">
+                 <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">หมวดหมู่ปัจจุบัน</p>
+                 {currentCount > 0 && (
+                   <span className="bg-primary/20 text-primary text-[8px] font-black px-1.5 py-0.5 rounded-md leading-none">
+                     {currentCount}
+                   </span>
+                 )}
+               </div>
                <h3 className="text-base font-black text-text-primary tracking-tight">{currentTab.label}</h3>
             </div>
           </div>
@@ -93,16 +112,17 @@ export function AdminChatTabSwitcher({ activeTab }: AdminChatTabSwitcherProps) {
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="absolute top-[calc(100%+0.75rem)] left-0 right-0 z-50 glass rounded-[2.5rem] p-3 shadow-2xl border-white/30 backdrop-blur-2xl overflow-hidden"
             >
-              <div className="grid gap-2">
+              <div className="grid gap-1">
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
+                  const count = counts[tab.id] || 0;
                   return (
                     <Link
                       key={tab.id}
                       href={`/admin/chat?status=${tab.id}`}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center justify-between px-5 py-4 rounded-3xl transition-all ${
+                      className={`flex items-center justify-between px-5 py-3.5 rounded-3xl transition-all ${
                         isActive 
                         ? "bg-primary/10 text-primary border border-primary/20" 
                         : "text-text-muted hover:bg-white/10 hover:text-text-primary"
@@ -112,9 +132,18 @@ export function AdminChatTabSwitcher({ activeTab }: AdminChatTabSwitcherProps) {
                         <Icon className={`w-5 h-5 ${isActive ? "text-primary" : "text-text-muted"}`} />
                         <span className="text-sm font-black tracking-tight">{tab.label}</span>
                       </div>
-                      {isActive && (
-                        <div className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--color-primary),0.5)]" />
-                      )}
+                      <div className="flex items-center gap-2">
+                        {count > 0 && (
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                            isActive ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                          }`}>
+                            {count}
+                          </span>
+                        )}
+                        {isActive && (
+                          <div className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--color-primary),0.5)]" />
+                        )}
+                      </div>
                     </Link>
                   );
                 })}

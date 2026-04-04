@@ -23,9 +23,17 @@ export default async function AdminChatListPage({
     .order("updated_at", { ascending: false });
 
   const rawSessions = data as AdminChatSummary[] | null;
+  
+  // Calculate counts for badges
+  const counts = {
+    active: rawSessions?.filter(s => s.is_active === true).length || 0,
+    new: rawSessions?.filter(s => s.status === "new").length || 0,
+    follow_up: rawSessions?.filter(s => s.status === "follow_up").length || 0,
+    resolved: rawSessions?.filter(s => s.is_active === false).length || 0,
+    all: rawSessions?.length || 0,
+  };
 
-  // Apply filters in JS for flexibility or use query.eq (since we have the full data set and it's small)
-  // Filtering the already fetched array is efficient enough here and avoids multiple query complex types
+  // Apply filters in JS
   const sessions = rawSessions?.filter(s => {
     if (activeTab === "active") return s.is_active === true;
     if (activeTab === "new") return s.status === "new";
@@ -71,7 +79,7 @@ export default async function AdminChatListPage({
         </header>
 
         {/* Navigation Tabs Switcher (Responsive) */}
-        <AdminChatTabSwitcher activeTab={activeTab} />
+        <AdminChatTabSwitcher activeTab={activeTab} counts={counts} />
 
         <div className="grid gap-6">
           {sessions?.length === 0 ? (
