@@ -76,16 +76,24 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="flex items-center gap-2.5 hover:scale-105 transition-transform duration-200">
+          <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+            <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-200">
               <div className="relative">
-                <span className="text-2xl drop-shadow-sm">🎮</span>
+                {/* Logo Badge Container */}
+                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-white/10 group-hover:rotate-3 transition-transform duration-300 overflow-hidden">
+                   <img 
+                    src="/images/logo.png" 
+                    alt="Live Learning Logo" 
+                    className="w-full h-full object-cover rounded-lg"
+                   />
+                </div>
+                {/* Glow Effect */}
                 <div
-                  className="absolute -inset-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"
+                  className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-60 transition-opacity duration-300 blur-md -z-10"
                   style={{ background: 'var(--gradient-primary)' }}
                 />
               </div>
-              <span className="text-xl font-bold gradient-text hidden sm:block tracking-tight">
+              <span className="text-xl font-black gradient-text hidden sm:block tracking-tighter uppercase whitespace-nowrap">
                 Live Learning
               </span>
             </div>
