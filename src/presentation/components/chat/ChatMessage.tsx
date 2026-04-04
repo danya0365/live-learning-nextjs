@@ -18,7 +18,7 @@ export function ChatMessage({ message, isMe = false }: ChatMessageProps) {
 
   return (
     <div
-      className={`chat-message w-full flex flex-col ${isMe ? "items-end text-right" : "items-start text-left"} gap-1.5`}
+      className={`flex w-full flex-col ${isMe ? "items-end" : "items-start"} gap-1.5`}
     >
       <div className={`flex items-end max-w-[92%] ${isMe ? "flex-row-reverse gap-2" : "flex-row gap-3"}`}>
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/20 ${isMe ? "bg-gradient-to-br from-primary to-secondary text-white" : "bg-surface text-text-muted"}`}>
