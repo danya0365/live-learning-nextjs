@@ -12,19 +12,11 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createAdminSupabaseClient();
     
-    // Fetch all sessions with their messages to count unread or show latest
-    // Similar to the pattern in portfolio, but using Supabase syntax
+    // 🔥 OPTIMIZED: Query the pre-aggregated summary View
+    // This is much faster and returns exactly what the list UI needs.
     const { data: sessions, error } = await supabase
-      .from("chat_sessions")
-      .select(`
-        *,
-        chat_messages (
-          content,
-          created_at,
-          role,
-          status
-        )
-      `)
+      .from("admin_chat_summary")
+      .select("*")
       .order("updated_at", { ascending: false });
 
     if (error) throw error;

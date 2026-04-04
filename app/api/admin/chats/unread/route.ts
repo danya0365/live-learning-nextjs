@@ -12,36 +12,19 @@ export async function GET() {
   try {
     const supabase = createAdminSupabaseClient();
     
-    // Fetch all active/new sessions and their unread customer messages
+    // 🔥 OPTIMIZED: Count unique sessions from the summary View
+    // Filters for unread_count > 0 in one simple query.
     const { data: sessions, error } = await supabase
-      .from("chat_sessions")
-      .select(`
-        id,
-        status,
-        chat_messages (
-          role,
-          status
-        )
-      `)
+      .from("admin_chat_summary")
+      .select("id")
+      .gt("unread_count", 0)
       .not('status', 'eq', 'resolved');
 
     if (error && error.code !== 'PGRST116') {
         console.error("Supabase query error:", error);
     }
     
-    // 🔥 HYBRID LOGIC: Count unique SESSIONS (rooms) that have unread messages
-    // This keeps the Header Badge tidy.
-    let sessionsWithUnreadCount = 0;
-
-    sessions?.forEach(session => {
-        const hasUnreadMessages = (session as any).chat_messages?.some(
-            (m: any) => m.role === 'user' && m.status !== 'read'
-        );
-        
-        if (hasUnreadMessages) {
-            sessionsWithUnreadCount++;
-        }
-    });
+    const sessionsWithUnreadCount = sessions?.length || 0;
 
     return NextResponse.json({ count: sessionsWithUnreadCount });
   } catch (error) {

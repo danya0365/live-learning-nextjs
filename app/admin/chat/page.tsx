@@ -1,7 +1,11 @@
-import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
-import { UserCircle2, MessageSquare, Clock, ArrowRight, Bot, Inbox, Star, CheckCircle, AlertCircle } from "lucide-react";
-import Link from 'next/link';
 import { MagicLinkService } from "@/src/infrastructure/security/MagicLinkService";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { ArrowRight, Bot, CheckCircle, Clock, Inbox, MessageSquare, Star, UserCircle2 } from "lucide-react";
+import Link from 'next/link';
+
+import { Database } from "@/src/domain/types/supabase";
+
+type AdminChatSummary = Database["public"]["Views"]["admin_chat_summary"]["Row"];
 
 export default async function AdminChatListPage({
   searchParams,
@@ -11,32 +15,23 @@ export default async function AdminChatListPage({
   const { status: activeTab = "active" } = await searchParams;
   const supabase = createAdminSupabaseClient();
   
-  // Fetch all sessions with their latest message info
-  let query = supabase
-    .from("chat_sessions")
-    .select(`
-      *,
-      chat_messages (
-        content,
-        created_at,
-        role,
-        status
-      )
-    `)
+  // Fetch all sessions with their pre-calculated summary info from the View
+  const { data, error } = await supabase
+    .from("admin_chat_summary")
+    .select("*")
     .order("updated_at", { ascending: false });
 
-  // Apply filters
-  if (activeTab === "active") {
-    query = query.eq("is_active", true);
-  } else if (activeTab === "new") {
-    query = query.eq("status", "new");
-  } else if (activeTab === "follow_up") {
-    query = query.eq("status", "follow_up");
-  } else if (activeTab === "resolved") {
-    query = query.eq("is_active", false);
-  }
+  const rawSessions = data as AdminChatSummary[] | null;
 
-  const { data: sessions, error } = await query;
+  // Apply filters in JS for flexibility or use query.eq (since we have the full data set and it's small)
+  // Filtering the already fetched array is efficient enough here and avoids multiple query complex types
+  const sessions = rawSessions?.filter(s => {
+    if (activeTab === "active") return s.is_active === true;
+    if (activeTab === "new") return s.status === "new";
+    if (activeTab === "follow_up") return s.status === "follow_up";
+    if (activeTab === "resolved") return s.is_active === false;
+    return true; // "all"
+  });
 
   if (error) {
     return (
@@ -107,11 +102,12 @@ export default async function AdminChatListPage({
             </div>
           ) : (
             sessions?.map((session) => {
-              const lastMessage = session.chat_messages?.[session.chat_messages.length - 1];
-              // Calculate unread count for this specific session
-              const unreadCount = (session as any).chat_messages?.filter(
-                (m: any) => m.role === 'user' && m.status !== 'read'
-              ).length || 0;
+              if (!session.id) return null; // Safe guard for TS
+
+              // Now using pre-aggregated data from Database View
+              const unreadCount = session.unread_count || 0;
+              const lastMessageContent = session.last_message_content || "เริ่มการสนทนาแล้ว";
+              const lastMessageAt = session.last_message_at || session.updated_at || new Date().toISOString();
               
               const expiresAt = Date.now() + 1000 * 60 * 60 * 24;
               const token = MagicLinkService.generateToken(session.id, expiresAt);
@@ -138,7 +134,7 @@ export default async function AdminChatListPage({
                       <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-50 transition-colors border border-gray-100">
                         <UserCircle2 className="w-8 h-8 text-gray-400 group-hover:text-indigo-500" />
                       </div>
-                      {/* 🔥 Numeric Unread Badge */}
+                      {/* 🔥 Optimized Numeric Unread Badge */}
                       {unreadCount > 0 && (
                         <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center px-1 animate-in zoom-in duration-300 shadow-sm">
                           <span className="text-[10px] font-black text-white">{unreadCount}</span>
@@ -155,7 +151,7 @@ export default async function AdminChatListPage({
                         </span>
                       </div>
                       <p className="text-sm font-medium text-gray-500 line-clamp-1 max-w-md">
-                        {lastMessage ? lastMessage.content : "เริ่มการสนทนาแล้ว"}
+                        {lastMessageContent}
                       </p>
                     </div>
                   </div>
@@ -164,7 +160,7 @@ export default async function AdminChatListPage({
                     <div className="hidden md:flex flex-col items-end gap-1">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
                         <Clock className="w-3.5 h-3.5" />
-                        {new Date(session.updated_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(lastMessageAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                       <span className="text-[10px] font-mono text-gray-300 bg-gray-50 px-2 rounded-md">ID: {session.id.slice(0, 8)}</span>
                     </div>

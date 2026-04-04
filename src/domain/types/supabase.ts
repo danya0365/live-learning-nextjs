@@ -261,6 +261,13 @@ export type Database = {
             foreignKeyName: "chat_messages_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
+            referencedRelation: "admin_chat_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
             referencedRelation: "chat_sessions"
             referencedColumns: ["id"]
           },
@@ -1512,7 +1519,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_chat_summary: {
+        Row: {
+          auto_reply: boolean | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string | null
+          is_active: boolean | null
+          last_message_at: string | null
+          last_message_content: string | null
+          last_message_role: string | null
+          last_message_status: string | null
+          status: string | null
+          unread_count: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_profile: {
