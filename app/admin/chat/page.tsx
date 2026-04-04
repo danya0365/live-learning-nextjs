@@ -2,6 +2,7 @@ import { MagicLinkService } from "@/src/infrastructure/security/MagicLinkService
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { ArrowRight, Bot, CheckCircle, Clock, Inbox, MessageSquare, Star, UserCircle2 } from "lucide-react";
 import Link from 'next/link';
+import { AdminChatTabSwitcher } from "@/src/presentation/components/chat/AdminChatTabSwitcher";
 
 import { Database } from "@/src/domain/types/supabase";
 
@@ -69,27 +70,8 @@ export default async function AdminChatListPage({
           </div>
         </header>
 
-        {/* Navigation Tabs */}
-        <nav className="flex items-center gap-2 mb-10 glass p-2 rounded-[2rem] border shadow-xl overflow-x-auto no-scrollbar animate-in zoom-in-95 duration-500">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <Link
-                key={tab.id}
-                href={`/admin/chat?status=${tab.id}`}
-                className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl text-sm font-black transition-all whitespace-nowrap ${
-                  isActive 
-                  ? "btn-game scale-105 shadow-xl shadow-primary/30" 
-                  : "text-text-muted hover:bg-white/10 hover:text-text-primary"
-                }`}
-              >
-                <Icon className={`w-4.5 h-4.5 ${isActive ? "text-white" : "text-text-muted"}`} />
-                {tab.label}
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Navigation Tabs Switcher (Responsive) */}
+        <AdminChatTabSwitcher activeTab={activeTab} />
 
         <div className="grid gap-6">
           {sessions?.length === 0 ? (
