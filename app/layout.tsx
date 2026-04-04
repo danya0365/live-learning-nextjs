@@ -52,13 +52,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  manifest: "/favicon/site.webmanifest",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      // Note: Add detailed icons (16x16, 32x32) to /public as needed
+      { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon/favicon.ico" },
     ],
-    shortcut: ["/favicon.ico"],
-    apple: ["/favicon.ico"], // Placeholder until apple-touch-icon is available
+    shortcut: ["/favicon/favicon.ico"],
+    apple: ["/favicon/apple-touch-icon.png"],
   },
   openGraph: {
     title: "Live Learning — เรียนสดออนไลน์กับอาจารย์ตัวจริง",
@@ -67,9 +69,9 @@ export const metadata: Metadata = {
     siteName: "Live Learning",
     images: [
       {
-        url: "/next.svg", // Placeholder, recommend adding a proper OG image
-        width: 1200,
-        height: 630,
+        url: "/favicon/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
         alt: "Live Learning Logo",
       },
     ],
@@ -79,7 +81,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Live Learning — เรียนสดออนไลน์กับอาจารย์ตัวจริง",
     description: "แพลตฟอร์มเรียนรู้สดออนไลน์ เลือกคอร์สที่ชอบ จองเวลาเรียนกับอาจารย์ผู้เชี่ยวชาญ",
-    images: ["/next.svg"],
+    images: ["/favicon/android-chrome-512x512.png"],
   },
   appleWebApp: {
     capable: true,
