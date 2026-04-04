@@ -169,7 +169,7 @@ export function AdminChatView({ sessionId, customerName }: AdminChatViewProps) {
       </header>
 
       {/* Chat Messages Area: Animated & Spaced */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-10 space-y-6 max-w-5xl mx-auto w-full custom-scrollbar animate-in fade-in duration-1000">
+      <main className="flex-1 overflow-y-auto px-6 py-10 md:px-10 space-y-6 max-w-5xl mx-auto w-full custom-scrollbar animate-in fade-in duration-1000">
         {searchResults && (
           <div className="px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-4 duration-500 shadow-lg backdrop-blur-md">
             <span className="text-xs font-black text-primary uppercase tracking-tight">
@@ -189,7 +189,7 @@ export function AdminChatView({ sessionId, customerName }: AdminChatViewProps) {
             <p className="text-sm font-black uppercase tracking-widest">เริ่มบทสนทนาใหม่</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 w-full">
             {activeMessages.map((message, idx) => (
               <div 
                 key={message.id} 

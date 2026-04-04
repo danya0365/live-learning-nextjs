@@ -20,7 +20,7 @@ export function ChatMessage({ message, isMe = false }: ChatMessageProps) {
     <div
       className={`chat-message w-full flex flex-col ${isMe ? "items-end text-right" : "items-start text-left"} gap-1.5`}
     >
-      <div className={`flex items-end gap-3 max-w-[85%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+      <div className={`flex items-end max-w-[92%] ${isMe ? "flex-row-reverse gap-2" : "flex-row gap-3"}`}>
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/20 ${isMe ? "bg-gradient-to-br from-primary to-secondary text-white" : "bg-surface text-text-muted"}`}>
           {isAdmin ? (
             <ShieldCheck className="w-4.5 h-4.5" />

@@ -127,7 +127,7 @@ export function AIChatBubble() {
           </div>
 
           {/* Body: Registration or Chat Messages */}
-          <div className="ai-chat__messages flex-1 overflow-y-auto p-5 custom-scrollbar bg-background/5">
+          <div className="ai-chat__messages flex-1 overflow-y-auto px-3.5 py-6 custom-scrollbar bg-background/5">
             {!isRegistered ? (
               <div className="flex flex-col items-center justify-center p-4 h-full text-center animate-in fade-in duration-700">
                 <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/20">
@@ -205,7 +205,7 @@ export function AIChatBubble() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 w-full">
                 {hasMoreHistory && (
                   <div className="flex justify-center my-4">
                     <button 
