@@ -89,155 +89,175 @@ export function AdminChatView({ sessionId, customerName }: AdminChatViewProps) {
   const activeMessages = searchResults || messages;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Admin Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between shadow-sm z-10 gap-4">
-        <div className="flex items-center gap-4 flex-1">
-          <Link href="/admin/chat" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+    <div className="flex flex-col h-screen bg-background transition-colors duration-500 overflow-hidden">
+      {/* Admin Header: Premium Glass Design */}
+      <header className="glass-subtle px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between shadow-lg z-20 gap-4 border-b border-white/20">
+        <div className="flex items-center gap-5 flex-1">
+          <Link href="/admin/chat" className="p-2.5 glass hover:bg-primary hover:text-white rounded-xl transition-all shadow-sm group active:scale-90">
+            <ArrowLeft className="w-5 h-5 text-text-muted group-hover:text-white" />
           </Link>
-          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
-            <UserCircle2 className="w-6 h-6 text-indigo-600" />
+          <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center shrink-0 border border-white/40 shadow-inner">
+            <UserCircle2 className="w-8 h-8 text-primary" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-gray-900 leading-tight truncate">
-              {customerName}
+            <h1 className="text-xl font-black text-text-primary leading-tight truncate tracking-tight">
+              คุณ {customerName}
             </h1>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] text-gray-500 font-mono uppercase">ID: {sessionId.slice(0, 8)}</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+              <span className="text-[10px] text-text-muted font-black tracking-widest uppercase opacity-60">SESSION: {sessionId.slice(0, 8)}</span>
             </div>
           </div>
         </div>
 
-        {/* Feature Controls */}
-        <div className="flex items-center flex-wrap gap-3 w-full md:w-auto">
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="relative flex-1 md:w-64 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        {/* Feature Controls: Semantic & Interactive */}
+        <div className="flex items-center flex-wrap gap-4 w-full md:w-auto">
+          {/* Search Bar: Glass Subtle */}
+          <form onSubmit={handleSearch} className="relative flex-1 md:w-72 max-w-sm group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-primary transition-colors" />
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาข้อความ..."
-              className="w-full pl-9 pr-8 py-2 bg-gray-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+              placeholder="ค้นหาในบทสนทนา..."
+              className="w-full pl-10 pr-10 py-2.5 glass rounded-xl text-sm font-bold text-text-primary focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-text-muted/50 border-white/30"
             />
             {searchQuery && (
               <button 
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 hover:bg-error/10 hover:text-error rounded-lg transition-colors"
               >
-                <X className="w-3.5 h-3.5 text-gray-400" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </form>
 
-          {/* AI Toggle */}
-          <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
-            <Bot className={`w-4 h-4 ${autoReply ? 'text-indigo-600' : 'text-gray-400'}`} />
-            <span className="text-xs font-semibold text-indigo-700">AI</span>
+          {/* AI Toggle: Secondary Accent */}
+          <div className="flex items-center gap-2.5 bg-secondary/10 px-4 py-2 rounded-xl border border-secondary/20 shadow-sm">
+            <Bot className={`w-4.5 h-4.5 ${autoReply ? 'text-secondary-dark' : 'text-text-muted'}`} />
+            <span className="text-[10px] font-black text-secondary-dark uppercase tracking-tighter">AI Assistant</span>
             <button 
               onClick={() => toggleAutoReply(!autoReply)}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${autoReply ? 'bg-indigo-600' : 'bg-gray-300'}`}
+              className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all focus:outline-none shadow-inner ${autoReply ? 'bg-secondary' : 'bg-text-muted/30'}`}
             >
-              <span className={`inline-block h-3 w-3 transform bg-white rounded-full transition-transform ${autoReply ? 'translate-x-5' : 'translate-x-1'}`} />
+              <span className={`inline-block h-4 w-4 transform bg-white rounded-full transition-transform shadow-md ${autoReply ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
             </button>
           </div>
 
-          {/* Status Dropdown */}
-          <div className="relative group">
+          {/* Status Dropdown: Semantic Tokens */}
+          <div className="relative">
             <select 
               onChange={(e) => updateSessionStatus(e.target.value)}
-              className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm hover:border-gray-300 transition-all"
+              className="appearance-none glass rounded-xl pl-4 pr-10 py-2.5 text-xs font-black text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-sm hover:border-primary/30 transition-all border-white/30 uppercase tracking-widest"
             >
               <option value="active">💬 ACTIVE</option>
               <option value="follow_up">⭐ FOLLOW-UP</option>
               <option value="spam">🚫 SPAM</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
           </div>
 
           <button 
             onClick={() => closeSession()}
-            className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
+            className="btn-game px-5 py-2.5 text-xs flex items-center gap-2 group"
           >
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="hidden sm:inline">RESOLVE</span>
+            <CheckCircle2 className="w-4.5 h-4.5 group-hover:rotate-12 transition-transform" />
+            <span>RESOLVE</span>
           </button>
         </div>
       </header>
 
-      {/* Chat Messages Area */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 max-w-5xl mx-auto w-full custom-scrollbar">
+      {/* Chat Messages Area: Animated & Spaced */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-10 space-y-6 max-w-5xl mx-auto w-full custom-scrollbar animate-in fade-in duration-1000">
         {searchResults && (
-          <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
-            <span className="text-xs font-bold text-indigo-700">ผลการค้นหาสำหรับ &quot;{searchQuery}&quot;</span>
-            <button onClick={handleClearSearch} className="text-[10px] text-indigo-600 hover:underline">ล้างการค้นหา</button>
+          <div className="px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-4 duration-500 shadow-lg backdrop-blur-md">
+            <span className="text-xs font-black text-primary uppercase tracking-tight">
+              🔍 ผลการค้นหาสำหรับ: &quot;{searchQuery}&quot;
+            </span>
+            <button onClick={handleClearSearch} className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">
+              X ล้างการค้นหา
+            </button>
           </div>
         )}
 
         {activeMessages.length === 0 && !isLoading ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
-            <MessageSquare className="w-16 h-16 mb-4" />
-            <p className="text-sm font-medium">ไม่พบข้อความ</p>
+          <div className="flex flex-col items-center justify-center h-full text-text-muted opacity-40 animate-pulse">
+            <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center mb-6 shadow-inner">
+               <MessageSquare className="w-12 h-12" />
+            </div>
+            <p className="text-sm font-black uppercase tracking-widest">เริ่มบทสนทนาใหม่</p>
           </div>
         ) : (
-          <>
-            {activeMessages.map((message) => (
-              <div key={message.id} className={`flex ${message.role === 'admin' || message.role === 'assistant' ? 'justify-end' : 'justify-start'}`}>
-                  <ChatMessage message={message} />
+          <div className="flex flex-col gap-6">
+            {activeMessages.map((message, idx) => (
+              <div 
+                key={message.id} 
+                className={`flex w-full animate-in fade-in slide-in-from-bottom-2 duration-500`}
+                style={{ animationDelay: `${Math.min(idx * 50, 500)}ms` }}
+              >
+                  <div className={`flex w-full ${message.role === 'admin' || message.role === 'assistant' ? 'justify-end' : 'justify-start'}`}>
+                    <ChatMessage message={message} />
+                  </div>
               </div>
             ))}
             {isLoading && !searchResults && (
-              <div className="flex items-center gap-2 text-gray-400 text-xs ml-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>กำลังดำเนินการ...</span>
+              <div className="flex items-center gap-2.5 text-primary text-xs font-black ml-4 animate-pulse">
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" />
+                </div>
+                <span className="uppercase tracking-widest">กำลังพิมพ์...</span>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </>
+            <div ref={messagesEndRef} className="h-4" />
+          </div>
         )}
       </main>
 
-      {/* Admin Input Panel */}
-      <footer className="bg-white border-t border-gray-200 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
-        <form onSubmit={handleAdminReply} className="max-w-5xl mx-auto flex gap-3">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onFocus={() => {
-              if (searchResults) handleClearSearch();
-            }}
-            placeholder={searchResults ? "ย้อนลับสู่โหมดแชทเพื่อตอบกลับ..." : "พิมพ์ข้อความตอบกลับในฐานะ Admin..."}
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm md:text-base text-gray-700 shadow-inner"
-            disabled={isLoading || !!searchResults}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading || !!searchResults}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white p-4 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-center aspect-square"
-          >
-            <Send className="w-6 h-6" />
-          </button>
-        </form>
+      {/* Admin Input Panel: Floating Glass Design */}
+      <footer className="p-6 md:p-8 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          <form onSubmit={handleAdminReply} className="flex gap-4 p-2 glass rounded-[2.5rem] shadow-2xl border-white/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onFocus={() => {
+                if (searchResults) handleClearSearch();
+              }}
+              placeholder={searchResults ? "ย้อนลับสู่โหมดแชทเพื่อตอบกลับ..." : "พิมพ์ข้อความตอบกลับในฐานะ Admin..."}
+              className="flex-1 bg-transparent border-none rounded-3xl px-6 py-4 focus:outline-none text-sm md:text-base font-bold text-text-primary placeholder:text-text-muted/40"
+              disabled={isLoading || !!searchResults}
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading || !!searchResults}
+              className="btn-game !px-0 w-16 h-16 !rounded-3xl flex items-center justify-center shadow-primary/40 active:scale-90 group transition-all"
+            >
+              <Send className="w-7 h-7 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            </button>
+          </form>
+        </div>
       </footer>
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e5e7eb;
-          border-radius: 10px;
+          background: rgba(var(--color-primary), 0.1);
+          border-radius: 20px;
+          border: 2px solid transparent;
+          background-clip: content-box;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #d1d5db;
+          background: rgba(var(--color-primary), 0.2);
         }
       `}</style>
     </div>
