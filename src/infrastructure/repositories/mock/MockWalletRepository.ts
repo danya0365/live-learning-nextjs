@@ -68,6 +68,12 @@ export class MockWalletRepository implements IWalletRepository {
     return { transactionId: newTx.id };
   }
 
+  async fulfillTopUp(profileId: string, amount: number): Promise<string> {
+    await this.delay(500);
+    console.log(`Mock fulfillTopUp: Added ${amount} to ${profileId}`);
+    return `mock-tx-${Date.now()}`;
+  }
+
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

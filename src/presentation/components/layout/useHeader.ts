@@ -22,7 +22,7 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
     { href: '/', label: 'หน้าหลัก', icon: '🏠' },
     { href: '/book', label: 'จองคลาส', icon: '➕' },
     { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    // { href: '/resources', label: 'แจกฟรี', icon: '🎁' },
+    { href: '/consultations', label: 'ปรึกษา', icon: '💬' },
     { href: '/quizzes', label: 'ประลอง', icon: '🧠' },
   ],
   instructor: [
@@ -34,6 +34,7 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
   ],
   admin: [
     { href: '/', label: 'หน้าหลัก', icon: '🏠' },
+    { href: '/admin/chat', label: 'แชท', icon: '💬' },
     { href: '/schedule', label: 'ตาราง', icon: '📅' },
     { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
     { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
@@ -42,7 +43,6 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
     { href: '/', label: 'หน้าหลัก', icon: '🏠' },
     { href: '/schedule', label: 'ตารางเรียน', icon: '📅' },
     { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    // { href: '/resources', label: 'แจกฟรี', icon: '🎁' },
     { href: '/quizzes', label: 'ประลอง', icon: '🧠' },
   ],
 };
@@ -50,15 +50,14 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
 const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
   student: [
     { href: '/profile', label: 'โปรไฟล์', icon: '👤', desc: 'ข้อมูลส่วนตัวบัญชีของฉัน' },
-    { href: '/consultations', label: 'ปรึกษา', icon: '💬', desc: 'ขอคำแนะนำจากอาจารย์' },
     { href: '/my-bookings', label: 'การจองของฉัน', icon: '📋', desc: 'ดูสถานะการจองทั้งหมด' },
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
     // { href: '/study-room', label: 'ห้องอ่านหนังสือ', icon: '☕', desc: 'ห้องสำหรับนั่งโฟกัสร่วมกัน' },
     // { href: '/shorts', label: 'คลิปสั้น', icon: '📱', desc: 'เรียนรู้เทคนิคผ่านวิดีโอสั้น' },
+    
   ],
   instructor: [
     { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
-    { href: '/consultations', label: 'คำขอของนักเรียน', icon: '💬', desc: 'ดูคำขอปรึกษาทั้งหมด' },
     { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
   ],
   admin: [

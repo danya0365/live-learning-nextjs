@@ -60,4 +60,13 @@ export class WalletPresenter {
       throw error;
     }
   }
+
+  async fulfillTopUp(profileId: string, amount: number): Promise<string> {
+    try {
+      return await this.repository.fulfillTopUp(profileId, amount);
+    } catch (error) {
+      console.error('Error fulfilling top up:', error);
+      throw error;
+    }
+  }
 }

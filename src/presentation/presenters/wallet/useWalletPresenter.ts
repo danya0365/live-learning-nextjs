@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuthStore } from "@/src/stores/authStore";
 import { WalletPresenter, WalletViewModel } from "./WalletPresenter";
 import { createClientWalletPresenter } from "./WalletPresenterClientFactory";
+import { usePresenterInit } from "../../hooks/usePresenterInit";
 
 export interface WalletPresenterState {
   viewModel: WalletViewModel | null;
@@ -61,10 +63,8 @@ export function useWalletPresenter(
     }
   }, [presenter, updateState]);
 
-  // Load data on mount if we don't have initial view model
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Handles initial fetch and reactive profile switching automatically
+  usePresenterInit(loadData, initialViewModel);
 
   const topUp = useCallback(
     async (amount: number, description?: string, isTestMode?: boolean) => {

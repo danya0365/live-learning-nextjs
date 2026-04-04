@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { a, useSpring } from '@react-spring/web';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
@@ -183,9 +184,10 @@ function FlashcardPlayer({ deck, onClose }: { deck: Deck, onClose: () => void })
       <div className="flex items-center justify-between mb-8">
         <button 
           onClick={onClose}
-          className="p-2 rounded-xl bg-surface/50 hover:bg-surface border border-border/50 text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2"
+          className="p-2 px-4 rounded-xl bg-surface/50 hover:bg-surface border border-border/50 text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2.5 group"
         >
-          <span>←</span> <span className="text-sm font-medium">กลับไปเลือกการ์ด</span>
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span className="text-sm font-bold">กลับไปเลือกการ์ด</span>
         </button>
         <div className="text-center">
             <h2 className="text-xl font-bold text-text-primary">{deck.title}</h2>
@@ -244,21 +246,23 @@ function FlashcardPlayer({ deck, onClose }: { deck: Deck, onClose: () => void })
       </div>
 
       {/* Navigation Controls */}
-      <div className="flex items-center justify-center gap-4 mt-8">
+    <div className="flex items-center justify-center gap-4 mt-8">
         <button 
            onClick={prevCard}
-           className="w-14 h-14 rounded-2xl bg-surface border border-border hover:bg-surface-elevated hover:border-text-muted transition-all flex items-center justify-center text-xl text-text-secondary hover:text-text-primary active:scale-95"
+           className="w-14 h-14 rounded-2xl bg-surface border border-border hover:bg-surface-elevated hover:border-primary/50 transition-all flex items-center justify-center text-text-secondary hover:text-primary active:scale-95 group"
+           aria-label="การ์ดก่อนหน้า"
         >
-            ←
+            <ArrowLeft className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
         </button>
-        <button className="px-6 py-4 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold tracking-wide shadow-lg shadow-primary/25 transition-all active:scale-95" onClick={() => setFlipped(!flipped)}>
+        <button className="px-8 py-4 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black tracking-wide shadow-lg shadow-primary/25 transition-all active:scale-95" onClick={() => setFlipped(!flipped)}>
             {flipped ? 'ซ่อนคำตอบ' : 'ดูคำตอบ'}
         </button>
         <button 
            onClick={nextCard}
-           className="w-14 h-14 rounded-2xl bg-surface border border-border hover:bg-surface-elevated hover:border-text-muted transition-all flex items-center justify-center text-xl text-text-secondary hover:text-text-primary active:scale-95"
+           className="w-14 h-14 rounded-2xl bg-surface border border-border hover:bg-surface-elevated hover:border-primary/50 transition-all flex items-center justify-center text-text-secondary hover:text-primary active:scale-95 group"
+           aria-label="การ์ดถัดไป"
         >
-            →
+            <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
         </button>
       </div>
     </div>

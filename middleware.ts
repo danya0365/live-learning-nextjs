@@ -10,6 +10,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 const protectedRoutes = [
   '/backend',
   '/profile',
+  '/api/admin',
 ];
 
 // Routes that should redirect to customer if already authenticated

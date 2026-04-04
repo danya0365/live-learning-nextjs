@@ -6,6 +6,7 @@ import { MarkdownContent } from "@/src/presentation/components/learn/MarkdownCon
 import { ContentComponentRenderer } from "@/src/presentation/components/learn/content/LearnContentRegistry";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -201,8 +202,8 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">❌ ไม่พบบทเรียนนี้</h1>
-        <Link href={`/courses/${courseId}/learn`} className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 block">
-          ← กลับไปหน้า Interactive Lab
+        <Link href={`/courses/${courseId}/learn`} className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 flex items-center justify-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> กลับไปหน้า Interactive Lab
         </Link>
       </div>
     );
@@ -323,16 +324,16 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
           {prevLesson ? (
             <Link
               href={`${basePath}/${prevLesson.slug}`}
-              className="px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-white rounded-lg transition-colors flex items-center gap-2 group"
             >
-              ← {prevLesson.titleTh}
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> {prevLesson.titleTh}
             </Link>
           ) : (
             <Link
               href={topicPath}
-              className="px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-white rounded-lg transition-colors"
+              className="px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-white rounded-lg transition-colors flex items-center gap-2 group"
             >
-              ← กลับ
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับ
             </Link>
           )}
         </div>
@@ -349,9 +350,9 @@ export function MainLearnLessonView({ courseId, topicSlug, lessonSlug, courseSlu
           {nextLesson ? (
             <Link
               href={`${basePath}/${nextLesson.slug}`}
-              className={`px-4 py-2 ${colors.btn} text-white rounded-lg transition-colors`}
+              className={`px-4 py-2 ${colors.btn} text-white rounded-lg transition-colors flex items-center gap-2 group`}
             >
-              {nextLesson.titleTh} →
+              {nextLesson.titleTh} <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           ) : (
             <Link

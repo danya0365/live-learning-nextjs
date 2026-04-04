@@ -7,6 +7,7 @@
 'use client';
 
 import { useConsultationDetailPresenter } from '@/src/presentation/presenters/consultations/useConsultationDetailPresenter';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import ConsultationDetailSkeleton from './ConsultationDetailSkeleton';
 
@@ -48,7 +49,9 @@ export function ConsultationDetailView({ requestId }: ConsultationDetailViewProp
         <div className="text-center">
           <div className="text-6xl mb-4">🔍</div>
           <p className="text-text-secondary text-lg mb-4">ไม่พบคำขอปรึกษานี้</p>
-          <Link href="/consultations" className="btn-game px-6 py-2 text-white rounded-xl">← กลับ</Link>
+          <Link href="/consultations" className="btn-game px-6 py-2 text-white rounded-xl inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" /> กลับ
+          </Link>
         </div>
       </div>
     );
@@ -61,8 +64,8 @@ export function ConsultationDetailView({ requestId }: ConsultationDetailViewProp
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Breadcrumb */}
-      <Link href="/consultations" className="text-text-muted hover:text-text-secondary text-sm mb-6 inline-flex items-center gap-1">
-        ← กลับไปรายการคำขอ
+      <Link href="/consultations" className="text-text-muted hover:text-text-secondary text-sm mb-6 inline-flex items-center gap-2 group transition-colors">
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับไปรายการคำขอ
       </Link>
 
       {/* Header card */}

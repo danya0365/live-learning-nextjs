@@ -29,12 +29,18 @@ export interface BookingWizardState {
   isEnrolled: boolean;
   walletBalance: number;
   paymentMethod: 'stripe' | 'wallet';
+  enrolledCourseIds: string[];
+  enrollmentRemainingHours: number | null;
+  weekOffset: number;
 }
 
 export interface BookingWizardActions {
   handleCourseSelect: (course: WizardCourse) => void;
   handleInstructorSelect: (instructor: WizardInstructor) => void;
   handleSlotSelect: (slot: WizardSlot) => void;
+  nextWeek: () => void;
+  prevWeek: () => void;
+  resetWeek: () => void;
   handleConfirm: () => void;
   goBack: () => void;
   handleFinish: () => void;
@@ -44,7 +50,7 @@ export interface BookingWizardActions {
   setPaymentMethod: (method: 'stripe' | 'wallet') => void;
 }
 
-export function useBookingWizardPresenter() {
+export function useBookingWizardPresenter(initialCourseId?: string | null) {
   const router = useRouter();
   const presenter = useMemo(() => createClientBookingWizardPresenter(), []);
 
@@ -76,6 +82,9 @@ export function useBookingWizardPresenter() {
   // Wallet State
   const [walletBalance, setWalletBalance] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'wallet'>('stripe');
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
+  const [enrollmentRemainingHours, setEnrollmentRemainingHours] = useState<number | null>(null);
+  const [weekOffset, setWeekOffset] = useState<number>(0);
 
   // Initial Load
   useEffect(() => {
@@ -92,13 +101,15 @@ export function useBookingWizardPresenter() {
            initialWalletBalance = walletData.wallet?.balance || 0;
         }
 
-        const [c, l] = await Promise.all([
+        const [c, l, enrollments] = await Promise.all([
             presenter.getCourses(),
-            configPresenter.getLevels()
+            configPresenter.getLevels(),
+            presenter.getMyEnrollments().catch(() => [])
         ]);
         setCourses(c);
         setLevels(l);
         setWalletBalance(initialWalletBalance);
+        setEnrolledCourseIds(enrollments.map(e => e.courseId));
       } catch (error) {
         console.error("Failed to load data", error);
       } finally {
@@ -128,25 +139,84 @@ export function useBookingWizardPresenter() {
         setIsEnrolled(true);
         setFinalPrice(0);
         setDiscountAmount(course.price);
+        
+        // Compute remaining hours (handle mapping if it comes back as snake_case from direct API calls)
+        const total = enrollment.totalHours ?? (enrollment as any).total_hours ?? 0;
+        const used = enrollment.usedHours ?? (enrollment as any).used_hours ?? 0;
+        setEnrollmentRemainingHours(total - used);
     } else {
         setIsEnrolled(false);
         setFinalPrice(null);
         setDiscountAmount(0);
+        setEnrollmentRemainingHours(null);
     }
 
     setStep('instructor');
   }, [presenter]);
 
+  // Auto-select course if passed from URL
+  useEffect(() => {
+    if (initialCourseId && courses.length > 0 && !selectedCourse) {
+      const match = courses.find(c => c.id === initialCourseId);
+      if (match) {
+        handleCourseSelect(match);
+      }
+    }
+  }, [initialCourseId, courses, selectedCourse, handleCourseSelect]);
+
+  const getWeekDates = useCallback((offset: number) => {
+      const today = new Date();
+      const start = new Date(today);
+      start.setDate(today.getDate() + (offset * 7));
+      
+      const end = new Date(start);
+      end.setDate(start.getDate() + 7);
+      
+      // Use Local Time formatting to avoid UTC boundary shifts (e.g. Midnight +7 timezone becomes previous day in UTC)
+      const toLocalDateString = (d: Date) => {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+      };
+      
+      return { 
+          startDateIso: toLocalDateString(start) + 'T00:00:00.000Z', 
+          endDateIso: toLocalDateString(end) + 'T23:59:59.999Z' 
+      };
+  }, []);
+
+  const fetchSlotsForWeek = useCallback(async (instructorId: string, offset: number) => {
+      const { startDateIso, endDateIso } = getWeekDates(offset);
+      const slots = await presenter.getSlotsByInstructor(instructorId, startDateIso, endDateIso);
+      setCalendarSlots(slots);
+  }, [presenter, getWeekDates]);
+
   const handleInstructorSelect = useCallback(async (instructor: WizardInstructor) => {
     setSelectedInstructor(instructor);
     setSelectedSlot(null);
-    
-    // Fetch slots
-    const slots = await presenter.getSlotsByInstructor(instructor.id);
-    setCalendarSlots(slots);
-    
+    setWeekOffset(0);
     setStep('calendar');
-  }, [presenter]);
+  }, []);
+
+  const nextWeek = useCallback(() => {
+    setWeekOffset(prev => prev + 1);
+  }, []);
+
+  const prevWeek = useCallback(() => {
+    setWeekOffset(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const resetWeek = useCallback(() => {
+    setWeekOffset(0);
+  }, []);
+
+  // Use a proper React effect to fetch slots when selection or offset changes
+  useEffect(() => {
+      if (selectedInstructor && step === 'calendar') {
+          fetchSlotsForWeek(selectedInstructor.id, weekOffset);
+      }
+  }, [selectedInstructor, weekOffset, step, fetchSlotsForWeek]);
 
   const handleSlotSelect = useCallback((slot: WizardSlot) => {
     setSelectedSlot(slot);
@@ -160,25 +230,31 @@ export function useBookingWizardPresenter() {
     setIsBooking(true);
     // Create booking via API
     try {
-        // Calculate the actual calendar date from the dayOfWeek
+        // Calculate the actual calendar date from the dayOfWeek and weekOffset
         const now = new Date();
         const currentDay = now.getDay();
         let diff = selectedSlot.dayOfWeek - currentDay;
         // If the day has already passed this week, schedule for next week
-        if (diff <= 0) diff += 7;
+        if (diff < 0) diff += 7;
         const targetDate = new Date(now);
-        targetDate.setDate(now.getDate() + diff);
+        targetDate.setDate(now.getDate() + diff + (weekOffset * 7));
+        
+        // Format to strict YYYY-MM-DD for backend to avoid timezone cast issues
+        const yyyy = targetDate.getFullYear();
+        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(targetDate.getDate()).padStart(2, '0');
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
         
         // If joining an existing class, book the course that is actively being taught
         const courseIdPayload = bookingAction === 'join' && selectedSlot.bookedCourseId
              ? selectedSlot.bookedCourseId
              : selectedCourse.id;
 
-        const result = await presenter.createBooking({
+        const result = await presenter.initiateBookingTransaction({
             courseId: courseIdPayload,
             instructorId: selectedInstructor.id,
             slotId: selectedSlot.id, // This is the instructor_availability_id
-            date: targetDate.toISOString(),
+            date: formattedDate,
             action: bookingAction,
             couponCode: couponCode ? couponCode : undefined,
             paymentMethod: paymentMethod // Pass the selected payment method
@@ -232,6 +308,8 @@ export function useBookingWizardPresenter() {
     setFinalPrice(null);
     setCouponError(null);
     setIsEnrolled(false);
+    setEnrollmentRemainingHours(null);
+    setWeekOffset(0);
     setPaymentMethod('stripe'); // Reset to default
   }, []);
 
@@ -292,12 +370,18 @@ export function useBookingWizardPresenter() {
       finalPrice,
       isEnrolled,
       walletBalance,
-      paymentMethod
+      paymentMethod,
+      enrolledCourseIds,
+      enrollmentRemainingHours,
+      weekOffset
     },
     actions: {
       handleCourseSelect,
       handleInstructorSelect,
       handleSlotSelect,
+      nextWeek,
+      prevWeek,
+      resetWeek,
       handleConfirm,
       goBack,
       handleFinish,

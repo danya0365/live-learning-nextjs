@@ -8,6 +8,7 @@
 
 import { ConsultationLevel } from '@/src/application/repositories/IConsultationRepository';
 import { useNewConsultationPresenter } from '@/src/presentation/presenters/consultations/useNewConsultationPresenter';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -31,8 +32,8 @@ export function NewConsultationView() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/consultations" className="text-text-muted hover:text-text-secondary text-sm mb-4 inline-flex items-center gap-1">
-          ← กลับไปรายการคำขอ
+        <Link href="/consultations" className="text-text-muted hover:text-text-secondary text-sm mb-4 inline-flex items-center gap-2 group transition-colors">
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับไปรายการคำขอ
         </Link>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">
           ✍️ สร้างคำขอปรึกษาใหม่
@@ -144,9 +145,9 @@ export function NewConsultationView() {
           <button
             onClick={() => actions.setStep(2)}
             disabled={!canGoStep2}
-            className="w-full py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
           >
-            ถัดไป: ตารางเวลา & งบ →
+            ถัดไป: ตารางเวลา & งบ <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </button>
         </div>
       )}
@@ -254,16 +255,16 @@ export function NewConsultationView() {
           <div className="flex gap-3">
             <button
               onClick={() => actions.setStep(1)}
-              className="flex-1 py-3 rounded-xl glass text-text-secondary font-medium hover:text-text-primary transition-colors"
+              className="flex-1 py-3.5 rounded-xl glass text-text-secondary font-bold hover:text-text-primary transition-all flex items-center justify-center gap-2 group"
             >
-              ← ย้อนกลับ
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> ย้อนกลับ
             </button>
             <button
               onClick={() => actions.setStep(3)}
               disabled={!canGoStep3}
-              className="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
             >
-              ถัดไป: ยืนยัน →
+              ถัดไป: ยืนยัน <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
         </div>
@@ -336,9 +337,9 @@ export function NewConsultationView() {
           <div className="flex gap-3">
             <button
               onClick={() => actions.setStep(2)}
-              className="flex-1 py-3 rounded-xl glass text-text-secondary font-medium hover:text-text-primary transition-colors"
+              className="flex-1 py-3.5 rounded-xl glass text-text-secondary font-bold hover:text-text-primary transition-all flex items-center justify-center gap-2 group"
             >
-              ← ย้อนกลับ
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> ย้อนกลับ
             </button>
             <button
               onClick={actions.handleSubmit}

@@ -10,13 +10,17 @@ export interface CourseDetailPresenterState {
   error: string | null;
 }
 
+export interface CourseDetailPresenterActions {
+  loadData: () => Promise<void>;
+}
+
 export function useCourseDetailPresenter(
   courseId: string,
   initialViewModel?: CourseDetailViewModel,
-): CourseDetailPresenterState {
+): CourseDetailPresenterState & CourseDetailPresenterActions {
   const presenter = useMemo(() => createClientCourseDetailPresenter(), []);
+  
   const isMountedRef = useRef(true);
-
   const [viewModel, setViewModel] = useState<CourseDetailViewModel | null>(initialViewModel || null);
   const [loading, setLoading] = useState(!initialViewModel);
   const [error, setError] = useState<string | null>(null);
@@ -46,5 +50,10 @@ export function useCourseDetailPresenter(
     return () => { isMountedRef.current = false; };
   }, []);
 
-  return { viewModel, loading, error };
+  return { 
+    viewModel, 
+    loading, 
+    error,
+    loadData,
+  };
 }

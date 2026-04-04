@@ -6,6 +6,7 @@
 
 'use client';
 
+import { AIChatBubble } from '@/src/presentation/components/chat/AIChatBubble';
 import { Footer } from '@/src/presentation/components/layout/Footer';
 import { Header } from '@/src/presentation/components/layout/Header';
 import { type ReactNode } from 'react';
@@ -42,6 +43,7 @@ export default function MainGroupLayout({ children }: { children: ReactNode }) {
       </main>
 
       <Footer />
+      <AIChatBubble />
     </div>
   );
 }

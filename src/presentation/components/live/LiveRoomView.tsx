@@ -10,6 +10,7 @@ import {
   usePublish,
   useRemoteUsers
 } from 'agora-rtc-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -62,8 +63,8 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
           <div className="text-6xl mb-4">🚫</div>
           <h1 className="text-2xl font-bold text-text-primary mb-2">ไม่พบห้องเรียนนี้</h1>
           <p className="text-text-secondary mb-6">ห้องเรียนอาจจบไปแล้วหรือ URL ไม่ถูกต้อง</p>
-          <Link href="/live" className="btn-game px-6 py-3 text-white rounded-xl inline-block">
-            ← กลับไปห้องเรียนสด
+          <Link href="/live" className="btn-game px-6 py-3 text-white rounded-xl inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" /> กลับไปห้องเรียนสด
           </Link>
         </div>
       </div>
@@ -86,9 +87,9 @@ export function LiveRoomView({ roomId }: LiveRoomViewProps) {
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => actions.setShowLeaveModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-text-secondary hover:text-error hover:bg-error/10 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-text-secondary hover:text-error hover:bg-error/10 transition-colors group"
           >
-            ← ออก
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" /> ออก
           </button>
           <div className="h-5 w-px bg-border/50 hidden sm:block" />
           <h1 className="text-sm font-bold text-text-primary truncate hidden sm:block">{room.title}</h1>

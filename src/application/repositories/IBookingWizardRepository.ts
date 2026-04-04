@@ -31,9 +31,10 @@ export interface WizardSlot {
   status: 'available' | 'booked' | 'none';
   bookedCourseName?: string;
   bookedCourseId?: string;
+  bookedByCurrentUser?: boolean;
 }
 
-export interface CreateWizardBookingData {
+export interface InitiateWizardTransactionData {
   courseId: string;
   instructorId: string;
   slotId: string;
@@ -43,7 +44,7 @@ export interface CreateWizardBookingData {
   paymentMethod?: 'stripe' | 'wallet';
 }
 
-export interface WizardBookingResult {
+export interface WizardTransactionResult {
   bookingId?: string;
   paymentId?: string;
   finalPrice: number;
@@ -54,6 +55,12 @@ export interface WizardBookingResult {
 export interface IBookingWizardRepository {
   getCourses(): Promise<WizardCourse[]>;
   getInstructorsByCourse(courseId: string): Promise<WizardInstructor[]>;
-  getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]>;
-  createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult>;
+  getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]>;
+  initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult>;
+  
+  // Checkout & Wallet Methods
+  updatePaymentMethod(paymentId: string, method: string): Promise<void>;
+  failPayment(paymentId: string): Promise<void>;
+  payWithWallet(amount: number, paymentId: string, description: string): Promise<string>;
+  fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string }>;
 }

@@ -1,8 +1,10 @@
 'use client';
 
+import { AdminChatBadge } from '@/src/presentation/components/chat/AdminChatBadge';
 import { HydrationGuard } from '@/src/presentation/components/common/HydrationGuard';
 import { LoadingOverlay } from '@/src/presentation/components/common/LoadingOverlay';
 import { ThemeToggle } from '@/src/presentation/components/common/ThemeToggle';
+import { cn } from '@/src/presentation/utils/cn';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useHeader } from './useHeader';
@@ -53,26 +55,49 @@ export function Header() {
   return (
     <header
       id="main-header"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'backdrop-blur-[20px] backdrop-saturate-[1.4] bg-[var(--header-bg-scrolled,rgba(var(--header-rgb,255,255,255),0.85))] shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]'
-          : 'backdrop-blur-[12px] backdrop-saturate-[1.2] bg-[var(--header-bg,rgba(var(--header-rgb,255,255,255),0.4))] shadow-none'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
     >
+      {/* 
+          ── GLASS BACKGROUND LAYER ──
+          We move the blur and background into a sibling div instead of the header tag.
+          This solves 'Nested Backdrop Filters' bug in Chrome because dropdowns 
+          are no longer descendants of the element with the blur, but siblings.
+      */}
+      <div 
+        className={cn(
+          "absolute inset-0 -z-10 transition-all duration-300",
+          scrolled
+            ? "backdrop-blur-[14px] backdrop-saturate-[1.4] bg-transparent shadow-[0_4px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)]"
+            : "backdrop-blur-[12px] backdrop-saturate-[1.2] bg-transparent shadow-none"
+        )}
+      />
+
       {/* Main bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="flex items-center gap-2.5 hover:scale-105 transition-transform duration-200">
+          <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+            <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-200">
               <div className="relative">
-                <span className="text-2xl drop-shadow-sm">🎮</span>
+                {/* Logo Badge Container (Transparent-First Approach) */}
+                <div className="w-10 h-10 flex items-center justify-center transition-all duration-300 group-hover:rotate-6">
+                   <img 
+                    src="/images/logo.png" 
+                    alt="Live Learning Logo" 
+                    className={cn(
+                      "w-full h-full object-contain rounded-lg transition-all duration-300",
+                      "mix-blend-multiply", // Effectively removes white on light backgrounds
+                      "dark:invert dark:hue-rotate-180 dark:mix-blend-normal dark:brightness-125 dark:contrast-125" // Magic hack to turn white bg -> black
+                    )}
+                   />
+                </div>
+                {/* Glow Effect */}
                 <div
-                  className="absolute -inset-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"
+                  className="absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-60 transition-opacity duration-300 blur-md -z-10"
                   style={{ background: 'var(--gradient-primary)' }}
                 />
               </div>
-              <span className="text-xl font-bold gradient-text hidden sm:block tracking-tight">
+              <span className="text-xl font-black gradient-text hidden sm:block tracking-tighter uppercase whitespace-nowrap">
                 Live Learning
               </span>
             </div>
@@ -84,11 +109,12 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 group/link ${
+                className={cn(
+                  "relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 group/link",
                   isActive(link.href)
-                    ? 'text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
+                    ? "text-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                )}
               >
                 {/* Active indicator pill */}
                 {isActive(link.href) && (
@@ -97,9 +123,12 @@ export function Header() {
                     style={{ background: 'var(--gradient-primary)' }}
                   />
                 )}
-                <span className="relative z-10 text-base group-hover/link:scale-110 transition-transform duration-200">
-                  {link.icon}
-                </span>
+                <div className="relative">
+                  <span className="relative z-10 text-base group-hover/link:scale-110 transition-transform duration-200">
+                    {link.icon}
+                  </span>
+                  {link.href === '/admin/chat' && <AdminChatBadge />}
+                </div>
                 <span className="relative z-10">{link.label}</span>
                 {/* Active bottom dot */}
                 {isActive(link.href) && (
@@ -137,22 +166,25 @@ export function Header() {
 
                 {/* Dropdown */}
                 <div
-                  className={`absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-xl backdrop-saturate-[1.5] bg-[var(--glass-bg)] ${
+                  className={cn(
+                    "absolute right-0 top-full mt-3 w-72 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right",
+                    "backdrop-blur-[14px] backdrop-saturate-[1.4] bg-transparent",
                     moreOpen
-                      ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-                  }`}
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                  )}
                 >
                   <div className="p-2">
                     {moreLinks.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
-                        className={`flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-150 group/more ${
+                        className={cn(
+                          "flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-150 group/more",
                           isActive(link.href)
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-text-secondary hover:bg-surface/80 hover:text-text-primary'
-                        }`}
+                            ? "bg-primary/10 text-primary"
+                            : "text-text-secondary hover:bg-surface/80 hover:text-text-primary"
+                        )}
                       >
                         <span className="text-xl mt-0.5 group-hover/more:scale-110 transition-transform duration-200">
                           {link.icon}
@@ -183,7 +215,9 @@ export function Header() {
               <div ref={authRef} className="relative">
                 <button
                   onClick={() => setAuthMenuOpen(!authMenuOpen)}
-                  className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-elevated transition-all duration-200 group/auth ring-2 ring-transparent hover:ring-primary/20"
+                  className={cn(
+                    "flex items-center gap-2 p-1 rounded-full hover:bg-surface-elevated transition-all duration-200 group/auth ring-2 ring-transparent hover:ring-primary/20"
+                  )}
                 >
                   <div className="relative">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-md transition-transform duration-200 group-hover/auth:scale-105">
@@ -196,11 +230,13 @@ export function Header() {
 
                 {/* Auth dropdown */}
                 <div
-                  className={`absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right backdrop-blur-xl backdrop-saturate-[1.5] bg-[var(--glass-bg)] ${
+                  className={cn(
+                    "absolute right-0 top-full mt-3 w-60 rounded-2xl border border-border/40 shadow-2xl transition-all duration-200 origin-top-right",
+                    "backdrop-blur-[14px] backdrop-saturate-[1.4] bg-transparent",
                     authMenuOpen
-                      ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-                  }`}
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+                  )}
                 >
                   {/* User info */}
                   <div className="px-4 py-3.5 border-b border-border/30">
@@ -247,11 +283,12 @@ export function Header() {
                                   handleSwitchProfile(p.profileId);
                                 }
                               }}
-                              className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group ${
+                              className={cn(
+                                "w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-150 group",
                                 isCurrent
-                                  ? 'bg-primary/5 ring-1 ring-primary/20'
-                                  : 'hover:bg-surface'
-                              }`}
+                                  ? "bg-primary/5 ring-1 ring-primary/20"
+                                  : "hover:bg-surface"
+                              )}
                             >
                               {/* Avatar */}
                               <div className="relative shrink-0">
@@ -261,7 +298,7 @@ export function Header() {
                                   {p.avatar}
                                 </div>
                                 {isCurrent && (
-                                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background" />
+                                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background shadow-sm" />
                                 )}
                               </div>
                               
@@ -308,9 +345,11 @@ export function Header() {
                         <span>📅</span> ตารางสอนของฉัน
                       </Link>
                     )}
-                    <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                      <span>💳</span> กระเป๋าเงิน
-                    </Link>
+                    {(role === 'student' || role === 'instructor') && (
+                      <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
+                        <span>💳</span> กระเป๋าเงิน
+                      </Link>
+                    )}
                     <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
                       <span>⚙️</span> ตั้งค่า
                     </Link>
@@ -319,7 +358,9 @@ export function Header() {
                   <div className="p-2 border-t border-border/30">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
+                      )}
                     >
                       <span>🚪</span> ออกจากระบบ
                     </button>
@@ -369,15 +410,20 @@ export function Header() {
         }}
       />
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Background (Sibling) */}
+      {mobileMenuOpen && (
+        <div 
+          className="lg:hidden absolute inset-0 -z-10 backdrop-blur-[24px] backdrop-saturate-[1.5] bg-transparent"
+          style={{ height: '100vh' }}
+        />
+      )}
+
+      {/* Mobile Menu Content */}
       <div
         className="lg:hidden overflow-hidden transition-all duration-300 ease-in-out"
         style={{
           maxHeight: mobileMenuOpen ? '80vh' : '0',
           opacity: mobileMenuOpen ? 1 : 0,
-          backdropFilter: 'blur(24px) saturate(1.5)',
-          WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
-          background: 'var(--glass-bg)',
         }}
       >
         <div className="border-t border-border/30" />
@@ -390,11 +436,12 @@ export function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150 ${
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150",
                 isActive(link.href)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-text-primary hover:bg-surface/60'
-              }`}
+                  ? "bg-primary/10 text-primary"
+                  : "text-text-primary hover:bg-surface/60"
+              )}
             >
               <span className="text-lg">{link.icon}</span>
               <span className="text-sm">{link.label}</span>
@@ -415,11 +462,12 @@ export function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150 ${
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium transition-all duration-150",
                     isActive(link.href)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-text-primary hover:bg-surface/60'
-                  }`}
+                      ? "bg-primary/10 text-primary"
+                      : "text-text-primary hover:bg-surface/60"
+                  )}
                 >
                   <span className="text-lg">{link.icon}</span>
                   <span className="text-sm">{link.label}</span>
@@ -444,7 +492,7 @@ export function Header() {
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-lg shadow-md">
                     {user.avatar}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background shadow-sm" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-text-primary">{user.name}</p>
@@ -483,11 +531,12 @@ export function Header() {
                               handleSwitchProfile(p.profileId);
                             }
                           }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 border ${
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 border",
                             isCurrent
-                              ? 'bg-primary/5 border-primary/20 shadow-sm'
-                              : 'bg-surface/50 border-transparent hover:bg-surface'
-                          }`}
+                              ? "bg-primary/5 border-primary/20 shadow-sm"
+                              : "bg-surface/50 border-transparent hover:bg-surface"
+                          )}
                         >
                           {/* Avatar */}
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base shadow-sm shrink-0 ${
@@ -536,15 +585,19 @@ export function Header() {
                   <span className="text-lg">📅</span><span className="text-sm">ตารางสอนของฉัน</span>
                 </Link>
               )}
-              <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
-                <span className="text-lg">💳</span><span className="text-sm">กระเป๋าเงิน (Wallet)</span>
-              </Link>
+              {(role === 'student' || role === 'instructor') && (
+                <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
+                  <span className="text-lg">💳</span><span className="text-sm">กระเป๋าเงิน (Wallet)</span>
+                </Link>
+              )}
               <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
                 <span className="text-lg">⚙️</span><span className="text-sm">ตั้งค่า</span>
               </Link>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 font-medium transition-all duration-150"
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 font-medium transition-all duration-150"
+                )}
               >
                 <span className="text-lg">🚪</span><span className="text-sm">ออกจากระบบ</span>
               </button>

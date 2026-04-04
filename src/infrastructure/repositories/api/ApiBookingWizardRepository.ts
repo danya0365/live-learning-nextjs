@@ -8,9 +8,9 @@
 'use client';
 
 import {
-    CreateWizardBookingData,
+    InitiateWizardTransactionData,
     IBookingWizardRepository,
-    WizardBookingResult,
+    WizardTransactionResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot
@@ -58,14 +58,23 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         }));
     }
 
-    async getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]> {
-        const res = await fetch(`/api/booking-wizard/instructors/${instructorId}/slots`);
+    async getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]> {
+        const url = new URL(`/api/booking-wizard/instructors/${instructorId}/slots`, window.location.origin);
+        if (startDateIso) url.searchParams.append('startDateIso', startDateIso);
+        if (endDateIso) url.searchParams.append('endDateIso', endDateIso);
+
+        const res = await fetch(url.toString(), {
+            // It's important not to cache date-specific requests by default across differing environments
+            // if we are jumping dates fast.
+            cache: 'no-store'
+        });
+        
         if (!res.ok) throw new Error('Failed to fetch wizard slots');
         return res.json();
     }
 
-    async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
-        const res = await fetch('/api/booking-wizard/bookings', {
+    async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
+        const res = await fetch('/api/booking-wizard/transactions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -73,9 +82,25 @@ export class ApiBookingWizardRepository implements IBookingWizardRepository {
         
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to create wizard booking');
+            throw new Error(errorData.error || 'Failed to initiate wizard transaction');
         }
         
         return res.json();
+    }
+
+    async updatePaymentMethod(paymentId: string, method: string): Promise<void> {
+        throw new Error('Method updatePaymentMethod is server-side only.');
+    }
+
+    async failPayment(paymentId: string): Promise<void> {
+        throw new Error('Method failPayment is server-side only.');
+    }
+
+    async payWithWallet(amount: number, paymentId: string, description: string): Promise<string> {
+        throw new Error('Method payWithWallet is server-side only.');
+    }
+
+    async fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string; }> {
+        throw new Error('Method fulfillWalletPayment is server-side only.');
     }
 }

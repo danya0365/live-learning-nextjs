@@ -1,6 +1,7 @@
 "use client";
 
 import { LabSidebarItem, LabViewProps } from "@/src/domain/types/learn-content";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, onExit }: LabViewProps) {
@@ -721,12 +722,18 @@ export function LineOALabView({ lesson, onSidebarUpdate, activeSidebarItemId, on
 
         {/* NAVIGATION OVERLAY INSIDE THE IFRAME-LIKE CONTAINER */}
         <div className="slide-nav">
-          <button onClick={prevSlide} disabled={currentSlide === 0}>‹</button>
+          <button onClick={prevSlide} disabled={currentSlide === 0} aria-label="ก่อนหน้า">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
           <span className="min-w-[70px] text-center opacity-80 whitespace-nowrap">
             {currentSlide + 1} / {totalSlides}
           </span>
-          <button onClick={nextSlide} disabled={currentSlide === totalSlides - 1}>›</button>
-          <span className="ml-2 opacity-50 text-xs hidden sm:inline whitespace-nowrap">← → หรือกดปุ่ม</span>
+          <button onClick={nextSlide} disabled={currentSlide === totalSlides - 1} aria-label="ถัดไป">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+          <span className="ml-2 opacity-50 text-xs hidden sm:inline-flex items-center gap-1 whitespace-nowrap">
+            <ArrowLeft className="w-3 h-3" /> <ArrowRight className="w-3 h-3" /> หรือกดปุ่ม
+          </span>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useTTS } from "@/src/presentation/hooks/useTTS";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
+import { ArrowLeft, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface LearnPodcastViewProps {
@@ -228,10 +229,10 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
             store.reset();
             store.setViewMode('normal');
           }}
-          className="flex items-center gap-2 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all group"
         >
-          <span>←</span>
-          <span className="hidden sm:inline">ออก</span>
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span className="hidden sm:inline font-medium">ออก</span>
         </button>
         
         {/* Sleep Timer */}
@@ -319,9 +320,10 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
               store.prevSlide();
             }}
             disabled={store.currentSlideIndex === 0}
-            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl transition-all disabled:opacity-30"
+            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all disabled:opacity-30 group"
+            aria-label="ย้อนกลับ"
           >
-            ⏮
+            <SkipBack className="w-6 h-6 fill-current transition-transform group-hover:scale-110" />
           </button>
           
           {/* Play/Pause */}
@@ -332,9 +334,14 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
               }
               store.togglePlayPause();
             }}
-            className="w-20 h-20 rounded-full bg-white text-purple-900 flex items-center justify-center text-3xl shadow-lg shadow-white/20 hover:scale-105 transition-all"
+            className="w-20 h-20 rounded-full bg-white text-purple-900 flex items-center justify-center shadow-lg shadow-white/20 hover:scale-105 transition-all active:scale-95"
+            aria-label={store.isPlaying ? "หยุด" : "เล่น"}
           >
-            {store.isPlaying ? '⏸' : '▶️'}
+            {store.isPlaying ? (
+              <Pause className="w-8 h-8 fill-current" />
+            ) : (
+              <Play className="w-8 h-8 fill-current ml-1" />
+            )}
           </button>
           
           {/* Skip Forward */}
@@ -344,9 +351,10 @@ export function LearnPodcastView({ courseSlug }: LearnPodcastViewProps) {
               advanceToNext();
             }}
             disabled={store.currentSlideIndex >= slides.length - 1}
-            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl transition-all disabled:opacity-30"
+            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all disabled:opacity-30 group"
+            aria-label="ถัดไป"
           >
-            ⏭
+            <SkipForward className="w-6 h-6 fill-current transition-transform group-hover:scale-110" />
           </button>
           
           {/* Speed */}

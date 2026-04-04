@@ -14,11 +14,13 @@ interface AuthGuardProps {
   children: React.ReactNode;
   /** Optional list of roles allowed to access this page */
   allowedRoles?: string[];
-  /** Optional fallback while loading */
+  /** Optional fallback while loading or redirecting */
   fallback?: React.ReactNode;
+  /** Optional fallback specifically for when the user is logged in but lacks the required role */
+  unauthorizedFallback?: React.ReactNode;
 }
 
-export function AuthGuard({ children, allowedRoles, fallback }: AuthGuardProps) {
+export function AuthGuard({ children, allowedRoles, fallback, unauthorizedFallback }: AuthGuardProps) {
   const router = useRouter();
   const { isAuthenticated, isInitialized, user } = useAuthStore();
 
@@ -32,23 +34,26 @@ export function AuthGuard({ children, allowedRoles, fallback }: AuthGuardProps) 
     }
 
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-      router.replace('/');
+      // Only redirect if there is no custom unauthorized UI provided
+      if (!unauthorizedFallback) {
+        router.replace('/');
+      }
     }
-  }, [isInitialized, isAuthenticated, user, allowedRoles, router]);
+  }, [isInitialized, isAuthenticated, user, allowedRoles, router, unauthorizedFallback]);
 
   // Auth store still initializing (restoring session) — show skeleton
   if (!isInitialized) {
     return fallback || <AuthGuardSkeleton />;
   }
 
-  // Not authenticated — will redirect, show skeleton
+  // Not authenticated — will redirect, show loading fallback
   if (!isAuthenticated) {
     return fallback || <AuthGuardSkeleton />;
   }
 
-  // Role mismatch
+  // Role mismatch - Show unauthorized fallback if provided, otherwise generic fallback
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return fallback || <AuthGuardSkeleton />;
+    return unauthorizedFallback || fallback || <AuthGuardSkeleton />;
   }
 
   return <>{children}</>;

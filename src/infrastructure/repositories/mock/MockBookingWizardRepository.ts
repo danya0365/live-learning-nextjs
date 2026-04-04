@@ -1,7 +1,7 @@
 import {
-    CreateWizardBookingData,
+    InitiateWizardTransactionData,
     IBookingWizardRepository,
-    WizardBookingResult,
+    WizardTransactionResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot,
@@ -25,9 +25,9 @@ export class MockBookingWizardRepository implements IBookingWizardRepository {
     return ALL_SLOTS[instructorId] || [];
   }
 
-  async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
+  async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log('Mock createBooking:', data);
+    console.log('Mock initiateBookingTransaction:', data);
     
     const course = ALL_COURSES.find(c => c.id === data.courseId);
     
@@ -40,5 +40,23 @@ export class MockBookingWizardRepository implements IBookingWizardRepository {
         status: finalPrice > 0 ? 'awaiting_payment' : 'success',
         checkoutUrl: finalPrice > 0 ? 'https://checkout.stripe.com/mock' : undefined
     };
+  }
+
+  async updatePaymentMethod(paymentId: string, method: string): Promise<void> {
+    console.log(`Mock updatePaymentMethod: ${paymentId} -> ${method}`);
+  }
+
+  async failPayment(paymentId: string): Promise<void> {
+    console.log(`Mock failPayment: ${paymentId}`);
+  }
+
+  async payWithWallet(amount: number, paymentId: string, description: string): Promise<string> {
+    console.log(`Mock payWithWallet: ${amount} for ${paymentId}`);
+    return `mock-tx-${Date.now()}`;
+  }
+
+  async fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string; }> {
+    console.log(`Mock fulfillWalletPayment: ${paymentId}`);
+    return { bookingId: `mock-booking-${Date.now()}`, enrollmentId: `mock-enrollment-${Date.now()}` };
   }
 }

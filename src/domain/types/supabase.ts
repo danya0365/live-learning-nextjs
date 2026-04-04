@@ -228,6 +228,84 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_draft: boolean | null
+          role: string
+          session_id: string
+          status: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_draft?: boolean | null
+          role: string
+          session_id: string
+          status?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_draft?: boolean | null
+          role?: string
+          session_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "admin_chat_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          auto_reply: boolean | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          is_active: boolean | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_reply?: boolean | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          is_active?: boolean | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_reply?: boolean | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          is_active?: boolean | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consultation_offers: {
         Row: {
           created_at: string | null
@@ -1441,7 +1519,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_chat_summary: {
+        Row: {
+          auto_reply: boolean | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string | null
+          is_active: boolean | null
+          last_message_at: string | null
+          last_message_content: string | null
+          last_message_role: string | null
+          last_message_status: string | null
+          status: string | null
+          unread_count: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_profile: {

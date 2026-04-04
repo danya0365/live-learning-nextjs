@@ -5,6 +5,7 @@ import { WalletViewModel } from '@/src/presentation/presenters/wallet/WalletPres
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import WalletSkeleton from './WalletSkeleton';
+import { useAlertModal } from '@/src/presentation/components/ui/AlertModal';
 
 interface WalletViewProps {
   initialViewModel?: WalletViewModel;
@@ -15,6 +16,7 @@ export function WalletView({ initialViewModel }: WalletViewProps) {
   
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { showAlert, AlertComponent } = useAlertModal();
 
   const [showTopUpOptions, setShowTopUpOptions] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>('');
@@ -24,10 +26,10 @@ export function WalletView({ initialViewModel }: WalletViewProps) {
 
   useEffect(() => {
     if (searchParams.get('success')) {
-      alert('เติมเงินลงกระเป๋าสำเร็จ!');
+      showAlert('เติมเงินลงกระเป๋าสำเร็จ!', 'success');
       router.replace('/wallet'); // Clear search params
     } else if (searchParams.get('canceled')) {
-      alert('คุณได้ยกเลิกการเติมเงิน');
+      showAlert('คุณได้ยกเลิกการเติมเงิน', 'warning');
       router.replace('/wallet');
     }
   }, [searchParams, router]);
@@ -39,28 +41,28 @@ export function WalletView({ initialViewModel }: WalletViewProps) {
   const handleTestTopUp = async () => {
     const amount = Number(topUpAmount);
     if (!amount || amount <= 0) {
-      alert('Please enter a valid amount');
+      showAlert('Please enter a valid amount', 'warning');
       return;
     }
 
     try {
       await topUp(amount, 'Test Top-up via UI', true); // Pass isTestMode=true
       setTopUpAmount('');
-      alert(`Successfully topped up ${amount} ฿`);
+      showAlert(`Successfully topped up ${amount} ฿`, 'success');
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      showAlert(`Error: ${err.message}`, 'error');
     }
   };
 
   const handleRealTopUp = async (amount: number) => {
     if (!amount || amount <= 0) {
-      alert('กรุณาระบุจำนวนเงินที่ถูกต้อง');
+      showAlert('กรุณาระบุจำนวนเงินที่ถูกต้อง', 'warning');
       return;
     }
     try {
       await topUp(amount, 'เติมเงินเข้ากระเป๋า');
     } catch (err: any) {
-      alert(`ไม่สามารถทำรายการได้: ${err.message}`);
+      showAlert(`ไม่สามารถทำรายการได้: ${err.message}`, 'error');
     }
   };
 
@@ -280,6 +282,9 @@ export function WalletView({ initialViewModel }: WalletViewProps) {
           </div>
         </div>
       </div>
+      
+      {/* Alert Modal Portal */}
+      <AlertComponent />
     </div>
   );
 }

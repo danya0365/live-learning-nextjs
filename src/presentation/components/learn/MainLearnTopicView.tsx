@@ -3,6 +3,7 @@
 import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-content";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -69,8 +70,8 @@ export function MainLearnTopicView({ courseId, topicSlug, courseSlug }: LearnTop
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">❌ ไม่พบหัวข้อนี้</h1>
-        <Link href={`/courses/${courseId}/learn`} className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 block">
-          ← กลับไปหน้า Interactive Lab
+        <Link href={`/courses/${courseId}/learn`} className="text-indigo-600 dark:text-indigo-400 hover:underline mt-4 flex items-center justify-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> กลับไปหน้า Interactive Lab
         </Link>
       </div>
     );
@@ -161,9 +162,9 @@ export function MainLearnTopicView({ courseId, topicSlug, courseSlug }: LearnTop
       <div className="mt-8">
         <Link
           href={backPath}
-          className={`${colors.text} hover:opacity-80 transition-colors`}
+          className={`${colors.text} hover:opacity-80 transition-colors flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-border/50 w-fit group`}
         >
-          ← กลับไปหน้า {course.title}
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับไปหน้า {course.title}
         </Link>
       </div>
     </div>

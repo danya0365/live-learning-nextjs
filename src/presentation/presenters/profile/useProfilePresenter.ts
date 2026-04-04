@@ -4,6 +4,7 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ProfileViewModel } from './ProfilePresenter';
 import { createClientProfilePresenter } from './ProfilePresenterClientFactory';
+import { usePresenterInit } from '../../hooks/usePresenterInit';
 
 export interface ProfilePresenterState {
   viewModel: ProfileViewModel | null;
@@ -36,10 +37,8 @@ export function useProfilePresenter(
     }
   }, [presenter, user?.role]);
 
-  useEffect(() => {
-    // โหลดครั้งแรกถ้าไม่มี initialViewModel
-    if (!initialViewModel) loadData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Handles initial fetch and reactive profile switching automatically
+  usePresenterInit(loadData, initialViewModel);
 
   useEffect(() => {
     isMountedRef.current = true;

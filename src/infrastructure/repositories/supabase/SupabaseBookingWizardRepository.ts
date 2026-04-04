@@ -5,11 +5,10 @@
  * 
  * ✅ For SERVER-SIDE use only (API Routes, Server Components)
  */
-
 import {
-    CreateWizardBookingData,
+    InitiateWizardTransactionData,
     IBookingWizardRepository,
-    WizardBookingResult,
+    WizardTransactionResult,
     WizardCourse,
     WizardInstructor,
     WizardSlot
@@ -29,6 +28,20 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         this.courseRepo = new SupabaseCourseRepository(supabase);
         this.instructorRepo = new SupabaseInstructorRepository(supabase);
         this.bookingRepo = new SupabaseBookingRepository(supabase);
+    }
+
+    private async getActiveProfileId(): Promise<string | undefined> {
+        const { data: activeProfiles, error } = await this.supabase.rpc('get_active_profile');
+        if (error) {
+            console.error('Error fetching active profile:', error);
+            return undefined;
+        }
+        
+        type ProfileResult = { id?: string };
+        const profiles = activeProfiles as ProfileResult[] | ProfileResult | null;
+        
+        if (!profiles) return undefined;
+        return Array.isArray(profiles) ? profiles[0]?.id : profiles.id;
     }
 
     async getCourses(): Promise<WizardCourse[]> {
@@ -65,7 +78,10 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         }));
     }
 
-    async getSlotsByInstructor(instructorId: string): Promise<WizardSlot[]> {
+    async getSlotsByInstructor(instructorId: string, startDateIso?: string, endDateIso?: string): Promise<WizardSlot[]> {
+        // Get current active profile to check for duplicate bookings
+        const activeProfileId = await this.getActiveProfileId();
+
         // 1. Get the base template availabilities
         const availabilities = await this.instructorRepo.getAvailabilities(instructorId);
         
@@ -74,7 +90,7 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
         // dynamically based on overlapping bookings for the upcoming dates.
         
         // Get all active bookings for this instructor
-        const { data: activeBookings } = await this.supabase
+        let bookingsQuery = this.supabase
             .from('bookings')
             .select(`
                 *,
@@ -83,8 +99,16 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             .eq('instructor_profile_id', instructorId)
             .in('status', ['pending', 'confirmed']);
             
+        if (startDateIso && endDateIso) {
+            bookingsQuery = bookingsQuery
+                .gte('scheduled_date', startDateIso.split('T')[0])
+                .lte('scheduled_date', endDateIso.split('T')[0]);
+        }
+            
+        const { data: activeBookings } = await bookingsQuery;
+            
         // Get active live sessions for this instructor
-        const { data: liveSessions } = await this.supabase
+        let liveSessionsQuery = this.supabase
             .from('live_sessions')
             .select(`
                 *,
@@ -92,10 +116,18 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             `)
             .eq('instructor_profile_id', instructorId)
             .in('status', ['scheduled', 'live']);
+            
+        if (startDateIso && endDateIso) {
+            liveSessionsQuery = liveSessionsQuery
+                .gte('scheduled_start', startDateIso)
+                .lte('scheduled_start', endDateIso);
+        }
+            
+        const { data: liveSessions } = await liveSessionsQuery;
 
-        // Since the wizard currently works on a weekly template level (dayOfWeek), 
-        // we'll check if there's ANY upcoming booking that blocks this template slot
-        // in the near future (e.g., this week)
+        // Note: The previous logic relied heavily on finding ANY active bookings matching the day of the week.
+        // With date-bounded filtering, the queries correctly scope to the requested week!
+        // Ensure week logic
         const today = new Date();
         const nextWeek = new Date(today);
         nextWeek.setDate(today.getDate() + 7);
@@ -104,8 +136,9 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             let status: 'available' | 'booked' | 'none' = 'available';
             let bookedCourseId: string | undefined = undefined;
             let bookedCourseName: string | undefined = undefined;
+            let bookedByCurrentUser = false;
 
-            // Check if this slot time generally overlaps with an active live session 
+            // Check if there's a live session already scheduled
             // (very rough check - ideal logic should map specific dates)
             const isLive = liveSessions?.find(ls => {
                 const lsDate = new Date(ls.scheduled_start);
@@ -118,16 +151,24 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
                  bookedCourseId = isLive.course_id;
                  // Type coercion due to Supabase nested selection typing
                  bookedCourseName = (isLive.course as unknown as { title: string })?.title || 'Live Session';
+                 
+                 // Check if the current user has already booked for this availability
+                 const userBooking = activeProfileId ? activeBookings?.find(b => 
+                     b.instructor_availability_id === a.id && 
+                     b.student_profile_id === activeProfileId
+                 ) : undefined;
+                 bookedByCurrentUser = !!userBooking;
             } else {
                  // Check if it's booked
-                 const isBooked = activeBookings?.find(b => {
-                     // Check if booking is for the same daily template
-                     return b.instructor_availability_id === a.id;
-                 });
-                 if (isBooked) {
+                 const overlappingBookings = activeBookings?.filter(b => b.instructor_availability_id === a.id) || [];
+                 if (overlappingBookings.length > 0) {
                      status = 'booked';
-                     bookedCourseId = isBooked.course_id;
-                     bookedCourseName = (isBooked.course as unknown as { title: string })?.title || 'Booked Class';
+                     bookedCourseId = overlappingBookings[0].course_id;
+                     bookedCourseName = (overlappingBookings[0].course as unknown as { title: string })?.title || 'Booked Class';
+                     
+                     // Check if any of these overlapping bookings belong to the current user
+                     const userBooking = activeProfileId ? overlappingBookings.find(b => b.student_profile_id === activeProfileId) : undefined;
+                     bookedByCurrentUser = !!userBooking;
                  }
             }
 
@@ -138,15 +179,35 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
                 endTime: a.endTime,
                 status: status,
                 bookedCourseId: bookedCourseId,
-                bookedCourseName: bookedCourseName
+                bookedCourseName: bookedCourseName,
+                bookedByCurrentUser: bookedByCurrentUser
             };
         });
     }
 
-    async createBooking(data: CreateWizardBookingData): Promise<WizardBookingResult> {
-        // 🔒 Server-Injected Identity: resolve studentId from auth session
-        const { data: { user } } = await this.supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
+    async initiateBookingTransaction(data: InitiateWizardTransactionData): Promise<WizardTransactionResult> {
+        // Get current active profile to resolve studentId from auth session
+        const activeProfileId = await this.getActiveProfileId();
+        if (!activeProfileId) throw new Error('Not authenticated');
+
+        // Check finding existing enrollment
+        const { data: enrollment, error: enrollError } = await this.supabase
+            .from('enrollments')
+            .select('total_hours, used_hours')
+            .eq('student_profile_id', activeProfileId)
+            .eq('course_id', data.courseId)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if (enrollError) {
+            console.error('Enrollment fetch error:', enrollError);
+            throw new Error('เกิดข้อผิดพลาดในการตรวจสอบข้อมูลการลงทะเบียน (Fetch error)');
+        }
+
+        // Only check quota if an active enrollment actually exists
+        if (enrollment && enrollment.used_hours >= enrollment.total_hours) {
+            throw new Error('โควตาชั่วโมงเรียนสำหรับคอร์สนี้หมดแล้ว (Learning hours exhausted)');
+        }
 
         // 1. Execute Atomic Transaction via RPC
         // This handles: Coupon Validation -> Payment (Pending/Succeeded) -> Enrollment -> Booking
@@ -171,6 +232,53 @@ export class SupabaseBookingWizardRepository implements IBookingWizardRepository
             paymentId: typedResult.payment_id,
             finalPrice: typedResult.final_price,
             status: typedResult.status
+        };
+    }
+
+    async updatePaymentMethod(paymentId: string, method: string): Promise<void> {
+        await this.supabase.from('payments').update({ payment_method: method }).eq('id', paymentId);
+    }
+
+    async failPayment(paymentId: string): Promise<void> {
+        await this.supabase.from('payments').update({ status: 'failed' }).eq('id', paymentId);
+    }
+
+    async payWithWallet(amount: number, paymentId: string, description: string): Promise<string> {
+        const activeProfileId = await this.getActiveProfileId();
+        if (!activeProfileId) throw new Error('Not authenticated');
+
+        const { data: txId, error: walletError } = await this.supabase.rpc('pay_with_wallet', {
+            p_profile_id: activeProfileId,
+            p_amount: amount,
+            p_reference_type: 'wizard_payment',
+            p_reference_id: paymentId,
+            p_description: description
+        });
+
+        if (walletError || !txId) {
+            throw new Error(walletError?.message || 'Insufficient wallet balance');
+        }
+
+        return txId as unknown as string;
+    }
+
+    async fulfillWalletPayment(paymentId: string, txId: string, instructorId: string, slotId: string, date: string): Promise<{ bookingId?: string; enrollmentId?: string; }> {
+        const { data: fulfillment, error: fulfillmentError } = await this.supabase.rpc('fulfill_stripe_payment', {
+            p_payment_id: paymentId,
+            p_transaction_id: txId,
+            p_instructor_id: instructorId,
+            p_slot_id: slotId,
+            p_scheduled_date: date
+        });
+
+        if (fulfillmentError) {
+            console.error("Wallet Fulfillment Error:", fulfillmentError);
+            throw new Error('Failed to fulfill booking after wallet deduction');
+        }
+
+        return {
+            bookingId: (fulfillment as any)?.booking_id,
+            enrollmentId: (fulfillment as any)?.enrollment_id
         };
     }
 }

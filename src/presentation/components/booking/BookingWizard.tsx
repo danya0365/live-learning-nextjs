@@ -3,7 +3,28 @@
 import { WizardCourse, WizardInstructor, WizardSlot } from '@/src/application/repositories/IBookingWizardRepository';
 import { Level } from '@/src/application/repositories/IConfigRepository';
 import { useBookingWizardPresenter } from '@/src/presentation/presenters/booking/useBookingWizardPresenter';
-import { useMemo, useState } from 'react';
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  Calendar, 
+  CalendarX, 
+  Check, 
+  Circle, 
+  CreditCard, 
+  GraduationCap, 
+  Handshake, 
+  Info, 
+  Layout, 
+  PartyPopper, 
+  Search, 
+  Star, 
+  Users, 
+  Wallet, 
+  X,
+  Loader2
+} from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 import BookingSkeleton from './BookingSkeleton';
 
 /* ── UI Constants ──────────────────────────── */
@@ -31,19 +52,30 @@ const STEP_META: Record<Step, { number: number; label: string; icon: string }> =
 };
 
 /* ── Helper: Get next dates for day of week ── */
-function getNextDateForDay(dayOfWeek: number): string {
-  const now = new Date();
-  const currentDay = now.getDay();
-  let diff = dayOfWeek - currentDay;
-  if (diff <= 0) diff += 7;
-  const nextDate = new Date(now);
-  nextDate.setDate(now.getDate() + diff);
-  return nextDate.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+function getNextDateForDay(dayOfWeek: number, weekOffset: number = 0): string {
+  const today = new Date();
+  const currentDay = today.getDay();
+  let daysUntil = dayOfWeek - currentDay;
+  
+  if (daysUntil < 0) {
+    daysUntil += 7;
+  }
+  
+  const nextDate = new Date(today);
+  nextDate.setDate(today.getDate() + daysUntil + (weekOffset * 7));
+  
+  return nextDate.toLocaleDateString('th-TH', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 }
 
 /* ── Component ─────────────────────────────── */
-export function BookingWizard() {
-  const { state, actions } = useBookingWizardPresenter();
+function BookingWizardContent() {
+  const searchParams = useSearchParams();
+  const initialCourseId = searchParams?.get('courseId');
+  const { state, actions } = useBookingWizardPresenter(initialCourseId);
   
   const {
     step,
@@ -65,7 +97,10 @@ export function BookingWizard() {
     finalPrice,
     isEnrolled,
     walletBalance,
-    paymentMethod
+    paymentMethod,
+    enrolledCourseIds,
+    enrollmentRemainingHours,
+    weekOffset
   } = state;
 
   const steps: Step[] = ['course', 'instructor', 'calendar', 'confirm'];
@@ -84,7 +119,7 @@ export function BookingWizard() {
             onClick={() => window.location.href = '/'} 
             className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors group"
           >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <span className="font-medium">กลับหน้าหลัก</span>
           </button>
           <div className="flex items-center gap-2 text-sm">
@@ -130,7 +165,7 @@ export function BookingWizard() {
         {/* Step content */}
         <div className="animate-fadeIn">
           {step === 'course' && (
-            <StepCourse courses={courses} levels={levels} onSelect={actions.handleCourseSelect} />
+            <StepCourse courses={courses} levels={levels} enrolledCourseIds={enrolledCourseIds} onSelect={actions.handleCourseSelect} />
           )}
           {step === 'instructor' && selectedCourse && (
             <StepInstructor
@@ -149,6 +184,10 @@ export function BookingWizard() {
               onSelect={actions.handleSlotSelect}
               onBack={actions.goBack}
               isEnrolled={isEnrolled}
+              enrollmentRemainingHours={enrollmentRemainingHours}
+              weekOffset={weekOffset}
+              onNextWeek={actions.nextWeek}
+              onPrevWeek={actions.prevWeek}
             />
           )}
           {step === 'confirm' && selectedCourse && selectedInstructor && selectedSlot && (
@@ -175,6 +214,7 @@ export function BookingWizard() {
               walletBalance={walletBalance}
               paymentMethod={paymentMethod}
               setPaymentMethod={actions.setPaymentMethod}
+              weekOffset={weekOffset}
             />
           )}
         </div>
@@ -183,10 +223,18 @@ export function BookingWizard() {
   );
 }
 
+export function BookingWizard() {
+  return (
+    <Suspense fallback={<BookingSkeleton />}>
+      <BookingWizardContent />
+    </Suspense>
+  );
+}
+
 /* ════════════════════════════════════════════
    Step 1: เลือกคอร์ส
    ════════════════════════════════════════════ */
-function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; levels: Level[]; onSelect: (c: WizardCourse) => void }) {
+function StepCourse({ courses, levels, enrolledCourseIds, onSelect }: { courses: WizardCourse[]; levels: Level[]; enrolledCourseIds: string[]; onSelect: (c: WizardCourse) => void }) {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -211,7 +259,9 @@ function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; le
 
       {/* Search */}
       <div className="relative mb-6">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
+          <Search className="w-4 h-4" />
+        </div>
         <input
           type="text"
           value={search}
@@ -252,18 +302,29 @@ function StepCourse({ courses, levels, onSelect }: { courses: WizardCourse[]; le
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-lg font-extrabold text-primary">
-                    ฿{course.price.toLocaleString()}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
-                    <span>⭐ {course.rating}</span>
-                    <span>•</span>
-                    <span>👥 {course.totalStudents.toLocaleString()}</span>
+                  {enrolledCourseIds.includes(course.id) ? (
+                    <div className="px-2 py-1 rounded-lg bg-success/10 border border-success/30 text-[10px] font-bold text-success animate-pulse inline-block mb-1">
+                      👑 OWNED
+                    </div>
+                  ) : (
+                    <div className="text-lg font-extrabold text-primary">
+                      ฿{course.price.toLocaleString()}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-xs text-text-muted mt-1 justify-end">
+                    <Star className="w-3 h-3 fill-warning text-warning" />
+                    <span>{course.rating}</span>
+                    <span className="mx-0.5">•</span>
+                    <Users className="w-3 h-3" />
+                    <span>{course.totalStudents.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-xs text-primary font-medium">เลือกคอร์สนี้ →</span>
+              <div className="mt-3 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-all">
+                <span className={`text-xs font-medium flex items-center gap-1 ${enrolledCourseIds.includes(course.id) ? 'text-success' : 'text-primary'}`}>
+                  {enrolledCourseIds.includes(course.id) ? 'จองเวลาเรียน' : 'เลือกคอร์สนี้'}
+                  <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+                </span>
               </div>
             </button>
           );
@@ -303,7 +364,7 @@ function StepInstructor({
         onClick={onBack}
         className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors mb-6 group"
       >
-        <span className="group-hover:-translate-x-1 transition-transform">←</span>
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>เปลี่ยนคอร์ส</span>
       </button>
 
@@ -337,9 +398,9 @@ function StepInstructor({
             className="w-full text-left glass rounded-2xl p-5 border border-border/50 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:scale-[1.01] transition-all group cursor-pointer"
           >
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl shrink-0">
-                👨‍🏫
-              </div>
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <GraduationCap className="w-8 h-8 text-primary" />
+            </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-bold text-text-primary group-hover:text-primary transition-colors">
@@ -363,13 +424,13 @@ function StepInstructor({
                   ))}
                 </div>
                 <div className="flex items-center gap-3 text-xs text-text-muted">
-                  <span>⭐ {inst.rating}</span>
-                  <span>👥 {inst.totalStudents.toLocaleString()} นักเรียน</span>
+                  <span className="flex items-center gap-0.5"><Star className="w-3 h-3 fill-warning text-warning" /> {inst.rating}</span>
+                  <span className="flex items-center gap-0.5"><Users className="w-3 h-3" /> {inst.totalStudents.toLocaleString()}</span>
                   <span>💰 ฿{inst.hourlyRate}/ชม.</span>
                 </div>
               </div>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity text-primary shrink-0">
-                →
+              <div className="opacity-0 group-hover:opacity-100 transition-all text-primary shrink-0">
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </div>
             </div>
           </button>
@@ -396,6 +457,10 @@ function StepCalendar({
   onSelect,
   onBack,
   isEnrolled,
+  enrollmentRemainingHours,
+  weekOffset,
+  onNextWeek,
+  onPrevWeek,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -403,6 +468,10 @@ function StepCalendar({
   onSelect: (slot: WizardSlot) => void;
   onBack: () => void;
   isEnrolled: boolean;
+  enrollmentRemainingHours: number | null;
+  weekOffset: number;
+  onNextWeek: () => void;
+  onPrevWeek: () => void;
 }) {
   // Group slots by day of week
   const slotsByDay = useMemo(() => {
@@ -424,7 +493,7 @@ function StepCalendar({
         onClick={onBack}
         className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors mb-6 group"
       >
-        <span className="group-hover:-translate-x-1 transition-transform">←</span>
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>เปลี่ยนอาจารย์</span>
       </button>
 
@@ -462,6 +531,40 @@ function StepCalendar({
         <p className="text-text-secondary text-sm">คลิกช่องเพื่อจองหรือเข้าร่วม</p>
       </div>
 
+      {/* Week Navigator */}
+      <div className="flex items-center justify-between mb-6 bg-surface/30 p-2 rounded-xl border border-border">
+        <button 
+          onClick={onPrevWeek} 
+          disabled={weekOffset === 0}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold group ${weekOffset === 0 ? 'text-text-muted cursor-not-allowed opacity-50' : 'hover:bg-surface text-text-primary hover:shadow-sm'}`}
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span className="hidden sm:inline">สัปดาห์ก่อนหน้า</span>
+        </button>
+        
+        <span className="text-sm font-extrabold text-primary px-4 py-1.5 bg-primary/10 rounded-lg">
+          {weekOffset === 0 ? 'สัปดาห์ปัจจุบัน' : weekOffset === 1 ? 'สัปดาห์หน้า' : `อีก ${weekOffset} สัปดาห์`}
+        </span>
+        
+        <button 
+          onClick={onNextWeek} 
+          className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold group hover:bg-surface text-text-primary hover:shadow-sm"
+        >
+          <span className="hidden sm:inline">สัปดาห์ถัดไป</span>
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </button>
+      </div>
+
+      {isEnrolled && enrollmentRemainingHours !== null && (
+        <div className={`glass rounded-2xl p-4 border text-center mb-6 ${enrollmentRemainingHours > 0 ? 'border-primary/30 bg-primary/5' : 'border-error/30 bg-error/5 animate-pulse'}`}>
+           <p className={`font-bold text-sm ${enrollmentRemainingHours > 0 ? 'text-primary' : 'text-error'}`}>
+             {enrollmentRemainingHours > 0 
+               ? `🎓 โควตาคงเหลือ: ${enrollmentRemainingHours} ชั่วโมง` 
+               : '🚨 โควตาชั่วโมงเรียนของคุณสำหรับคอร์สนี้หมดแล้ว ไม่สามารถจองเพิ่มได้'}
+           </p>
+        </div>
+      )}
+
       {slots.length === 0 ? (
         <div className="glass rounded-2xl p-8 border border-warning/30 bg-warning/5 text-center my-8 animate-fadeIn">
           <div className="text-5xl mb-4">🗓️</div>
@@ -473,9 +576,10 @@ function StepCalendar({
           </p>
           <button
             onClick={onBack}
-            className="px-6 py-2.5 rounded-xl btn-game text-white text-sm font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl btn-game text-white text-sm font-bold shadow-lg hover:scale-105 active:scale-95 transition-all group"
           >
-            ← เลือกอาจารย์ท่านอื่น
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            <span>เลือกอาจารย์ท่านอื่น</span>
           </button>
         </div>
       ) : (
@@ -489,6 +593,10 @@ function StepCalendar({
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-warning/20 border border-warning/50" />
           <span className="text-text-secondary">คอร์สเดียวกัน — เข้าร่วม</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-4 h-4 rounded bg-primary/20 border border-primary/50" />
+          <span className="text-text-secondary">จองแล้ว</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-surface border border-border" />
@@ -508,7 +616,7 @@ function StepCalendar({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-text-primary">{DAY_LABELS[day]}</p>
-                  <p className="text-[10px] text-text-muted">{getNextDateForDay(day)}</p>
+                  <p className="text-[10px] text-text-muted">{getNextDateForDay(day, weekOffset)}</p>
                 </div>
               </div>
 
@@ -519,9 +627,11 @@ function StepCalendar({
               ) : (
                 <div className="space-y-2">
                   {daySlots.map((slot) => {
-                    const isAvailable = slot.status === 'available';
-                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id;
-                    const isUnavailable = slot.status === 'booked' && slot.bookedCourseId !== course.id;
+                    const isHoursExhausted = isEnrolled && enrollmentRemainingHours !== null && enrollmentRemainingHours <= 0;
+                    const isAvailable = slot.status === 'available' && !isHoursExhausted;
+                    const isBookedByMe = slot.bookedByCurrentUser;
+                    const isJoinable = slot.status === 'booked' && slot.bookedCourseId === course.id && !isBookedByMe && !isHoursExhausted;
+                    const isUnavailable = (slot.status === 'booked' && slot.bookedCourseId !== course.id) || isBookedByMe || isHoursExhausted;
                     
                     return (
                     <button
@@ -539,27 +649,31 @@ function StepCalendar({
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm ${isAvailable ? 'text-success' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
-                              {isAvailable ? '🟢' : isJoinable ? '🟡' : '🔴'}
+                            <span className={`text-sm ${isAvailable ? 'text-success' : isBookedByMe ? 'text-primary' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              {isAvailable ? '🟢' : isBookedByMe ? '🔵' : isJoinable ? '🟡' : '🔴'}
                             </span>
                             <span className={`text-sm font-bold ${isUnavailable ? 'text-text-muted' : 'text-text-primary'}`}>
                               {slot.startTime} — {slot.endTime}
                             </span>
                           </div>
                           {slot.status === 'booked' && slot.bookedCourseName && (
-                            <p className={`text-[10px] ml-5 mt-0.5 ${isJoinable ? 'text-warning' : 'text-text-muted'}`}>
-                              📌 {slot.bookedCourseName}
-                            </p>
+                            <div className={`text-[10px] ml-5 mt-0.5 ${isBookedByMe ? 'text-primary' : isJoinable ? 'text-warning' : 'text-text-muted'}`}>
+                              <p>
+                                📌 {slot.bookedCourseName} {isBookedByMe && '(คุณจองแล้ว)'}
+                              </p>
+                            </div>
                           )}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           isAvailable
                             ? 'bg-success/20 text-success'
+                            : isBookedByMe
+                            ? 'bg-primary/20 text-primary'
                             : isJoinable
                             ? 'bg-warning/20 text-warning'
                             : 'bg-surface text-text-muted'
                         }`}>
-                          {isAvailable ? 'จองใหม่' : isJoinable ? 'เข้าร่วม' : 'ไม่ว่าง'}
+                          {isAvailable ? 'จองใหม่' : isBookedByMe ? 'จองแล้ว' : isJoinable ? 'เข้าร่วม' : 'ไม่ว่าง'}
                         </span>
                       </div>
                     </button>
@@ -603,6 +717,7 @@ function StepConfirm({
   walletBalance,
   paymentMethod,
   setPaymentMethod,
+  weekOffset,
 }: {
   course: WizardCourse;
   instructor: WizardInstructor;
@@ -626,12 +741,17 @@ function StepConfirm({
   walletBalance: number;
   paymentMethod: 'stripe' | 'wallet';
   setPaymentMethod: (method: 'stripe' | 'wallet') => void;
+  weekOffset: number;
 }) {
   if (bookingDone) {
     return (
       <div className="text-center py-8 animate-fadeIn">
-        <div className="text-7xl mb-4 animate-bounce-soft">
-          {action === 'new' ? '🎉' : '🤝'}
+        <div className="flex justify-center mb-4">
+          {action === 'new' ? (
+            <PartyPopper className="w-20 h-20 text-success animate-bounce-soft" />
+          ) : (
+            <Handshake className="w-20 h-20 text-success animate-bounce-soft" />
+          )}
         </div>
         <h2 className="text-2xl font-extrabold text-text-primary mb-2">
           {action === 'new' ? 'จองสำเร็จ!' : 'เข้าร่วมสำเร็จ!'}
@@ -671,7 +791,7 @@ function StepConfirm({
                 <p className="text-sm font-bold text-text-primary">
                   {DAY_LABELS[slot.dayOfWeek]} {slot.startTime} — {slot.endTime}
                 </p>
-                <p className="text-[10px] text-text-muted">{getNextDateForDay(slot.dayOfWeek)}</p>
+                <p className="text-[10px] text-text-muted">{getNextDateForDay(slot.dayOfWeek, weekOffset)}</p>
               </div>
             </div>
           </div>
@@ -705,13 +825,17 @@ function StepConfirm({
         onClick={onBack}
         className="flex items-center gap-2 text-sm text-text-secondary hover:text-primary transition-colors mb-6 group"
       >
-        <span className="group-hover:-translate-x-1 transition-transform">←</span>
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         <span>เปลี่ยนเวลา</span>
       </button>
 
       <div className="text-center mb-6">
-        <div className="text-5xl mb-3">
-          {action === 'new' ? '📝' : '🤝'}
+        <div className="flex justify-center mb-4">
+          {action === 'new' ? (
+            <Layout className="w-16 h-16 text-primary" />
+          ) : (
+            <Handshake className="w-16 h-16 text-warning" />
+          )}
         </div>
         <h2 className="text-2xl font-extrabold text-text-primary mb-2">
           {action === 'new' ? 'ยืนยันการจอง' : 'ยืนยันเข้าร่วม'}
@@ -757,14 +881,16 @@ function StepConfirm({
             <p className="font-bold text-text-primary">
               {DAY_LABELS[slot.dayOfWeek]} {slot.startTime} — {slot.endTime}
             </p>
-            <p className="text-xs text-text-muted mt-0.5">{getNextDateForDay(slot.dayOfWeek)}</p>
+            <p className="text-xs text-text-muted mt-0.5">{getNextDateForDay(slot.dayOfWeek, weekOffset)}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${
-            action === 'new' ? 'bg-success/10' : 'bg-warning/10'
-          }`}>
-            {action === 'new' ? '🟢' : '🟡'}
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0">
+            {action === 'new' ? (
+              <Circle className="w-6 h-6 fill-success text-success" />
+            ) : (
+              <Circle className="w-6 h-6 fill-warning text-warning" />
+            )}
           </div>
           <div>
             <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium">ประเภท</p>
@@ -809,9 +935,15 @@ function StepConfirm({
             <button
               onClick={applyCoupon}
               disabled={!couponCode || isApplyingCoupon || discountAmount > 0 || isBooking}
-              className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all disabled:opacity-50"
+              className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all disabled:opacity-50 flex items-center justify-center min-w-[80px]"
             >
-              {isApplyingCoupon ? '⏳' : discountAmount > 0 ? '✅' : 'ใช้โค้ด'}
+              {isApplyingCoupon ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : discountAmount > 0 ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                'ใช้โค้ด'
+              )}
             </button>
           </div>
           {couponError && <p className="text-[10px] text-error mt-2 ml-1">❌ {couponError}</p>}
@@ -846,7 +978,7 @@ function StepConfirm({
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-text-primary flex items-center gap-2">
-                  <span>💳</span> บัตรเครดิต / โอนเงิน
+                  <CreditCard className="w-5 h-5 text-primary" /> บัตรเครดิต / โอนเงิน
                 </span>
                 {paymentMethod === 'stripe' && <span className="text-primary">●</span>}
               </div>
@@ -864,7 +996,7 @@ function StepConfirm({
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-text-primary flex items-center gap-2">
-                  <span>💰</span> กระเป๋าเงิน
+                  <Wallet className="w-5 h-5 text-primary" /> กระเป๋าเงิน
                 </span>
                 {paymentMethod === 'wallet' && <span className="text-primary">●</span>}
               </div>
@@ -880,7 +1012,7 @@ function StepConfirm({
           {/* Wallet insufficient balance warning */}
           {insufficientWalletBalance && (
             <div className="glass p-3 rounded-lg border border-error/20 bg-error/5 flex items-start gap-2 animate-fadeIn">
-              <span className="text-error mt-0.5">⚠️</span>
+              <Info className="w-4 h-4 text-error mt-0.5 shrink-0" />
               <div>
                 <p className="text-xs font-bold text-error">ยอดเงินในกระเป๋าไม่เพียงพอ</p>
                 <p className="text-[10px] text-text-muted mt-0.5">
@@ -944,10 +1076,12 @@ function StepConfirm({
         >
           {isBooking ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin text-lg">⏳</span> กำลังดำเนินการ...
+              <Loader2 className="w-4 h-4 animate-spin" /> กำลังดำเนินการ...
             </span>
           ) : isFree ? (
-            '✅ ยืนยันจองฟรี'
+            <span className="flex items-center justify-center gap-2">
+              <Check className="w-4 h-4" /> ยืนยันจองฟรี
+            </span>
           ) : (
             `ชำระเงิน ฿${currentPriceToPay.toLocaleString()}`
           )}
