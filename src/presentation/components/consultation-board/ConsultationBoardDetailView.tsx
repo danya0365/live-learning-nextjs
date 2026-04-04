@@ -6,6 +6,7 @@
 'use client';
 
 import { useConsultationBoardDetailPresenter } from '@/src/presentation/presenters/consultation-board/useConsultationBoardDetailPresenter';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import ConsultationDetailSkeleton from '../consultations/ConsultationDetailSkeleton';
 
@@ -41,7 +42,9 @@ export function ConsultationBoardDetailView({ requestId }: ConsultationBoardDeta
         <div className="text-center">
           <div className="text-6xl mb-4">🔍</div>
           <p className="text-text-secondary text-lg mb-4">ไม่พบคำขอปรึกษานี้</p>
-          <Link href="/consultations/board" className="btn-game px-6 py-2 text-white rounded-xl">← กลับ</Link>
+          <Link href="/consultations/board" className="btn-game px-6 py-2 text-white rounded-xl inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" /> กลับ
+          </Link>
         </div>
       </div>
     );
@@ -52,8 +55,8 @@ export function ConsultationBoardDetailView({ requestId }: ConsultationBoardDeta
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Breadcrumb */}
-      <Link href="/consultations/board" className="text-text-muted hover:text-text-secondary text-sm mb-6 inline-flex items-center gap-1">
-        ← กลับไปบอร์ดคำขอ
+      <Link href="/consultations/board" className="text-text-muted hover:text-text-secondary text-sm mb-6 inline-flex items-center gap-2 group transition-colors">
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับไปบอร์ดคำขอ
       </Link>
 
       {/* Student info + request */}

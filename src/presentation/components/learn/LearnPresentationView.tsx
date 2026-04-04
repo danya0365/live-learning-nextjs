@@ -5,6 +5,7 @@ import { MarkdownContent } from "@/src/presentation/components/learn/MarkdownCon
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
+import { ArrowLeft, ArrowRight, ChevronRight, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface LearnPresentationViewProps {
@@ -278,7 +279,7 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
             className="text-white/50 hover:text-white transition-colors"
             title="ออกจาก Presentation"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
         
@@ -308,9 +309,9 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
                 {/* Topic Header */}
                 <button
                   onClick={() => toggleTopic(topic.id)}
-                  className="w-full px-4 py-2.5 flex items-center gap-2 hover:bg-white/5 transition-colors text-left"
+                  className="w-full px-4 py-2.5 flex items-center gap-2 hover:bg-white/5 transition-colors text-left group/topic"
                 >
-                  <span className={`text-xs transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
+                  <ChevronRight className={`w-3 h-3 text-white/40 transition-transform ${isExpanded ? 'rotate-90 text-white' : ''}`} />
                   <span className="text-lg">{topic.icon}</span>
                   <span className="flex-1 text-sm font-medium text-white/90 truncate">
                     {topic.titleTh}
@@ -369,7 +370,7 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
         className="absolute top-1/2 -translate-y-1/2 z-10 w-6 h-12 bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm rounded-r-lg flex items-center justify-center transition-all"
         style={{ left: sidebarCollapsed ? 0 : '288px' }}
       >
-        <span className={`text-xs text-white transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`}>▶</span>
+        <ChevronRight className={`w-4 h-4 text-white transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`} />
       </button>
 
       {/* Main Content */}
@@ -393,10 +394,10 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
               reset();
               setViewMode("normal");
             }}
-            className="flex items-center gap-2 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all group"
           >
-            <span className="hidden sm:inline">ออก</span>
-            <span>✕</span>
+            <span className="hidden sm:inline font-medium">ออก</span>
+            <X className="w-4 h-4 transition-transform group-hover:rotate-90" />
           </button>
         </header>
 
@@ -449,21 +450,23 @@ export function LearnPresentationView({ courseSlug }: LearnPresentationViewProps
             <button
               onClick={prevSlide}
               disabled={currentSlideIndex === 0}
-              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all group"
+              aria-label="ก่อนหน้า"
             >
-              ←
+              <ArrowLeft className="w-6 h-6 transition-transform group-hover:-translate-x-1" />
             </button>
 
-            <div className="text-white/60 text-sm px-4">
-              ใช้ปุ่มลูกศร ← → หรือ Space เพื่อเลื่อน
+            <div className="text-white/60 text-sm px-4 flex items-center gap-2">
+              ใช้ปุ่มลูกศร <ArrowLeft className="w-3 h-3" /> <ArrowRight className="w-3 h-3" /> หรือ Space เพื่อเลื่อน
             </div>
 
             <button
               onClick={nextSlide}
               disabled={currentSlideIndex >= totalSlides - 1}
-              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all"
+              className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all group"
+              aria-label="ถัดไป"
             >
-              →
+              <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
         </footer>

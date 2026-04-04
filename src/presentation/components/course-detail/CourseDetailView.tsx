@@ -2,6 +2,7 @@
 
 import { CourseDetailViewModel } from '@/src/presentation/presenters/course-detail/CourseDetailPresenter';
 import { useCourseDetailPresenter } from '@/src/presentation/presenters/course-detail/useCourseDetailPresenter';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CourseDetailSkeleton from './CourseDetailSkeleton';
@@ -29,8 +30,8 @@ export function CourseDetailView({ courseId, initialViewModel }: CourseDetailVie
           <div className="text-6xl mb-4">😢</div>
           <h1 className="text-2xl font-bold text-text-primary mb-2">ไม่พบคอร์สนี้</h1>
           <p className="text-text-muted mb-6">{state.error || 'คอร์สที่คุณค้นหาอาจถูกลบหรือไม่มีอยู่'}</p>
-          <Link href="/courses" className="btn-game px-6 py-3 text-white rounded-xl inline-block">
-            ← กลับไปดูคอร์สทั้งหมด
+          <Link href="/courses" className="btn-game px-6 py-3 text-white rounded-xl inline-flex items-center gap-2 group transition-transform">
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับไปดูคอร์สทั้งหมด
           </Link>
         </div>
       </div>

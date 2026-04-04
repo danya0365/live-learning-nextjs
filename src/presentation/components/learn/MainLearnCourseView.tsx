@@ -4,6 +4,7 @@ import { LearnCourse, LearnLesson, LearnTopic } from "@/src/domain/types/learn-c
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LearnCinemaView } from "./LearnCinemaView";
@@ -214,8 +215,11 @@ export function MainLearnCourseView({ courseId, courseType }: LearnCourseViewPro
 
       {/* Back Link */}
       <div className="mt-8">
-        <Link href={`/courses/${courseId}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors">
-          ← กลับหน้าคอร์สเรียน
+        <Link 
+          href={`/courses/${courseId}`} 
+          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors inline-flex items-center gap-2 group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> กลับหน้าคอร์สเรียน
         </Link>
       </div>
     </div>

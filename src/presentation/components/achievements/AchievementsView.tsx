@@ -9,6 +9,7 @@
 import { AchievementCategory, AchievementDetail } from '@/src/application/repositories/IAchievementRepository';
 import { AchievementsViewModel } from '@/src/presentation/presenters/achievements/AchievementsPresenter';
 import { useAchievementsPresenter } from '@/src/presentation/presenters/achievements/useAchievementsPresenter';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -60,8 +61,8 @@ export function AchievementsView({ initialViewModel }: AchievementsViewProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Link href="/profile" className="text-text-muted hover:text-primary transition-colors text-sm">
-            ← โปรไฟล์
+          <Link href="/profile" className="text-text-muted hover:text-primary transition-colors text-sm flex items-center gap-1 group">
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" /> โปรไฟล์
           </Link>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">

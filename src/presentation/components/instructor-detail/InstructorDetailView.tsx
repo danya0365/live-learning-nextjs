@@ -8,6 +8,7 @@
 
 import { InstructorDetailViewModel } from '@/src/presentation/presenters/instructor-detail/InstructorDetailPresenter';
 import { useInstructorDetailPresenter } from '@/src/presentation/presenters/instructor-detail/useInstructorDetailPresenter';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import InstructorDetailSkeleton from './InstructorDetailSkeleton';
 
@@ -33,8 +34,8 @@ export function InstructorDetailView({ instructorId, initialViewModel }: Instruc
           <div className="text-6xl mb-4">😢</div>
           <h1 className="text-2xl font-bold text-text-primary mb-2">ไม่พบอาจารย์ท่านนี้</h1>
           <p className="text-text-muted mb-6">{state.error || 'ข้อมูลอาจารย์อาจถูกลบหรือไม่มีอยู่'}</p>
-          <Link href="/instructors" className="btn-game px-6 py-3 text-white rounded-xl inline-block">
-            ← กลับไปดูอาจารย์ทั้งหมด
+          <Link href="/instructors" className="btn-game px-6 py-3 text-white rounded-xl inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" /> กลับไปดูอาจารย์ทั้งหมด
           </Link>
         </div>
       </div>

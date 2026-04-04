@@ -7,6 +7,7 @@ import { useTTS } from "@/src/presentation/hooks/useTTS";
 import { useStaticLearnContentPresenter } from "@/src/presentation/presenters/learn-content/useStaticLearnContentPresenter";
 import { useLearnModeStore } from "@/src/presentation/stores/learnModeStore";
 import { useProgressStore } from "@/src/presentation/stores/progressStore";
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface LearnCinemaViewProps {
@@ -262,7 +263,7 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
             }}
             className="flex items-center gap-2 px-3 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
-            <span>←</span>
+            <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">ออก</span>
           </button>
           
@@ -352,8 +353,9 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
               }}
               disabled={store.currentSlideIndex === 0}
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all"
+              aria-label="ก่อนหน้า"
             >
-              ⏮
+              <SkipBack className="w-5 h-5" />
             </button>
             
             <button
@@ -364,8 +366,9 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
                 store.togglePlayPause();
               }}
               className={`w-16 h-16 rounded-full bg-gradient-to-r ${colors.gradient} hover:opacity-90 text-white text-2xl flex items-center justify-center shadow-lg ${colors.glow} transition-all`}
+              aria-label={store.isPlaying ? "หยุด" : "เล่น"}
             >
-              {store.isPlaying ? '⏸' : '▶️'}
+              {store.isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current ml-1" />}
             </button>
             
             <button
@@ -375,8 +378,9 @@ export function LearnCinemaView({ courseSlug }: LearnCinemaViewProps) {
               }}
               disabled={isLastSlide}
               className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center disabled:opacity-30 transition-all"
+              aria-label="ถัดไป"
             >
-              ⏭
+              <SkipForward className="w-5 h-5" />
             </button>
           </div>
           
