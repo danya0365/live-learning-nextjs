@@ -1,9 +1,14 @@
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
-import { NextResponse } from "next/server";
+import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 🛡️ Guard: Only Admin can access
+  const auth = await verifyAdmin();
+  if (!auth.authorized) return auth.response;
+
   try {
     const supabase = createAdminSupabaseClient();
     

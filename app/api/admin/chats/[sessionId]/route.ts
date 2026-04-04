@@ -1,14 +1,26 @@
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
+  // 🛡️ Guard: Only Admin can access
+  const auth = await verifyAdmin();
+  if (!auth.authorized) return auth.response;
+
   try {
     const { sessionId } = await params;
     const supabase = createAdminSupabaseClient();
     
+    // 1. Fetch Session Info
+    const { data: session } = await supabase
+      .from("chat_sessions")
+      .select("status")
+      .eq("id", sessionId)
+      .single();
+
     const searchParams = request.nextUrl.searchParams;
     const lastMessageAt = searchParams.get("lastMessageAt");
     const beforeDate = searchParams.get("before");
@@ -22,7 +34,6 @@ export async function GET(
     if (lastMessageAt) {
       query = query.gt("created_at", lastMessageAt);
     } else if (beforeDate) {
-      // Load history before a specific date, limit to 50
       query = supabase
         .from("chat_messages")
         .select("*")
@@ -31,7 +42,6 @@ export async function GET(
         .order("created_at", { ascending: false })
         .limit(50);
     } else {
-      // Initial load, limit to 50
       query = query.limit(50);
     }
 
@@ -39,12 +49,11 @@ export async function GET(
 
     if (error) throw error;
     
-    // Sort ascending for UI if we fetched history (which was desc)
     if (beforeDate && messages) {
        messages = messages.reverse();
     }
 
-    // Auto-mark customer messages as read when admin views
+    // 2. Auto-mark customer messages as read & auto-transition 'new' status
     if (messages && messages.length > 0) {
       const unreadUserMessages = messages
         .filter((m) => m.role === "user" && m.status !== "read")
@@ -56,11 +65,18 @@ export async function GET(
           .update({ status: "read" })
           .in("id", unreadUserMessages);
           
-        // Reflect in response
         messages = messages.map(m => 
           unreadUserMessages.includes(m.id) ? { ...m, status: "read" } : m
         );
       }
+    }
+
+    // 3. Mark session as 'active' if it was 'new' when viewed by admin
+    if (session?.status === 'new') {
+        await supabase
+          .from("chat_sessions")
+          .update({ status: 'active' })
+          .eq("id", sessionId);
     }
 
     return NextResponse.json({ messages });
@@ -74,6 +90,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
+  // 🛡️ Guard: Only Admin can access
+  const auth = await verifyAdmin();
+  if (!auth.authorized) return auth.response;
+
   try {
      const { sessionId } = await params;
      const { message } = await request.json();
@@ -84,7 +104,7 @@ export async function POST(
 
      const supabase = createAdminSupabaseClient();
      
-     // Save admin reply to database
+     // 1. Save admin reply
      const { data: newMessage, error } = await supabase
        .from("chat_messages")
        .insert([
@@ -100,10 +120,13 @@ export async function POST(
 
      if (error) throw error;
 
-     // Update session's updated_at
+     // 2. Update session metadata and auto-transition from 'new' to 'active'
      await supabase
        .from("chat_sessions")
-       .update({ updated_at: new Date().toISOString() })
+       .update({ 
+         updated_at: new Date().toISOString(),
+         status: 'active' // Ensure status is active when admin replies
+       })
        .eq("id", sessionId);
 
      return NextResponse.json({ message: newMessage });

@@ -108,6 +108,11 @@ export default async function AdminChatListPage({
           ) : (
             sessions?.map((session) => {
               const lastMessage = session.chat_messages?.[session.chat_messages.length - 1];
+              // Calculate unread count for this specific session
+              const unreadCount = (session as any).chat_messages?.filter(
+                (m: any) => m.role === 'user' && m.status !== 'read'
+              ).length || 0;
+              
               const expiresAt = Date.now() + 1000 * 60 * 60 * 24;
               const token = MagicLinkService.generateToken(session.id, expiresAt);
               const adminUrl = `/admin/chat/${session.id}?token=${token}&expires=${expiresAt}`;
@@ -133,8 +138,11 @@ export default async function AdminChatListPage({
                       <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-50 transition-colors border border-gray-100">
                         <UserCircle2 className="w-8 h-8 text-gray-400 group-hover:text-indigo-500" />
                       </div>
-                      {!lastMessage?.status && lastMessage?.role === 'user' && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
+                      {/* 🔥 Numeric Unread Badge */}
+                      {unreadCount > 0 && (
+                        <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center px-1 animate-in zoom-in duration-300 shadow-sm">
+                          <span className="text-[10px] font-black text-white">{unreadCount}</span>
+                        </div>
                       )}
                     </div>
                     <div>
