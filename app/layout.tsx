@@ -1,4 +1,5 @@
 import '@/public/styles/index.css';
+import { Toaster } from 'sonner';
 import { AuthProvider } from '@/src/presentation/providers/AuthProvider';
 import { ThemeProvider } from '@/src/presentation/providers/ThemeProvider';
 import type { Metadata } from "next";
@@ -7,7 +8,7 @@ import { Noto_Sans_Thai } from 'next/font/google';
 const notoSansThai = Noto_Sans_Thai({
   subsets: ['thai', 'latin'],
   variable: '--font-noto-sans-thai',
-  preload: false,
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -23,12 +24,12 @@ export default function RootLayout({
   return (
     <html lang="th" className={notoSansThai.variable} suppressHydrationWarning>
       <body className={`${notoSansThai.className} antialiased`}>
-        <AuthProvider>
-          <ThemeProvider>
+        <ThemeProvider>
+          <AuthProvider>
             {children}
-            
-          </ThemeProvider>
-        </AuthProvider>
+            <Toaster position="top-right" expand={true} richColors />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
