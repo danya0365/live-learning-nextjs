@@ -79,12 +79,16 @@ export function Header() {
           <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
             <div className="flex items-center gap-3 hover:scale-105 transition-transform duration-200">
               <div className="relative">
-                {/* Logo Badge Container */}
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-white/10 group-hover:rotate-3 transition-transform duration-300 overflow-hidden">
+                {/* Logo Badge Container (Transparent-First Approach) */}
+                <div className="w-10 h-10 flex items-center justify-center transition-all duration-300 group-hover:rotate-6">
                    <img 
                     src="/images/logo.png" 
                     alt="Live Learning Logo" 
-                    className="w-full h-full object-cover rounded-lg"
+                    className={cn(
+                      "w-full h-full object-contain rounded-lg transition-all duration-300",
+                      "mix-blend-multiply", // Effectively removes white on light backgrounds
+                      "dark:invert dark:hue-rotate-180 dark:mix-blend-normal dark:brightness-125 dark:contrast-125" // Magic hack to turn white bg -> black
+                    )}
                    />
                 </div>
                 {/* Glow Effect */}
