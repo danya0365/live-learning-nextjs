@@ -99,7 +99,7 @@ export function AIChatBubble() {
     <div className="ai-chat fixed bottom-6 right-6 z-[9999]">
       {/* Chat Window: Premium Glass Design */}
       {isOpen && (
-        <div className="ai-chat__window absolute bottom-20 right-0 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-140px)] glass rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 border-white/40">
+        <div className="ai-chat__window absolute bottom-20 right-0 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-140px)] glass rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 border-border">
           
           {/* Header: Solid Brand Identity */}
           <div className="ai-chat__header w-full shrink-0">
@@ -107,7 +107,7 @@ export function AIChatBubble() {
               <div className="ai-chat__header-avatar">
                 <Bot className="ai-chat__header-icon" />
               </div>
-              <div className="ai-chat__header-text">
+              <div className="ai-chat__header-text text-left">
                 <h3 className="ai-chat__header-title font-black tracking-tight leading-none">Clean Assistant</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
@@ -130,7 +130,7 @@ export function AIChatBubble() {
           <div className="ai-chat__messages flex-1 overflow-y-auto p-5 custom-scrollbar bg-background/5">
             {!isRegistered ? (
               <div className="flex flex-col items-center justify-center p-4 h-full text-center animate-in fade-in duration-700">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/40">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/20">
                   <Bot className="w-10 h-10 text-primary animate-pulse" />
                 </div>
                 <h4 className="text-2xl font-black gradient-text tracking-tighter mb-2 text-left">ยินดีต้อนรับครับ! ✨</h4>
@@ -149,7 +149,7 @@ export function AIChatBubble() {
                       onChange={(e) => setRegName(e.target.value)}
                       required
                       disabled={isLoading}
-                      className="w-full pl-12 pr-4 py-3.5 glass rounded-2xl text-sm font-bold text-text-primary focus:ring-2 focus:ring-primary/20 transition-all border-white/30 placeholder:text-text-muted/50"
+                      className="w-full pl-12 pr-4 py-3.5 glass rounded-2xl text-sm font-bold text-text-primary focus:ring-2 focus:ring-primary/20 transition-all border-border placeholder:text-text-muted/50"
                     />
                   </div>
                   <div className="relative group">
@@ -161,7 +161,7 @@ export function AIChatBubble() {
                       onChange={(e) => setRegPhone(e.target.value)}
                       required
                       disabled={isLoading}
-                      className="w-full pl-12 pr-4 py-3.5 glass rounded-2xl text-sm font-bold text-text-primary focus:ring-2 focus:ring-primary/20 transition-all border-white/30 placeholder:text-text-muted/50"
+                      className="w-full pl-12 pr-4 py-3.5 glass rounded-2xl text-sm font-bold text-text-primary focus:ring-2 focus:ring-primary/20 transition-all border-border placeholder:text-text-muted/50"
                     />
                   </div>
 
@@ -196,7 +196,7 @@ export function AIChatBubble() {
                     <button
                       key={s.query}
                       onClick={() => sendMessage(s.query)}
-                      className="w-full glass hover:bg-primary/5 border-white/30 hover:border-primary/20 py-3 px-4 rounded-2xl text-xs font-black text-text-secondary transition-all active:scale-95 text-left flex items-center justify-between group"
+                      className="w-full glass hover:bg-primary/5 border-border/40 hover:border-primary/20 py-3 px-4 rounded-2xl text-xs font-black text-text-secondary transition-all active:scale-95 text-left flex items-center justify-between group"
                     >
                       {s.label}
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
@@ -211,7 +211,7 @@ export function AIChatBubble() {
                     <button 
                       onClick={() => loadMoreHistory()}
                       disabled={isLoading}
-                      className="text-[10px] font-black glass border-white/30 hover:bg-white/40 text-text-muted py-2 px-6 rounded-full transition-all flex items-center gap-2 uppercase tracking-widest"
+                      className="text-[10px] font-black glass border-border/50 hover:bg-white/40 text-text-muted py-2 px-6 rounded-full transition-all flex items-center gap-2 uppercase tracking-widest"
                     >
                       {isLoading ? <Loader2 className="w-3 h-3 animate-spin"/> : "โหลดข้อความเดิม"}
                     </button>
@@ -236,8 +236,8 @@ export function AIChatBubble() {
 
           {/* Input Box: High Gloss Floating Bar */}
           {isRegistered && (
-            <div className="p-5 shrink-0 relative z-10 border-t border-white/10 bg-background/20">
-              <form onSubmit={handleSubmit} className="flex gap-3 p-1.5 glass rounded-[2rem] shadow-2xl border-white/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all bg-surface/50">
+            <div className="p-5 shrink-0 relative z-10 border-t border-border/40 bg-background/20">
+              <form onSubmit={handleSubmit} className="flex gap-3 p-1.5 glass rounded-[2rem] shadow-2xl border-border focus-within:ring-4 focus-within:ring-primary/10 transition-all bg-surface/50">
                 <input
                   ref={inputRef}
                   type="text"

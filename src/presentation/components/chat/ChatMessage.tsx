@@ -31,11 +31,11 @@ export function ChatMessage({ message, isMe = false }: ChatMessageProps) {
           )}
         </div>
         
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 text-left">
           <div className={`px-5 py-3 rounded-2xl text-sm font-bold shadow-sm transition-all border ${
             isMe 
               ? "bg-gradient-to-br from-primary to-secondary text-white border-transparent rounded-tr-none shadow-primary/20" 
-              : "bg-surface text-text-primary border-border/50 rounded-tl-none"
+              : "bg-surface dark:bg-white/5 text-text-primary border-border rounded-tl-none"
           }`}>
              {isAdmin && !isMe && (
                <span className="text-[10px] font-black text-primary mb-2 flex items-center gap-1.5 uppercase tracking-widest border-b border-primary/10 pb-1.5">

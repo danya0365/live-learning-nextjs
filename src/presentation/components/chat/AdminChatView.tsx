@@ -215,9 +215,9 @@ export function AdminChatView({ sessionId, customerName }: AdminChatViewProps) {
       </main>
 
       {/* Admin Input Panel: Floating Glass Design */}
-      <footer className="p-6 md:p-8 relative z-10">
+      <footer className="p-6 md:p-8 relative z-10 border-t border-border/40 bg-background/20">
         <div className="max-w-5xl mx-auto">
-          <form onSubmit={handleAdminReply} className="flex gap-4 p-2 glass rounded-[2.5rem] shadow-2xl border-white/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+          <form onSubmit={handleAdminReply} className="flex gap-4 p-2 glass rounded-[2.5rem] shadow-2xl border-border focus-within:ring-4 focus-within:ring-primary/10 transition-all bg-surface/50">
             <input
               ref={inputRef}
               type="text"
