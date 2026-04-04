@@ -8,6 +8,7 @@
 import { useChatStore } from "@/src/presentation/stores/chat-store";
 import { Bot, Loader2, MessageCircle, Phone, Send, UserCircle2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "../../utils/cn";
 import { ChatMessage } from "./ChatMessage";
 
 export function AIChatBubble() {
@@ -266,22 +267,47 @@ export function AIChatBubble() {
         </div>
       )}
 
-      {/* Floating Button: High Impact Action */}
-      <button
-        onClick={toggleChat}
-        className={`w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-2xl shadow-primary/40 transition-all active:scale-95 group relative ${isOpen ? "rotate-90" : "animate-bounce hover:animate-none"}`}
-        aria-label={isOpen ? "ปิดแชท" : "เปิดแชท"}
-      >
-        <div className="absolute inset-0 bg-white/20 rounded-[1.5rem] animate-pulse pointer-events-none" />
-        {isOpen ? (
-          <X className="w-8 h-8 text-white transition-transform group-hover:scale-110" />
-        ) : (
-          <div className="relative">
-             <MessageCircle className="w-8 h-8 text-white transition-transform group-hover:scale-110" />
-             {/* Simple Dot for notification can be added here if needed */}
+      {/* Close/Toggle Button: Subtle & Responsive */}
+      <div className="flex flex-col items-end gap-3">
+        {/* Subtle Greeting Tooltip (Only shown once per session or on delay) */}
+        {!isOpen && (
+          <div className="bg-white dark:bg-surface-elevated px-4 py-2 rounded-2xl shadow-xl border border-border/40 text-xs font-bold text-text-primary animate-in fade-in slide-in-from-right-4 duration-1000 delay-1000 fill-mode-backwards relative group">
+            <span className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              มีคำถามสอบถามได้นะครับ ✨
+            </span>
+            {/* Arrow */}
+            <div className="absolute right-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-white dark:bg-surface-elevated rotate-45 border-r border-t border-border/40" />
           </div>
         )}
-      </button>
+
+        <button
+          onClick={toggleChat}
+          className={cn(
+            "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-500 active:scale-95 group relative overflow-hidden",
+            isOpen 
+              ? "bg-surface-elevated border border-border/40 rotate-180" 
+              : "bg-gradient-to-br from-primary/90 to-secondary/90 hover:from-primary hover:to-secondary shadow-primary/20 hover:shadow-primary/40"
+          )}
+          aria-label={isOpen ? "ปิดแชท" : "เปิดแชท"}
+        >
+          {/* Inner Glow Soft Pulse (Only when closed) */}
+          {!isOpen && (
+            <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />
+          )}
+          
+          {isOpen ? (
+            <X className="w-6 h-6 text-text-primary transition-transform group-hover:scale-110" />
+          ) : (
+            <div className="relative">
+               <MessageCircle className="w-7 h-7 text-white transition-transform group-hover:scale-110" />
+            </div>
+          )}
+        </button>
+      </div>
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
