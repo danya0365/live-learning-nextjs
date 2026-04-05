@@ -38,7 +38,7 @@ export class LineMessagingService {
     const expiresAt = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
     const token = MagicLinkService.generateToken(sessionId, expiresAt);
     
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
     
     const magicLink = `${baseUrl}/admin/chat/${sessionId}?token=${token}&expires=${expiresAt}`;
