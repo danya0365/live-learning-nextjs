@@ -1,4 +1,5 @@
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,7 +20,7 @@ export async function GET(
       return NextResponse.json({ messages: [] });
     }
 
-    const chatRepo = new SupabaseChatRepository();
+    const chatRepo = new SupabaseChatRepository(createAdminSupabaseClient());
     const messages = await chatRepo.searchMessages(sessionId, query);
 
     return NextResponse.json({ messages });

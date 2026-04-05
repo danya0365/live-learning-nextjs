@@ -1,4 +1,5 @@
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { MagicLinkService } from "@/src/infrastructure/security/MagicLinkService";
 import { AdminChatTabSwitcher } from "@/src/presentation/components/chat/AdminChatTabSwitcher";
 import { ArrowRight, Bot, Clock, Inbox, UserCircle2 } from "lucide-react";
@@ -10,7 +11,7 @@ export default async function AdminChatListPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status: activeTab = "active" } = await searchParams;
-  const chatRepo = new SupabaseChatRepository();
+  const chatRepo = new SupabaseChatRepository(createAdminSupabaseClient());
   
   // Fetch all sessions with their pre-calculated summary info from the repository
   const rawSessions = await chatRepo.getAdminChatSummary();
