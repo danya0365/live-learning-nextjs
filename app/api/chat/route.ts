@@ -1,5 +1,5 @@
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { LineMessagingService } from "@/src/infrastructure/services/LineMessagingService";
-import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -10,56 +10,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Message and sessionId are required" }, { status: 400 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository();
     const lineService = new LineMessagingService();
 
-    // Ensure session exists
-    const { data: session } = await supabase
-      .from('chat_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
+    // 1. Ensure session exists
+    const session = await chatRepo.getSession(sessionId);
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    // Save user message
-    const { error: insertError } = await supabase
-       .from('chat_messages')
-       .insert({
-          id: messageId,
-          session_id: sessionId,
-          role: 'user',
-          content: message,
-          status: 'sent'
-       });
+    // 2. Save user message
+    await chatRepo.addMessage(sessionId, "user", message, {
+      id: messageId,
+      status: "sent"
+    });
 
-    if (insertError) throw insertError;
-
-    // Notify Admin via LINE
+    // 3. Notify Admin via LINE
     try {
-        await lineService.notifyAdmin(sessionId, `[${session.customer_name}] ${message}`);
+        await lineService.notifyAdmin(sessionId, `[${session.customerName}] ${message}`);
     } catch (e) {
         console.error("Failed to notify line", e);
     }
 
-    // Prepare Auto-Response Fallback
+    // 4. Prepare Auto-Response Fallback
     const simpleResponse = "ได้รับข้อความแล้วครับ ทีมงานจะรีบตรวจสอบและตอบกลับให้เร็วที่สุดครับ ⚡";
     
-    if (session.auto_reply) {
-      const { data: aiMessage, error: aiError } = await supabase
-        .from('chat_messages')
-        .insert({
-           session_id: sessionId,
-           role: 'assistant',
-           content: simpleResponse,
-           is_draft: false
-        })
-        .select()
-        .single();
+    if (session.autoReply) {
+      const aiMessage = await chatRepo.addMessage(sessionId, "assistant", simpleResponse, {
+        isDraft: false
+      });
         
-      if (aiError) throw aiError;
       return NextResponse.json({ response: simpleResponse, responseId: aiMessage.id });
     } else {
        return NextResponse.json({ ack: true });

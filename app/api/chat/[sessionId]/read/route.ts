@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -8,17 +8,10 @@ export async function POST(
   try {
     const resolvedParams = await params;
     const sessionId = resolvedParams.sessionId;
-    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository();
 
     // Mark assistant/admin messages as read
-    const { error } = await supabase
-      .from('chat_messages')
-      .update({ status: 'read' })
-      .eq('session_id', sessionId)
-      .neq('role', 'user')
-      .neq('status', 'read');
-
-    if (error) throw error;
+    await chatRepo.markMessagesAsReadForUser(sessionId);
     
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,12 +1,8 @@
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { MagicLinkService } from "@/src/infrastructure/security/MagicLinkService";
-import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
-import { ArrowRight, Bot, CheckCircle, Clock, Inbox, MessageSquare, Star, UserCircle2 } from "lucide-react";
-import Link from 'next/link';
 import { AdminChatTabSwitcher } from "@/src/presentation/components/chat/AdminChatTabSwitcher";
-
-import { Database } from "@/src/domain/types/supabase";
-
-type AdminChatSummary = Database["public"]["Views"]["admin_chat_summary"]["Row"];
+import { ArrowRight, Bot, Clock, Inbox, UserCircle2 } from "lucide-react";
+import Link from 'next/link';
 
 export default async function AdminChatListPage({
   searchParams,
@@ -14,49 +10,28 @@ export default async function AdminChatListPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const { status: activeTab = "active" } = await searchParams;
-  const supabase = createAdminSupabaseClient();
+  const chatRepo = new SupabaseChatRepository();
   
-  // Fetch all sessions with their pre-calculated summary info from the View
-  const { data, error } = await supabase
-    .from("admin_chat_summary")
-    .select("*")
-    .order("updated_at", { ascending: false });
-
-  const rawSessions = data as AdminChatSummary[] | null;
+  // Fetch all sessions with their pre-calculated summary info from the repository
+  const rawSessions = await chatRepo.getAdminChatSummary();
   
   // Calculate counts for badges
   const counts = {
-    active: rawSessions?.filter(s => s.is_active === true).length || 0,
-    new: rawSessions?.filter(s => s.status === "new").length || 0,
-    follow_up: rawSessions?.filter(s => s.status === "follow_up").length || 0,
-    resolved: rawSessions?.filter(s => s.is_active === false).length || 0,
-    all: rawSessions?.length || 0,
+    active: rawSessions.filter(s => s.isActive === true).length,
+    new: rawSessions.filter(s => s.status === "new").length,
+    follow_up: rawSessions.filter(s => s.status === "follow_up").length,
+    resolved: rawSessions.filter(s => s.isActive === false).length,
+    all: rawSessions.length,
   };
 
   // Apply filters in JS
-  const sessions = rawSessions?.filter(s => {
-    if (activeTab === "active") return s.is_active === true;
+  const sessions = rawSessions.filter(s => {
+    if (activeTab === "active") return s.isActive === true;
     if (activeTab === "new") return s.status === "new";
     if (activeTab === "follow_up") return s.status === "follow_up";
-    if (activeTab === "resolved") return s.is_active === false;
+    if (activeTab === "resolved") return s.isActive === false;
     return true; // "all"
   });
-
-  if (error) {
-    return (
-      <div className="p-8 text-red-500">
-        Error loading sessions: {error.message}
-      </div>
-    );
-  }
-
-  const tabs = [
-    { id: "active", label: "กำลังดำเนินการ", icon: MessageSquare },
-    { id: "new", label: "มาใหม่", icon: Inbox },
-    { id: "follow_up", label: "รอดำเนินการ", icon: Star },
-    { id: "resolved", label: "ปิดงานแล้ว", icon: CheckCircle },
-    { id: "all", label: "ทั้งหมด", icon: Bot },
-  ];
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 transition-colors duration-500">
@@ -82,7 +57,7 @@ export default async function AdminChatListPage({
         <AdminChatTabSwitcher activeTab={activeTab} counts={counts} />
 
         <div className="grid gap-6">
-          {sessions?.length === 0 ? (
+          {sessions.length === 0 ? (
             <div className="glass rounded-[3rem] p-24 text-center border-2 border-dashed border-primary/10 animate-in fade-in zoom-in duration-700">
                <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
                   <Inbox className="w-12 h-12 text-text-muted opacity-30" />
@@ -93,13 +68,11 @@ export default async function AdminChatListPage({
                </p>
             </div>
           ) : (
-            sessions?.map((session) => {
-              if (!session.id) return null; // Safe guard for TS
-
-              // Now using pre-aggregated data from Database View
-              const unreadCount = session.unread_count || 0;
-              const lastMessageContent = session.last_message_content || "เริ่มการสนทนาแล้ว";
-              const lastMessageAt = session.last_message_at || session.updated_at || new Date().toISOString();
+            sessions.map((session) => {
+              // Now using pre-aggregated data from the repository (camelCase)
+              const unreadCount = session.unreadCount;
+              const lastMessageContent = session.lastMessageContent || "เริ่มการสนทนาแล้ว";
+              const lastMessageAt = session.lastMessageAt || session.updatedAt;
               
               const expiresAt = Date.now() + 1000 * 60 * 60 * 24;
               const token = MagicLinkService.generateToken(session.id, expiresAt);
@@ -136,10 +109,10 @@ export default async function AdminChatListPage({
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-xl font-extrabold text-text-primary group-hover:text-primary transition-colors tracking-tight">
-                          คุณ {session.customer_name}
+                          คุณ {session.customerName}
                         </h3>
                         <span className={`text-[10px] uppercase font-black px-3 py-1 rounded-lg border tracking-widest ${statusColors[session.status || 'active']}`}>
-                          {session.status || (session.is_active ? 'active' : 'resolved')}
+                          {session.status || (session.isActive ? 'active' : 'resolved')}
                         </span>
                       </div>
                       <p className="text-sm font-bold text-text-secondary line-clamp-1 max-w-md opacity-80">
@@ -152,7 +125,7 @@ export default async function AdminChatListPage({
                     <div className="hidden md:flex flex-col items-end gap-1.5">
                       <div className="flex items-center gap-2 text-xs font-black text-text-muted">
                         <Clock className="w-4 h-4" />
-                        {new Date(lastMessageAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                        {lastMessageAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                       <span className="text-[10px] font-black text-text-muted/40 bg-surface/50 px-2.5 py-0.5 rounded-lg border border-border/50 uppercase tracking-tighter">ID: {session.id.slice(0, 8)}</span>
                     </div>

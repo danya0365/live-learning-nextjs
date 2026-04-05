@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -8,51 +8,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name and phone are required" }, { status: 400 });
     }
 
-    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository();
     
-    // Check if user session exists by phone number
-    let { data: session } = await supabase
-      .from('chat_sessions')
-      .select('*')
-      .eq('customer_phone', phone)
-      .single();
+    // 1. Get or Create session
+    const session = await chatRepo.getOrCreateSession(name, phone);
 
-    if (!session) {
-      // Create new session
-      const { data: newSession, error: createError } = await supabase
-        .from('chat_sessions')
-        .insert({ customer_name: name, customer_phone: phone })
-        .select()
-        .single();
-        
-      if (createError) throw createError;
-      session = newSession;
-    } else {
-      // Update name if changed
-      if (session.customer_name !== name) {
-        await supabase
-          .from('chat_sessions')
-          .update({ customer_name: name, updated_at: new Date().toISOString() })
-          .eq('id', session.id);
-      }
-    }
-
-    // Get chat history
-    const { data: messages } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('session_id', session.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
-      
-    const history = (messages || []).reverse().map((m: any) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content,
-      status: m.status,
-      isDraft: m.is_draft,
-      createdAt: m.created_at
-    }));
+    // 2. Get chat history
+    const history = await chatRepo.getMessagesBySession(session.id, {
+      limit: 50,
+      ascending: true
+    });
 
     return NextResponse.json({
       sessionId: session.id,
