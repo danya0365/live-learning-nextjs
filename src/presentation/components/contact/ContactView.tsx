@@ -55,10 +55,7 @@ export function ContactView({ initialViewModel }: ContactViewProps) {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     try {
-      // 1. Submit to original presenter (optional but good for tracking)
-      await actions.submitForm(data);
-
-      // 2. Register for Chat
+      // 1. Register for Chat
       const registered = await registerCustomer(data.name, data.email);
 
       if (registered) {
