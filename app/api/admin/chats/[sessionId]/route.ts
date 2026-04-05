@@ -1,4 +1,5 @@
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,70 +14,27 @@ export async function GET(
   try {
     const { sessionId } = await params;
     const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
     
-    // 1. Fetch Session Info
-    const { data: session } = await supabase
-      .from("chat_sessions")
-      .select("status")
-      .eq("id", sessionId)
-      .single();
+    // 1. Fetch Session Info for dynamic statuses
+    const session = await chatRepo.getSession(sessionId);
 
     const searchParams = request.nextUrl.searchParams;
-    const lastMessageAt = searchParams.get("lastMessageAt");
-    const beforeDate = searchParams.get("before");
+    const lastMessageAt = searchParams.get("lastMessageAt") || undefined;
+    const beforeDate = searchParams.get("before") || undefined;
 
-    let query = supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("created_at", { ascending: true });
+    let messages = await chatRepo.getMessagesBySession(sessionId, {
+      lastMessageAt,
+      before: beforeDate,
+      limit: 50
+    });
 
-    if (lastMessageAt) {
-      query = query.gt("created_at", lastMessageAt);
-    } else if (beforeDate) {
-      query = supabase
-        .from("chat_messages")
-        .select("*")
-        .eq("session_id", sessionId)
-        .lt("created_at", beforeDate)
-        .order("created_at", { ascending: false })
-        .limit(50);
-    } else {
-      query = query.limit(50);
-    }
-
-    let { data: messages, error } = await query;
-
-    if (error) throw error;
-    
-    if (beforeDate && messages) {
-       messages = messages.reverse();
-    }
-
-    // 2. Auto-mark customer messages as read & auto-transition 'new' status
-    if (messages && messages.length > 0) {
-      const unreadUserMessages = messages
-        .filter((m) => m.role === "user" && m.status !== "read")
-        .map((m) => m.id);
-
-      if (unreadUserMessages.length > 0) {
-        await supabase
-          .from("chat_messages")
-          .update({ status: "read" })
-          .in("id", unreadUserMessages);
-          
-        messages = messages.map(m => 
-          unreadUserMessages.includes(m.id) ? { ...m, status: "read" } : m
-        );
-      }
-    }
+    // 2. Auto-mark customer messages as read
+    await chatRepo.markMessagesAsReadBySession(sessionId);
 
     // 3. Mark session as 'active' if it was 'new' when viewed by admin
     if (session?.status === 'new') {
-        await supabase
-          .from("chat_sessions")
-          .update({ status: 'active' })
-          .eq("id", sessionId);
+        await chatRepo.updateSessionStatus(sessionId, 'active');
     }
 
     return NextResponse.json({ messages });
@@ -103,31 +61,16 @@ export async function POST(
      }
 
      const supabase = createAdminSupabaseClient();
+     const chatRepo = new SupabaseChatRepository(supabase);
+
      
      // 1. Save admin reply
-     const { data: newMessage, error } = await supabase
-       .from("chat_messages")
-       .insert([
-         {
-           session_id: sessionId,
-           role: "admin",
-           content: message,
-           status: "sent"
-         },
-       ])
-       .select()
-       .single();
+     const newMessage = await chatRepo.addMessage(sessionId, "admin", message, {
+       status: "sent"
+     });
 
-     if (error) throw error;
-
-     // 2. Update session metadata and auto-transition from 'new' to 'active'
-     await supabase
-       .from("chat_sessions")
-       .update({ 
-         updated_at: new Date().toISOString(),
-         status: 'active' // Ensure status is active when admin replies
-       })
-       .eq("id", sessionId);
+     // 2. Update session status to 'active'
+     await chatRepo.updateSessionStatus(sessionId, 'active');
 
      return NextResponse.json({ message: newMessage });
   } catch (error) {

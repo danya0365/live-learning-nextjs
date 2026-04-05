@@ -1,4 +1,5 @@
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,25 +20,15 @@ export async function POST(
     }
 
     const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
+
     
     // Status can be: 'read' (internal message status), 'new', 'active', 'follow_up', 'resolved', 'spam'
     if (status === "read") {
-       const { error } = await supabase
-         .from("chat_messages")
-         .update({ status: "read" })
-         .eq("session_id", sessionId)
-         .eq("role", "user");
-       if (error) throw error;
+       await chatRepo.markMessagesAsReadBySession(sessionId);
     } else {
        // Update session status
-       const { error } = await supabase
-         .from("chat_sessions")
-         .update({ 
-           status: status,
-           updated_at: new Date().toISOString()
-         })
-         .eq("id", sessionId);
-       if (error) throw error;
+       await chatRepo.updateSessionStatus(sessionId, status);
     }
 
     return NextResponse.json({ success: true, status });

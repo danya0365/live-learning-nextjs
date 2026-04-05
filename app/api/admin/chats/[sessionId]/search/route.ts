@@ -1,4 +1,5 @@
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -20,14 +21,9 @@ export async function GET(
     }
 
     const supabase = createAdminSupabaseClient();
-    const { data: messages, error } = await supabase
-      .from("chat_messages")
-      .select("*")
-      .eq("session_id", sessionId)
-      .ilike("content", `%${query}%`)
-      .order("created_at", { ascending: true });
+    const chatRepo = new SupabaseChatRepository(supabase);
 
-    if (error) throw error;
+    const messages = await chatRepo.searchMessages(sessionId, query);
 
     return NextResponse.json({ messages });
   } catch (error) {

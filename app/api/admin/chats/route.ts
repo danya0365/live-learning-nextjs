@@ -1,4 +1,5 @@
 import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,15 +12,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = createAdminSupabaseClient();
-    
-    // 🔥 OPTIMIZED: Query the pre-aggregated summary View
-    // This is much faster and returns exactly what the list UI needs.
-    const { data: sessions, error } = await supabase
-      .from("admin_chat_summary")
-      .select("*")
-      .order("updated_at", { ascending: false });
-
-    if (error) throw error;
+    const chatRepo = new SupabaseChatRepository(supabase);
+    const sessions = await chatRepo.getAdminChatSummary();
 
     return NextResponse.json({ sessions });
   } catch (error) {
