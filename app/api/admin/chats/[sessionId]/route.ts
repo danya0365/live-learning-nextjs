@@ -1,3 +1,4 @@
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,7 +13,8 @@ export async function GET(
 
   try {
     const { sessionId } = await params;
-    const chatRepo = new SupabaseChatRepository();
+    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
     
     // 1. Fetch Session Info for dynamic statuses
     const session = await chatRepo.getSession(sessionId);
@@ -58,7 +60,9 @@ export async function POST(
        return NextResponse.json({ error: "Message is required" }, { status: 400 });
      }
 
-     const chatRepo = new SupabaseChatRepository();
+     const supabase = createAdminSupabaseClient();
+     const chatRepo = new SupabaseChatRepository(supabase);
+
      
      // 1. Save admin reply
      const newMessage = await chatRepo.addMessage(sessionId, "admin", message, {

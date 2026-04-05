@@ -1,3 +1,4 @@
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
@@ -18,7 +19,9 @@ export async function POST(
       return NextResponse.json({ error: "autoReply is required" }, { status: 400 });
     }
 
-    const chatRepo = new SupabaseChatRepository();
+    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
+
     await chatRepo.toggleAutoReply(sessionId, autoReply);
 
     return NextResponse.json({ success: true, autoReply });

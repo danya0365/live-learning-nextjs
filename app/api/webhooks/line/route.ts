@@ -1,3 +1,4 @@
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { LineMessagingService } from "@/src/infrastructure/services/LineMessagingService";
 import { TextEventMessage, WebhookEvent } from "@line/bot-sdk";
@@ -23,7 +24,9 @@ export async function POST(request: NextRequest) {
     const body = JSON.parse(rawBody);
     const events: WebhookEvent[] = body.events || [];
 
-    const chatRepo = new SupabaseChatRepository();
+    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
+
 
     for (const event of events) {
       if (event.type === "message" && event.message.type === "text") {

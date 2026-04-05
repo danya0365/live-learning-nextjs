@@ -1,3 +1,4 @@
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,7 +13,9 @@ export async function POST(
 
   try {
      const { sessionId } = await params;
-     const chatRepo = new SupabaseChatRepository();
+     const supabase = createAdminSupabaseClient();
+     const chatRepo = new SupabaseChatRepository(supabase);
+
      
      await chatRepo.updateSessionStatus(sessionId, "resolved");
 

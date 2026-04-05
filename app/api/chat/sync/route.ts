@@ -1,5 +1,7 @@
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { NextRequest, NextResponse } from "next/server";
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +14,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "SessionId is required" }, { status: 400 });
     }
 
-    const chatRepo = new SupabaseChatRepository();
+    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
     const messages = await chatRepo.getMessagesBySession(sessionId, {
       lastMessageAt,
       before,

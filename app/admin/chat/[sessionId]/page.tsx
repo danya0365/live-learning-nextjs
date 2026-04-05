@@ -1,4 +1,5 @@
 import { MagicLinkService } from "@/src/infrastructure/security/MagicLinkService";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { AdminChatView } from "@/src/presentation/components/chat/AdminChatView";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { notFound } from "next/navigation";
@@ -50,8 +51,10 @@ export default async function AdminChatPage({ params, searchParams }: AdminChatP
   }
 
   // Fetch session details from Repository
-  const chatRepo = new SupabaseChatRepository();
+  const supabase = createAdminSupabaseClient();
+  const chatRepo = new SupabaseChatRepository(supabase);
   const session = await chatRepo.getSession(sessionId);
+
 
   if (!session) {
     notFound();

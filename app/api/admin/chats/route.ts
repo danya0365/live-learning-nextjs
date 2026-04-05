@@ -1,3 +1,4 @@
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,7 +11,8 @@ export async function GET(request: NextRequest) {
   if (!auth.authorized) return auth.response;
 
   try {
-    const chatRepo = new SupabaseChatRepository();
+    const supabase = createAdminSupabaseClient();
+    const chatRepo = new SupabaseChatRepository(supabase);
     const sessions = await chatRepo.getAdminChatSummary();
 
     return NextResponse.json({ sessions });
