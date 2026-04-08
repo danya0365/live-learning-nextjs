@@ -2,6 +2,7 @@
 
 import { HomeViewModel } from '@/src/presentation/presenters/home/HomePresenter';
 import Link from 'next/link';
+import { Gamepad2, GraduationCap, BookOpen, Users, Star, Target, Flame, MonitorPlay, Calendar, PlayCircle, Search, Rocket, Sparkles, Lightbulb, Shield, Video, User, Tag } from 'lucide-react';
 
 interface HomeLandingViewProps {
   viewModel: HomeViewModel;
@@ -31,11 +32,11 @@ function HeroSection({ stats }: { stats: HomeViewModel['stats'] }) {
     <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
       {/* Floating decorations */}
       <div className="absolute inset-0 pointer-events-none">
-        <span className="absolute top-16 left-[10%] text-4xl opacity-40 animate-float">⭐</span>
-        <span className="absolute top-24 right-[15%] text-3xl opacity-30 animate-float" style={{ animationDelay: '0.5s' }}>🎯</span>
-        <span className="absolute bottom-20 left-[20%] text-3xl opacity-25 animate-float" style={{ animationDelay: '1s' }}>🚀</span>
-        <span className="absolute bottom-32 right-[25%] text-4xl opacity-35 animate-float" style={{ animationDelay: '0.3s' }}>💡</span>
-        <span className="absolute top-40 left-[60%] text-2xl opacity-30 animate-float" style={{ animationDelay: '0.8s' }}>✨</span>
+        <Star className="absolute top-16 left-[10%] w-10 h-10 opacity-40 animate-float text-yellow-400" />
+        <Target className="absolute top-24 right-[15%] w-8 h-8 opacity-30 animate-float text-red-400" style={{ animationDelay: '0.5s' }} />
+        <Rocket className="absolute bottom-20 left-[20%] w-8 h-8 opacity-25 animate-float text-blue-400" style={{ animationDelay: '1s' }} />
+        <Lightbulb className="absolute bottom-32 right-[25%] w-10 h-10 opacity-35 animate-float text-amber-400" style={{ animationDelay: '0.3s' }} />
+        <Sparkles className="absolute top-40 left-[60%] w-6 h-6 opacity-30 animate-float text-purple-400" style={{ animationDelay: '0.8s' }} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -46,8 +47,8 @@ function HeroSection({ stats }: { stats: HomeViewModel['stats'] }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
             </span>
-            <span className="text-sm font-medium text-primary">
-              🎮 อาจารย์ออนไลน์ตอนนี้ {stats.onlineNow} คน
+            <span className="text-sm font-medium text-primary flex items-center gap-1.5">
+              <Gamepad2 className="w-4 h-4" /> อาจารย์ออนไลน์ตอนนี้ {stats.onlineNow} คน
             </span>
           </div>
 
@@ -68,19 +69,19 @@ function HeroSection({ stats }: { stats: HomeViewModel['stats'] }) {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <Link href="/courses" className="btn-game px-8 py-3.5 text-lg text-white rounded-2xl inline-flex items-center gap-2 font-semibold hover:scale-105 transition-transform">
-              <span>📚</span> สำรวจคอร์สเรียน
+              <BookOpen className="w-5 h-5 flex-shrink-0" /> สำรวจคอร์สเรียน
             </Link>
             <Link href="/instructors" className="px-8 py-3.5 text-lg rounded-2xl inline-flex items-center gap-2 font-semibold bg-surface-elevated border border-border text-text-primary hover:border-primary/50 hover:scale-105 transition-all">
-              <span>👨‍🏫</span> ดูอาจารย์ทั้งหมด
+               <GraduationCap className="w-5 h-5 flex-shrink-0 text-primary" /> ดูอาจารย์ทั้งหมด
             </Link>
           </div>
 
           {/* Quick stats */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-10 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            <QuickStat icon="📚" value={`${stats.totalCourses}+`} label="คอร์สเรียน" />
-            <QuickStat icon="👨‍🏫" value={`${stats.totalInstructors}+`} label="อาจารย์" />
-            <QuickStat icon="👥" value={`${(stats.totalStudents / 1000).toFixed(1)}K+`} label="นักเรียน" />
-            <QuickStat icon="⭐" value={`${stats.averageRating}`} label="คะแนนเฉลี่ย" />
+            <QuickStat icon={<BookOpen className="w-5 h-5 text-blue-500" />} value={`${stats.totalCourses}+`} label="คอร์สเรียน" />
+            <QuickStat icon={<GraduationCap className="w-5 h-5 text-purple-500" />} value={`${stats.totalInstructors}+`} label="อาจารย์" />
+            <QuickStat icon={<Users className="w-5 h-5 text-green-500" />} value={`${(stats.totalStudents / 1000).toFixed(1)}K+`} label="นักเรียน" />
+            <QuickStat icon={<Star className="w-5 h-5 text-yellow-500" />} value={`${stats.averageRating}`} label="คะแนนเฉลี่ย" />
           </div>
         </div>
       </div>
@@ -88,10 +89,10 @@ function HeroSection({ stats }: { stats: HomeViewModel['stats'] }) {
   );
 }
 
-function QuickStat({ icon, value, label }: { icon: string; value: string; label: string }) {
+function QuickStat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className="text-lg">{icon}</span>
+      <span className="text-lg flex items-center justify-center">{icon}</span>
       <span className="font-bold text-text-primary">{value}</span>
       <span className="text-text-muted">{label}</span>
     </div>
@@ -105,12 +106,12 @@ function CategoriesSection({ categories }: { categories: HomeViewModel['categori
   return (
     <section className="py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeader title="หมวดหมู่ยอดนิยม" subtitle="เลือกสาขาที่สนใจแล้วเริ่มเรียนรู้ได้เลย" icon="🏷️" />
+        <SectionHeader title="หมวดหมู่ยอดนิยม" subtitle="เลือกสาขาที่สนใจแล้วเริ่มเรียนรู้ได้เลย" icon={<Tag className="w-8 h-8 text-primary" />} />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {categories.map((cat) => (
             <div key={cat.id} className="glass rounded-2xl p-4 text-center group hover:scale-105 transition-transform cursor-pointer">
-              <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">{cat.icon}</div>
+              <div className="text-4xl mb-2 group-hover:scale-110 transition-transform flex justify-center text-primary">{cat.icon || <BookOpen className="w-10 h-10" />}</div>
               <h3 className="text-sm font-semibold text-text-primary mb-1 truncate">{cat.name}</h3>
               <p className="text-xs text-text-muted">{cat.courseCount} คอร์ส</p>
             </div>
@@ -140,7 +141,7 @@ function FeaturedCoursesSection({ courses }: { courses: HomeViewModel['featuredC
         <SectionHeader
           title="คอร์สแนะนำ"
           subtitle="คอร์สยอดนิยมที่ได้รับคะแนนสูงสุดจากนักเรียน"
-          icon="🔥"
+          icon={<Flame className="w-8 h-8 text-orange-500" />}
           action={{ href: '/courses', label: 'ดูทั้งหมด' }}
         />
 
@@ -150,18 +151,18 @@ function FeaturedCoursesSection({ courses }: { courses: HomeViewModel['featuredC
               {/* Thumbnail */}
               <div className="relative h-40 overflow-hidden" style={{ background: `linear-gradient(135deg, hsl(${index * 60 + 200}, 70%, 60%), hsl(${index * 60 + 240}, 70%, 50%))` }}>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-5xl opacity-80 group-hover:scale-110 transition-transform">
-                    {course.tags[0] === 'React' ? '⚛️' :
-                     course.tags[0] === 'Python' ? '🐍' :
-                     course.tags[0] === 'UX' ? '🎨' :
-                     course.tags[0] === 'Flutter' ? '📱' :
-                     course.tags[0] === 'Cybersecurity' ? '🛡️' :
-                     course.tags[0] === 'Node.js' ? '🟢' : '📚'}
+                  <span className="text-white opacity-80 group-hover:scale-110 transition-transform">
+                    {course.tags[0] === 'React' ? <Sparkles className="w-12 h-12" /> :
+                     course.tags[0] === 'Python' ? <MonitorPlay className="w-12 h-12" /> :
+                     course.tags[0] === 'UX' ? <Target className="w-12 h-12" /> :
+                     course.tags[0] === 'Flutter' ? <MonitorPlay className="w-12 h-12" /> :
+                     course.tags[0] === 'Cybersecurity' ? <Shield className="w-12 h-12" /> :
+                     <BookOpen className="w-12 h-12" />}
                   </span>
                 </div>
                 {course.isLiveFeature && (
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/90 text-white text-[10px] font-bold shadow-lg backdrop-blur-sm">
-                    <span>📡 คลาสเรียนสด</span>
+                    <Video className="w-3 h-3" /> <span>คลาสเรียนสด</span>
                   </div>
                 )}
                 <div className="absolute top-3 right-3 px-2 py-1 rounded-md glass text-xs font-medium text-white">
@@ -175,13 +176,13 @@ function FeaturedCoursesSection({ courses }: { courses: HomeViewModel['featuredC
                 <p className="text-xs text-text-muted mb-3 line-clamp-2">{course.description}</p>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">👨‍🏫</div>
+                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary"><GraduationCap className="w-3 h-3" /></div>
                   <span className="text-xs text-text-secondary truncate">อาจารย์ {course.instructorCount} คน</span>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-border/50">
                   <div className="flex items-center gap-1">
-                    <span className="text-warning text-sm">⭐</span>
+                    <Star className="w-4 h-4 text-warning" fill="currentColor" />
                     <span className="text-sm font-bold text-text-primary">{course.rating}</span>
                     <span className="text-xs text-text-muted">({course.totalStudents.toLocaleString()})</span>
                   </div>
@@ -206,7 +207,7 @@ function InstructorsSection({ instructors }: { instructors: HomeViewModel['topIn
         <SectionHeader
           title="อาจารย์ผู้เชี่ยวชาญ"
           subtitle="เรียนรู้กับอาจารย์ระดับมืออาชีพจากสถาบันชั้นนำ"
-          icon="🌟"
+          icon={<Star className="w-8 h-8 text-yellow-400" />}
           action={{ href: '/instructors', label: 'ดูทั้งหมด' }}
         />
 
@@ -223,11 +224,11 @@ function InstructorsSection({ instructors }: { instructors: HomeViewModel['topIn
                 </div>
               )}
 
-              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-2xl">👨‍🏫</div>
+              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white"><GraduationCap className="w-8 h-8" /></div>
               <h3 className="text-sm font-bold text-text-primary mb-1 truncate">{instructor.name}</h3>
 
               <div className="flex items-center justify-center gap-1 mb-2">
-                <span className="text-warning text-sm">⭐</span>
+                <Star className="w-4 h-4 text-warning" fill="currentColor" />
                 <span className="text-sm font-bold text-text-primary">{instructor.rating}</span>
               </div>
 
@@ -240,8 +241,8 @@ function InstructorsSection({ instructors }: { instructors: HomeViewModel['topIn
               </div>
 
               <div className="flex items-center justify-center gap-3 text-xs text-text-muted">
-                <span>👥 {instructor.totalStudents.toLocaleString()}</span>
-                <span>📚 {instructor.totalCourses}</span>
+                <span className="flex items-center gap-1"><Users className="w-3 h-3 text-primary/70" /> {instructor.totalStudents.toLocaleString()}</span>
+                <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-primary/70" /> {instructor.totalCourses}</span>
               </div>
             </div>
           ))}
@@ -256,10 +257,10 @@ function InstructorsSection({ instructors }: { instructors: HomeViewModel['topIn
    ============================================ */
 function StatsSection({ stats }: { stats: HomeViewModel['stats'] }) {
   const STAT_ITEMS = [
-    { icon: '📚', value: stats.totalCourses, suffix: '+', label: 'คอร์สเรียน', color: 'from-blue-500 to-cyan-400' },
-    { icon: '👨‍🏫', value: stats.totalInstructors, suffix: '+', label: 'อาจารย์ผู้เชี่ยวชาญ', color: 'from-purple-500 to-pink-400' },
-    { icon: '👥', value: stats.totalStudents, suffix: '+', label: 'นักเรียนทั้งหมด', color: 'from-green-500 to-emerald-400' },
-    { icon: '⭐', value: stats.averageRating, suffix: '/5', label: 'คะแนนเฉลี่ย', color: 'from-yellow-500 to-orange-400' },
+    { icon: <BookOpen className="w-8 h-8 text-white" />, value: stats.totalCourses, suffix: '+', label: 'คอร์สเรียน', color: 'from-blue-500 to-cyan-400' },
+    { icon: <GraduationCap className="w-8 h-8 text-white" />, value: stats.totalInstructors, suffix: '+', label: 'อาจารย์ผู้เชี่ยวชาญ', color: 'from-purple-500 to-pink-400' },
+    { icon: <Users className="w-8 h-8 text-white" />, value: stats.totalStudents, suffix: '+', label: 'นักเรียนทั้งหมด', color: 'from-green-500 to-emerald-400' },
+    { icon: <Star className="w-8 h-8 text-white" fill="currentColor" />, value: stats.averageRating, suffix: '/5', label: 'คะแนนเฉลี่ย', color: 'from-yellow-500 to-orange-400' },
   ];
 
   return (
@@ -291,16 +292,16 @@ function StatsSection({ stats }: { stats: HomeViewModel['stats'] }) {
    ============================================ */
 function HowItWorksSection() {
   const STEPS = [
-    { icon: '🔍', title: 'เลือกคอร์ส', description: 'ค้นหาและเลือกคอร์สเรียนที่คุณสนใจจากหมวดหมู่ต่างๆ' },
-    { icon: '👨‍🏫', title: 'เลือกอาจารย์', description: 'ดูโปรไฟล์อาจารย์ ตรวจสอบคะแนนรีวิว และความเชี่ยวชาญ' },
-    { icon: '📅', title: 'จองเวลาเรียน', description: 'เลือกช่วงเวลาที่อาจารย์ว่างและทำการจองเรียนสด' },
-    { icon: '🎥', title: 'เรียนสดออนไลน์', description: 'เข้าร่วมคลาสเรียนสดผ่านวิดีโอ พร้อมโต้ตอบแบบเรียลไทม์' },
+    { icon: <Search className="w-10 h-10 text-primary" />, title: 'เลือกคอร์ส', description: 'ค้นหาและเลือกคอร์สเรียนที่คุณสนใจจากหมวดหมู่ต่างๆ' },
+    { icon: <User className="w-10 h-10 text-primary" />, title: 'เลือกอาจารย์', description: 'ดูโปรไฟล์อาจารย์ ตรวจสอบคะแนนรีวิว และความเชี่ยวชาญ' },
+    { icon: <Calendar className="w-10 h-10 text-primary" />, title: 'จองเวลาเรียน', description: 'เลือกช่วงเวลาที่อาจารย์ว่างและทำการจองเรียนสด' },
+    { icon: <Video className="w-10 h-10 text-primary" />, title: 'เรียนสดออนไลน์', description: 'เข้าร่วมคลาสเรียนสดผ่านวิดีโอ พร้อมโต้ตอบแบบเรียลไทม์' },
   ];
 
   return (
     <section className="py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeader title="เริ่มต้นใช้งานง่ายๆ" subtitle="เพียง 4 ขั้นตอน ก็สามารถเริ่มเรียนกับอาจารย์ตัวจริงได้" icon="🎯" />
+        <SectionHeader title="เริ่มต้นใช้งานง่ายๆ" subtitle="เพียง 4 ขั้นตอน ก็สามารถเริ่มเรียนกับอาจารย์ตัวจริงได้" icon={<Target className="w-8 h-8 text-primary" />} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {STEPS.map((step, index) => (
@@ -308,7 +309,7 @@ function HowItWorksSection() {
               <div className="absolute -top-3 -left-2 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-bold shadow-md">
                 {index + 1}
               </div>
-              <div className="text-4xl mb-4 mt-2">{step.icon}</div>
+              <div className="flex items-center justify-center w-16 h-16 mb-4 mt-2 rounded-2xl bg-primary/10">{step.icon}</div>
               <h3 className="text-base font-bold text-text-primary mb-2">{step.title}</h3>
               <p className="text-sm text-text-secondary leading-relaxed">{step.description}</p>
               {index < STEPS.length - 1 && (
@@ -336,7 +337,7 @@ function CTASection() {
           </div>
 
           <div className="relative z-10">
-            <span className="text-5xl inline-block animate-float">🚀</span>
+            <div className="flex justify-center animate-float text-primary mb-2"><Rocket className="w-16 h-16" /></div>
 
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-text-primary mt-4 mb-4">
               พร้อมเริ่มเรียนรู้แล้วหรือยัง?
@@ -347,10 +348,10 @@ function CTASection() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/courses" className="btn-game px-8 py-3.5 text-lg text-white rounded-2xl inline-flex items-center gap-2 font-semibold hover:scale-105 transition-transform">
-                <span>🎮</span> เริ่มเรียนเลย!
+                <Gamepad2 className="w-5 h-5 flex-shrink-0" /> เริ่มเรียนเลย!
               </Link>
               <Link href="/schedule" className="px-8 py-3.5 text-lg rounded-2xl inline-flex items-center gap-2 font-semibold text-text-secondary hover:text-text-primary hover:bg-surface transition-all">
-                <span>📅</span> ดูตารางเรียน
+                <Calendar className="w-5 h-5 flex-shrink-0 text-primary" /> ดูตารางเรียน
               </Link>
             </div>
           </div>
@@ -366,14 +367,14 @@ function CTASection() {
 function SectionHeader({ title, subtitle, icon, action }: {
   title: string;
   subtitle: string;
-  icon: string;
+  icon: React.ReactNode;
   action?: { href: string; label: string };
 }) {
   return (
     <div className="flex items-end justify-between mb-8 sm:mb-10">
       <div>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">{icon}</span>
+          <span className="flex items-center justify-center">{icon}</span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-text-primary">{title}</h2>
         </div>
         <p className="text-text-secondary text-sm sm:text-base">{subtitle}</p>
