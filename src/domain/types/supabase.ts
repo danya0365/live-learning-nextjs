@@ -1600,6 +1600,16 @@ export type Database = {
         Returns: Database["public"]["Enums"]["profile_role"]
       }
       get_auth_user_by_id: { Args: { p_id: string }; Returns: Json }
+      get_my_sessions: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          ip: string
+          updated_at: string
+          user_agent: string
+        }[]
+      }
       get_paginated_users: {
         Args: { p_limit?: number; p_page?: number }
         Returns: Json

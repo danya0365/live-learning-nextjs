@@ -55,7 +55,7 @@ export function Footer() {
                 พร้อมระบบจองเวลาเรียนอัจฉริยะ 🚀
               </p>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 hidden">
                 {SOCIAL_LINKS.map((social) => (
                   <a
                     key={social.label}

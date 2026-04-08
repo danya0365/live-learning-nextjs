@@ -45,6 +45,14 @@ export interface AuthSession {
   expiresAt: number;
 }
 
+export interface ActiveSession {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  userAgent: string;
+  ip: string;
+}
+
 export interface AuthResult {
   success: boolean;
   user?: AuthUser;
@@ -120,6 +128,8 @@ export interface IAuthRepository {
   resendEmailVerification(email: string): Promise<AuthResult>;
   verifyEmail(token: string): Promise<AuthResult>;
   refreshSession(): Promise<AuthSession | null>;
+  getActiveSessions(): Promise<ActiveSession[]>;
+  revokeOtherSessions(): Promise<boolean>;
   
   /**
    * Subscribe to auth state changes

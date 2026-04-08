@@ -106,7 +106,10 @@ export function SettingsView() {
           {state.activeTab === 'security' && state.user && (
             <SecurityForm
               user={state.user}
+              activeSessions={state.activeSessions}
+              loadingSessions={state.loadingSessions}
               onUpdatePassword={actions.updatePassword}
+              onRevokeOtherSessions={actions.revokeOtherSessions}
             />
           )}
 
