@@ -125,6 +125,25 @@ live-learning-nextjs/
 > แต่จริงๆ หลายคนแค่มีเรื่องอยากถาม ไม่รู้ว่าอาจารย์คนไหนว่าง
 > ฟีเจอร์นี้กลับทิศ: **นักเรียนถาม → อาจารย์มาตอบ**
 
+### 🌟 Communities & Extra Features
+| Feature | Description |
+|---------|-------------|
+| Blog & Resources | ระบบบทความและแหล่งเรียนรู้ตามสายงานต่างๆ |
+| Quiz & QA | แบบทดสอบประเมินผล และกระดานถาม-ตอบแลกเปลี่ยนความรู้ |
+| Study Room & Shorts | ห้องอ่านหนังสือออนไลน์ และระบบวิดีโอ Shorts |
+| Achievements & Wallet | ระบบเก็บสะสมความสำเร็จ และกระเป๋าเงินสำหรับชำระค่าบริการ |
+| Support & Feedback | ระบบช่วยเหลือ (FAQ, Contact) และส่งข้อเสนอแนะ |
+
+---
+
+## ✅ Pre-Production Checklist (เตรียมพร้อมก่อนขึ้น Prod)
+
+- [ ] **Environment Variables:** ตรวจสอบ API Keys ต่างๆ (Stripe, Agora, Supabase) ให้เป็นโหมด Live/Production
+- [ ] **Database Migrations:** อัปเดต Database Schema ล่าสุดและสั่งรันบน Supabase Cloud
+- [ ] **RLS Policies:** ทบทวนข้อกำหนด Row Level Security สำหรับทุกตาราง เพื่อความปลอดภัยของข้อมูลแต่ละ Role
+- [ ] **End-to-End Testing:** ทดสอบ Flow การใช้งานหลัก (จอง -> ชำระเงิน -> เข้าเรียน -> จบการสอน) ครบวงจร
+- [ ] **New Features Verification:** ทดสอบความถูกต้องของโมดูลใหม่เอี่ยม เช่น Consultation Requests และระบบ Wallet
+
 ---
 
 ## 🗃️ Database Schema
