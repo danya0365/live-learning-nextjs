@@ -8,6 +8,7 @@ import { cn } from '@/src/presentation/utils/cn';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useHeader } from './useHeader';
+import { ClipboardList, Calendar, Wallet, Settings, LogOut, MoreHorizontal } from 'lucide-react';
 
 /* ── Component ─────────────────────────────── */
 export function Header() {
@@ -125,7 +126,7 @@ export function Header() {
                 )}
                 <div className="relative">
                   <span className="relative z-10 text-base group-hover/link:scale-110 transition-transform duration-200">
-                    {link.icon}
+                    <link.icon className="w-5 h-5 flex-shrink-0" />
                   </span>
                   {link.href === '/admin/chat' && <AdminChatBadge />}
                 </div>
@@ -154,7 +155,7 @@ export function Header() {
                       style={{ background: 'var(--gradient-primary)' }}
                     />
                   )}
-                  <span className="relative z-10">⋯</span>
+                  <MoreHorizontal className="w-4 h-4 relative z-10 flex-shrink-0" />
                   <span className="relative z-10">เพิ่มเติม</span>
                   <svg
                     className={`relative z-10 w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`}
@@ -186,8 +187,8 @@ export function Header() {
                             : "text-text-secondary hover:bg-surface/80 hover:text-text-primary"
                         )}
                       >
-                        <span className="text-xl mt-0.5 group-hover/more:scale-110 transition-transform duration-200">
-                          {link.icon}
+                        <span className="text-xl mt-0.5 group-hover/more:scale-110 transition-transform duration-200 text-primary">
+                          <link.icon className="w-5 h-5 flex-shrink-0" />
                         </span>
                         <div>
                           <p className="text-sm font-semibold">{link.label}</p>
@@ -337,21 +338,21 @@ export function Header() {
                   <div className="p-2">
                     {role === 'student' && (
                       <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                        <span>📋</span> การจองของฉัน
+                        <ClipboardList className="w-4 h-4 flex-shrink-0" /> การจองของฉัน
                       </Link>
                     )}
                     {role === 'instructor' && (
                       <Link href="/schedule" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                        <span>📅</span> ตารางสอนของฉัน
+                        <Calendar className="w-4 h-4 flex-shrink-0" /> ตารางสอนของฉัน
                       </Link>
                     )}
                     {(role === 'student' || role === 'instructor') && (
                       <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                        <span>💳</span> กระเป๋าเงิน
+                        <Wallet className="w-4 h-4 flex-shrink-0" /> กระเป๋าเงิน
                       </Link>
                     )}
                     <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-surface/80 hover:text-text-primary transition-all duration-150">
-                      <span>⚙️</span> ตั้งค่า
+                      <Settings className="w-4 h-4 flex-shrink-0" /> ตั้งค่า
                     </Link>
                   </div>
 
@@ -362,7 +363,7 @@ export function Header() {
                         "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error/10 transition-all duration-150 text-left"
                       )}
                     >
-                      <span>🚪</span> ออกจากระบบ
+                      <LogOut className="w-4 h-4 flex-shrink-0" /> ออกจากระบบ
                     </button>
                   </div>
                 </div>
@@ -443,7 +444,7 @@ export function Header() {
                   : "text-text-primary hover:bg-surface/60"
               )}
             >
-              <span className="text-lg">{link.icon}</span>
+              <span className="text-primary"><link.icon className="w-5 h-5 flex-shrink-0" /></span>
               <span className="text-sm">{link.label}</span>
               {isActive(link.href) && (
                 <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
@@ -469,7 +470,7 @@ export function Header() {
                       : "text-text-primary hover:bg-surface/60"
                   )}
                 >
-                  <span className="text-lg">{link.icon}</span>
+                  <span className="text-primary"><link.icon className="w-5 h-5 flex-shrink-0" /></span>
                   <span className="text-sm">{link.label}</span>
                   {isActive(link.href) && (
                     <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
@@ -577,21 +578,21 @@ export function Header() {
 
               {role === 'student' && (
                 <Link href="/my-bookings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
-                  <span className="text-lg">📋</span><span className="text-sm">การจองของฉัน</span>
+                  <ClipboardList className="w-5 h-5 flex-shrink-0 text-text-secondary" /><span className="text-sm">การจองของฉัน</span>
                 </Link>
               )}
               {role === 'instructor' && (
                 <Link href="/schedule" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
-                  <span className="text-lg">📅</span><span className="text-sm">ตารางสอนของฉัน</span>
+                  <Calendar className="w-5 h-5 flex-shrink-0 text-text-secondary" /><span className="text-sm">ตารางสอนของฉัน</span>
                 </Link>
               )}
               {(role === 'student' || role === 'instructor') && (
                 <Link href="/wallet" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
-                  <span className="text-lg">💳</span><span className="text-sm">กระเป๋าเงิน (Wallet)</span>
+                  <Wallet className="w-5 h-5 flex-shrink-0 text-text-secondary" /><span className="text-sm">กระเป๋าเงิน (Wallet)</span>
                 </Link>
               )}
               <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-primary hover:bg-surface/60 font-medium transition-all duration-150">
-                <span className="text-lg">⚙️</span><span className="text-sm">ตั้งค่า</span>
+                <Settings className="w-5 h-5 flex-shrink-0 text-text-secondary" /><span className="text-sm">ตั้งค่า</span>
               </Link>
               <button
                 onClick={handleLogout}
@@ -599,7 +600,7 @@ export function Header() {
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 font-medium transition-all duration-150"
                 )}
               >
-                <span className="text-lg">🚪</span><span className="text-sm">ออกจากระบบ</span>
+                <LogOut className="w-5 h-5 flex-shrink-0 text-error" /><span className="text-sm">ออกจากระบบ</span>
               </button>
             </>
           ) : (
