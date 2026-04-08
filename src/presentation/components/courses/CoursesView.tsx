@@ -10,6 +10,7 @@ import { CourseSortOption, CoursesViewModel } from '@/src/presentation/presenter
 import { useCoursesPresenter } from '@/src/presentation/presenters/courses/useCoursesPresenter';
 import Link from 'next/link';
 import CoursesSkeleton from './CoursesSkeleton';
+import { BookOpen, Search, Flame, Star, ArrowUpNarrowWide, ArrowDownWideNarrow, Sparkles, AlertTriangle, MonitorPlay, Target, Shield, GraduationCap, Video, Users, Clock } from 'lucide-react';
 
 interface CoursesViewProps {
   initialViewModel?: CoursesViewModel;
@@ -27,7 +28,7 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
+          <AlertTriangle className="w-16 h-16 text-error mx-auto mb-4" />
           <p className="text-error font-medium mb-2">เกิดข้อผิดพลาด</p>
           <p className="text-text-secondary mb-4">{state.error}</p>
           <button onClick={() => actions.loadData()} className="btn-game px-6 py-2 text-white rounded-xl">ลองใหม่</button>
@@ -42,8 +43,9 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">
-          📚 คอร์สเรียนทั้งหมด
+        <h1 className="flex items-center gap-3 text-3xl sm:text-4xl font-extrabold text-text-primary mb-2">
+          <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+          คอร์สเรียนทั้งหมด
         </h1>
         <p className="text-text-secondary">
           สำรวจคอร์สเรียนสดออนไลน์ {vm.stats.totalItems} คอร์ส จากหมวดหมู่ต่างๆ
@@ -54,7 +56,7 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
       <div className="glass rounded-2xl p-4 sm:p-6 mb-8 flex flex-col gap-4">
         {/* Search */}
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
           <input
             type="text"
             placeholder="ค้นหาคอร์ส เช่น React, Python, UX..."
@@ -87,7 +89,9 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
                     : 'bg-surface border border-border text-text-secondary hover:border-primary/50'
                 }`}
               >
-                {cat.icon} {cat.name}
+                <span className="flex items-center gap-1.5 justify-center">
+                  <span className="text-primary">{cat.icon || <BookOpen className="w-3.5 h-3.5" />}</span> {cat.name}
+                </span>
               </button>
             ))}
           </div>
@@ -114,11 +118,11 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
         <div className="flex items-center gap-2">
           <span className="text-xs text-text-muted">เรียงตาม:</span>
           {([
-            { value: 'popular' as CourseSortOption, label: '🔥 ยอดนิยม' },
-            { value: 'rating' as CourseSortOption, label: '⭐ คะแนน' },
-            { value: 'price-asc' as CourseSortOption, label: '💰 ราคา ↑' },
-            { value: 'price-desc' as CourseSortOption, label: '💰 ราคา ↓' },
-            { value: 'newest' as CourseSortOption, label: '🆕 ใหม่ล่าสุด' },
+            { value: 'popular' as CourseSortOption, label: <span className="flex items-center gap-1"><Flame className="w-3.5 h-3.5" /> ยอดนิยม</span> },
+            { value: 'rating' as CourseSortOption, label: <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5" /> คะแนน</span> },
+            { value: 'price-asc' as CourseSortOption, label: <span className="flex items-center gap-1"><ArrowUpNarrowWide className="w-3.5 h-3.5" /> ราคา ↑</span> },
+            { value: 'price-desc' as CourseSortOption, label: <span className="flex items-center gap-1"><ArrowDownWideNarrow className="w-3.5 h-3.5" /> ราคา ↓</span> },
+            { value: 'newest' as CourseSortOption, label: <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5" /> ใหม่ล่าสุด</span> },
           ]).map((opt) => (
             <button
               key={opt.value}
@@ -145,7 +149,7 @@ export function CoursesView({ initialViewModel }: CoursesViewProps) {
       {/* Course Grid */}
       {vm.courses.length === 0 ? (
         <div className="text-center py-20">
-          <div className="text-6xl mb-4">🔍</div>
+          <Search className="w-16 h-16 mx-auto text-text-muted mb-4 opacity-50" />
           <p className="text-text-secondary text-lg mb-2">ไม่พบคอร์สที่ค้นหา</p>
           <p className="text-text-muted text-sm">ลองเปลี่ยนตัวกรองหรือคำค้นหาใหม่</p>
         </div>
@@ -171,8 +175,15 @@ function CourseCard({ course, index }: { course: CoursesViewModel['courses'][0];
   };
 
   const tagIcon = (tag: string) => {
-    const icons: Record<string, string> = { React: '⚛️', Python: '🐍', UX: '🎨', Flutter: '📱', Cybersecurity: '🛡️', 'Node.js': '🟢' };
-    return icons[tag] || '📚';
+    switch (tag) {
+      case 'React': return <Sparkles className="w-16 h-16" />;
+      case 'Python': return <MonitorPlay className="w-16 h-16" />;
+      case 'UX': return <Target className="w-16 h-16" />;
+      case 'Flutter': return <MonitorPlay className="w-16 h-16" />;
+      case 'Cybersecurity': return <Shield className="w-16 h-16" />;
+      case 'Node.js': return <MonitorPlay className="w-16 h-16" />;
+      default: return <BookOpen className="w-16 h-16" />;
+    }
   };
 
   return (
@@ -183,13 +194,13 @@ function CourseCard({ course, index }: { course: CoursesViewModel['courses'][0];
         style={{ background: `linear-gradient(135deg, hsl(${index * 45 + 200}, 70%, 60%), hsl(${index * 45 + 240}, 70%, 45%))` }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-6xl opacity-80 group-hover:scale-110 transition-transform">
+          <span className="text-white opacity-80 group-hover:scale-110 transition-transform">
             {tagIcon(course.tags[0])}
           </span>
         </div>
         {course.isLiveFeature && (
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/90 text-white text-[10px] font-bold shadow-lg backdrop-blur-sm">
-            <span>📡 คลาสเรียนสด</span>
+            <Video className="w-3 h-3" /> <span>คลาสเรียนสด</span>
           </div>
         )}
         <div className="absolute top-3 right-3 px-2 py-1 rounded-md glass text-xs font-medium text-white">
@@ -210,18 +221,18 @@ function CourseCard({ course, index }: { course: CoursesViewModel['courses'][0];
         <p className="text-xs text-text-muted mb-4 line-clamp-2">{course.description}</p>
 
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-sm">👨‍🏫</div>
+          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-sm text-primary"><GraduationCap className="w-4 h-4" /></div>
           <span className="text-sm text-text-secondary truncate">อาจารย์ {course.instructorCount} คน</span>
         </div>
 
         <div className="flex items-center gap-4 text-xs text-text-muted mb-4">
-          <span>⏱️ {Math.round(course.durationMinutes / 60)} ชม.</span>
-          <span>👥 {course.totalStudents.toLocaleString()} คน</span>
+          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {Math.round(course.durationMinutes / 60)} ชม.</span>
+          <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {course.totalStudents.toLocaleString()} คน</span>
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-border/50">
           <div className="flex items-center gap-1">
-            <span className="text-warning">⭐</span>
+            <Star className="w-4 h-4 text-warning" fill="currentColor" />
             <span className="text-sm font-bold text-text-primary">{course.rating}</span>
           </div>
           <span className="text-lg font-extrabold text-primary">฿{course.price.toLocaleString()}</span>
