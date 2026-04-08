@@ -1,4 +1,5 @@
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { verifyAdmin } from "@/src/infrastructure/security/AdminGuard";
 import { NextResponse } from "next/server";
 
@@ -10,7 +11,7 @@ export async function GET() {
   if (!auth.authorized) return auth.response;
 
   try {
-    const chatRepo = new SupabaseChatRepository();
+    const chatRepo = new SupabaseChatRepository(createAdminSupabaseClient());
     const count = await chatRepo.getUnreadSessionCount();
 
     return NextResponse.json({ count });

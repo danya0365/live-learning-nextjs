@@ -1,4 +1,5 @@
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { LineMessagingService } from "@/src/infrastructure/services/LineMessagingService";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Message and sessionId are required" }, { status: 400 });
     }
 
-    const chatRepo = new SupabaseChatRepository();
+    const chatRepo = new SupabaseChatRepository(createAdminSupabaseClient());
     const lineService = new LineMessagingService();
 
     // 1. Ensure session exists

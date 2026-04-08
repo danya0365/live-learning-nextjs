@@ -1,6 +1,6 @@
 import { AdminChatSummary, ChatMessageData, ChatSessionData, IChatRepository } from "@/src/application/repositories/IChatRepository";
 import { Database } from "@/src/domain/types/supabase";
-import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from "uuid";
 
 type ChatSessionRow = Database["public"]["Tables"]["chat_sessions"]["Row"];
@@ -9,7 +9,7 @@ type ChatMessageRow = Database["public"]["Tables"]["chat_messages"]["Row"];
 type AdminChatSummaryRow = Database["public"]["Views"]["admin_chat_summary"]["Row"];
 
 export class SupabaseChatRepository implements IChatRepository {
-  private supabase = createAdminSupabaseClient();
+  constructor(private readonly supabase: SupabaseClient<Database>) {}
 
   async getSession(sessionId: string): Promise<ChatSessionData | null> {
     const { data, error } = await this.supabase

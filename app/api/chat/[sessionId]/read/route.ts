@@ -1,4 +1,5 @@
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -8,7 +9,7 @@ export async function POST(
   try {
     const resolvedParams = await params;
     const sessionId = resolvedParams.sessionId;
-    const chatRepo = new SupabaseChatRepository();
+    const chatRepo = new SupabaseChatRepository(createAdminSupabaseClient());
 
     // Mark assistant/admin messages as read
     await chatRepo.markMessagesAsReadForUser(sessionId);

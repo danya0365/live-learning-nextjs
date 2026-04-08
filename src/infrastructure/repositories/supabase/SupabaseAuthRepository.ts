@@ -5,6 +5,7 @@
  */
 
 import {
+  ActiveSession,
   AuthProfile,
   AuthResult,
   AuthSession,
@@ -346,6 +347,31 @@ export class SupabaseAuthRepository implements IAuthRepository {
     });
 
     return () => data.subscription.unsubscribe();
+  }
+
+  async getActiveSessions(): Promise<ActiveSession[]> {
+    const { data, error } = await this.supabase.rpc('get_my_sessions');
+    if (error) {
+      console.error('Failed to get active sessions from Supabase RPC:', error);
+      return [];
+    }
+
+    return (data as any[]).map(row => ({
+      id: row.id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      userAgent: row.user_agent,
+      ip: row.ip,
+    }));
+  }
+
+  async revokeOtherSessions(): Promise<boolean> {
+    const { error } = await this.supabase.auth.signOut({ scope: 'others' });
+    if (error) {
+      console.error('Failed to revoke other sessions:', error);
+      return false;
+    }
+    return true;
   }
 
   // ============================================================

@@ -1,7 +1,7 @@
-
 import {
     ISettingsRepository
 } from '@/src/application/repositories/ISettingsRepository';
+import { IAuthRepository } from '@/src/application/repositories/IAuthRepository';
 
 export interface SettingsViewModel {
   language: string;
@@ -16,7 +16,10 @@ export interface SettingsViewModel {
 }
 
 export class SettingsPresenter {
-  constructor(private readonly repo: ISettingsRepository) {}
+  constructor(
+    private readonly repo: ISettingsRepository,
+    private readonly authRepo: IAuthRepository
+  ) {}
 
   async getViewModel(userId: string): Promise<SettingsViewModel> {
     const prefs = await this.repo.getPreferences(userId);
@@ -52,5 +55,13 @@ export class SettingsPresenter {
 
   async updatePreferences(data: import('@/src/application/repositories/ISettingsRepository').UserPreferences & { userId: string }) {
     return this.repo.updatePreferences(data);
+  }
+
+  async getActiveSessions() {
+    return this.authRepo.getActiveSessions();
+  }
+
+  async revokeOtherSessions() {
+    return this.authRepo.revokeOtherSessions();
   }
 }

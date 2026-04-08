@@ -1,16 +1,52 @@
 import { AuthUser } from '@/src/stores/authStore';
+import { LogOut, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { UAParser } from 'ua-parser-js';
+import { ActiveSession } from '@/src/application/repositories/IAuthRepository';
 
 interface SecurityFormProps {
   user: AuthUser;
+  activeSessions: ActiveSession[];
+  loadingSessions: boolean;
   onUpdatePassword: (current: string, next: string, confirm: string) => Promise<boolean>;
+  onRevokeOtherSessions: () => Promise<boolean>;
 }
 
-export function SecurityForm({ user, onUpdatePassword }: SecurityFormProps) {
+export function SecurityForm({ 
+  user, 
+  activeSessions, 
+  loadingSessions, 
+  onUpdatePassword, 
+  onRevokeOtherSessions 
+}: SecurityFormProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+
+  const handleRevokeOtherSessions = async () => {
+    if (!window.confirm('คุณต้องการออกจากระบบจากอุปกรณ์อื่นทั้งหมดใช่หรือไม่?')) return;
+    
+    setRevoking(true);
+    await onRevokeOtherSessions();
+    setRevoking(false);
+  };
+
+  const getDeviceDetails = (uaString: string) => {
+    const parser = new UAParser(uaString);
+    const result = parser.getResult();
+    
+    const browser = result.browser.name ? `${result.browser.name}` : 'Unknown Browser';
+    const os = result.os.name ? `${result.os.name}` : 'Unknown OS';
+    const deviceType = result.device.type || 'desktop';
+    
+    let Icon = Monitor;
+    if (deviceType === 'mobile') Icon = Smartphone;
+    else if (deviceType === 'tablet') Icon = Tablet;
+    
+    return { name: `${browser} • ${os}`, Icon };
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -75,18 +111,53 @@ export function SecurityForm({ user, onUpdatePassword }: SecurityFormProps) {
 
       {/* Sessions section */}
       <div className="mt-8 pt-6 border-t border-border/30">
-        <h3 className="text-sm font-bold text-text-primary mb-4">🖥️ เซสชันที่เข้าสู่ระบบ</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-text-primary">🖥️ เซสชันที่เข้าสู่ระบบ</h3>
+          {activeSessions.length > 1 && (
+            <button 
+              onClick={handleRevokeOtherSessions}
+              disabled={revoking}
+              className="text-xs text-error hover:text-error/80 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              <LogOut className="w-3.5 h-3.5" /> 
+              {revoking ? 'กำลังออกจากระบบ...' : 'ออกจากระบบอุปกรณ์อื่น'}
+            </button>
+          )}
+        </div>
+        
         <div className="space-y-3">
-          <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface/50 border border-border/30">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">💻</span>
-              <div>
-                <p className="text-sm font-medium text-text-primary">อุปกรณ์ปัจจุบัน</p>
-                <p className="text-[10px] text-text-muted">Chrome • macOS • เข้าใช้ล่าสุด: เมื่อสักครู่</p>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-medium">ใช้งานอยู่</span>
-          </div>
+          {loadingSessions ? (
+            <div className="text-center py-4 text-xs text-text-muted">กำลังโหลดข้อมูลเซสชัน...</div>
+          ) : activeSessions.length > 0 ? (
+            activeSessions.map((session, index) => {
+              const { name, Icon } = getDeviceDetails(session.userAgent);
+              const isCurrent = index === 0; 
+              
+              return (
+                <div key={session.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${isCurrent ? 'bg-surface/50 border-primary/30' : 'bg-surface border-border/30'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-surface-elevated text-text-muted'}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-text-primary">
+                        {isCurrent ? 'อุปกรณ์ปัจจุบัน' : 'อุปกรณ์อื่น'} 
+                        {!isCurrent && session.ip && <span className="text-xs text-text-muted ml-1">({session.ip})</span>}
+                      </p>
+                      <p className="text-[10px] text-text-muted">
+                        {name} • เข้าใช้ล่าสุด: {new Date(session.updatedAt || session.createdAt).toLocaleString('th-TH')}
+                      </p>
+                    </div>
+                  </div>
+                  {isCurrent && (
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-medium">ใช้งานอยู่</span>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-4 text-xs text-text-muted">ไม่มีข้อมูลเซสชัน</div>
+          )}
         </div>
       </div>
     </div>

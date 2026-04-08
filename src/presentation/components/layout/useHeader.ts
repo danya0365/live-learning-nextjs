@@ -4,13 +4,14 @@ import { useClickOutside } from '@/src/presentation/hooks/useClickOutside';
 import { useAuthStore, UserRole } from '@/src/stores/authStore';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { Home, Plus, BookOpen, MessageCircle, Brain, Calendar, ClipboardList, User, Presentation, Users, LucideIcon } from 'lucide-react';
 
 /* ── Constants & Types ─────────────────────── */
 
 export interface NavLink {
   href: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
 }
 
 export interface MoreLink extends NavLink {
@@ -19,57 +20,52 @@ export interface MoreLink extends NavLink {
 
 const NAV_BY_ROLE: Record<UserRole | 'guest', NavLink[]> = {
   student: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/book', label: 'จองคลาส', icon: '➕' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/consultations', label: 'ปรึกษา', icon: '💬' },
-    { href: '/quizzes', label: 'ประลอง', icon: '🧠' },
+    { href: '/', label: 'หน้าหลัก', icon: Home },
+    { href: '/book', label: 'จองคลาส', icon: Plus },
+    { href: '/courses', label: 'คอร์สเรียน', icon: BookOpen },
+    { href: '/consultations', label: 'ปรึกษา', icon: MessageCircle },
+    { href: '/quizzes', label: 'ประลอง', icon: Brain },
   ],
   instructor: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/schedule', label: 'ตารางสอน', icon: '📅' },
-    { href: '/consultations/board', label: 'บอร์ดปรึกษา', icon: '📋' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
+    { href: '/', label: 'หน้าหลัก', icon: Home },
+    { href: '/schedule', label: 'ตารางสอน', icon: Calendar },
+    { href: '/consultations/board', label: 'บอร์ดปรึกษา', icon: ClipboardList },
+    { href: '/courses', label: 'คอร์สเรียน', icon: BookOpen },
+    { href: '/profile', label: 'โปรไฟล์', icon: User },
   ],
   admin: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/admin/chat', label: 'แชท', icon: '💬' },
-    { href: '/schedule', label: 'ตาราง', icon: '📅' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/profile', label: 'โปรไฟล์', icon: '👤' },
+    { href: '/', label: 'หน้าหลัก', icon: Home },
+    { href: '/admin/chat', label: 'แชท', icon: MessageCircle },
+    { href: '/schedule', label: 'ตาราง', icon: Calendar },
+    { href: '/courses', label: 'คอร์สเรียน', icon: BookOpen },
+    { href: '/profile', label: 'โปรไฟล์', icon: User },
   ],
   guest: [
-    { href: '/', label: 'หน้าหลัก', icon: '🏠' },
-    { href: '/schedule', label: 'ตารางเรียน', icon: '📅' },
-    { href: '/courses', label: 'คอร์สเรียน', icon: '📚' },
-    { href: '/quizzes', label: 'ประลอง', icon: '🧠' },
+    { href: '/', label: 'หน้าหลัก', icon: Home },
+    { href: '/schedule', label: 'ตารางเรียน', icon: Calendar },
+    { href: '/courses', label: 'คอร์สเรียน', icon: BookOpen },
+    { href: '/quizzes', label: 'ประลอง', icon: Brain },
   ],
 };
 
 const MORE_BY_ROLE: Record<UserRole | 'guest', MoreLink[]> = {
   student: [
-    { href: '/profile', label: 'โปรไฟล์', icon: '👤', desc: 'ข้อมูลส่วนตัวบัญชีของฉัน' },
-    { href: '/my-bookings', label: 'การจองของฉัน', icon: '📋', desc: 'ดูสถานะการจองทั้งหมด' },
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
-    // { href: '/study-room', label: 'ห้องอ่านหนังสือ', icon: '☕', desc: 'ห้องสำหรับนั่งโฟกัสร่วมกัน' },
-    // { href: '/shorts', label: 'คลิปสั้น', icon: '📱', desc: 'เรียนรู้เทคนิคผ่านวิดีโอสั้น' },
-    
+    { href: '/profile', label: 'โปรไฟล์', icon: User, desc: 'ข้อมูลส่วนตัวบัญชีของฉัน' },
+    { href: '/my-bookings', label: 'การจองของฉัน', icon: ClipboardList, desc: 'ดูสถานะการจองทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: Presentation, desc: 'คลาสที่กำลังสอนอยู่' },
   ],
   instructor: [
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอนอยู่' },
-    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: Presentation, desc: 'คลาสที่กำลังสอนอยู่' },
+    { href: '/instructors', label: 'อาจารย์', icon: Users, desc: 'ดูอาจารย์ทั้งหมด' },
   ],
   admin: [
-    { href: '/instructors', label: 'อาจารย์', icon: '📚', desc: 'ดูอาจารย์ทั้งหมด' },
-    { href: '/schedule', label: 'ตาราง', icon: '📅', desc: 'ดูตารางทั้งหมด' },
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
+    { href: '/instructors', label: 'อาจารย์', icon: Users, desc: 'ดูอาจารย์ทั้งหมด' },
+    { href: '/schedule', label: 'ตาราง', icon: Calendar, desc: 'ดูตารางทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: Presentation, desc: 'คลาสที่กำลังสอน' },
   ],
   guest: [
-    { href: '/instructors', label: 'อาจารย์', icon: '👨‍🏫', desc: 'ดูอาจารย์ทั้งหมด' },
-    { href: '/live', label: 'LIVE', icon: '🔴', desc: 'คลาสที่กำลังสอน' },
-    // { href: '/study-room', label: 'ห้องอ่านหนังสือ', icon: '☕', desc: 'รับสมาธิกับเพื่อนร่วมห้อง' },
-    // { href: '/shorts', label: 'คลิปสั้น', icon: '📱', desc: 'เทคนิคไวๆ สายรีบเรียน' },
+    { href: '/instructors', label: 'อาจารย์', icon: Users, desc: 'ดูอาจารย์ทั้งหมด' },
+    { href: '/live', label: 'LIVE', icon: Presentation, desc: 'คลาสที่กำลังสอน' },
   ],
 };
 

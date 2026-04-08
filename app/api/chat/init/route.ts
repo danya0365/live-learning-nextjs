@@ -1,4 +1,5 @@
 import { SupabaseChatRepository } from "@/src/infrastructure/repositories/supabase/SupabaseChatRepository";
+import { createAdminSupabaseClient } from "@/src/infrastructure/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name and phone are required" }, { status: 400 });
     }
 
-    const chatRepo = new SupabaseChatRepository();
+    const chatRepo = new SupabaseChatRepository(createAdminSupabaseClient());
     
     // 1. Get or Create session
     const session = await chatRepo.getOrCreateSession(name, phone);

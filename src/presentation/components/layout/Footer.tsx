@@ -4,8 +4,8 @@
 
 'use client';
 
-import Link from 'next/link';
 import { useAppVersion } from '@/src/presentation/hooks/useAppVersion';
+import Link from 'next/link';
 
 const FOOTER_LINKS = {
   เรียนรู้: [
@@ -16,15 +16,9 @@ const FOOTER_LINKS = {
   ],
   ช่วยเหลือ: [
     { href: '/faq', label: 'คำถามที่พบบ่อย' },
-    { href: '/support', label: 'ศูนย์ช่วยเหลือ' },
+    { href: '/contact', label: 'ติดต่อเรา' },
     { href: '/terms', label: 'ข้อกำหนดการใช้งาน' },
     { href: '/privacy', label: 'นโยบายความเป็นส่วนตัว' },
-  ],
-  ชุมชน: [
-    { href: '/blog', label: 'บทความ' },
-    { href: '/events', label: 'กิจกรรม' },
-    { href: '/discord', label: 'Discord Community' },
-    { href: '/feedback', label: 'แจ้งปัญหา/แนะนำ' },
   ],
 };
 
@@ -49,7 +43,7 @@ export function Footer() {
 
       <div className="glass border-t border-border/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             {/* Brand */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-2.5 mb-5">
@@ -61,7 +55,7 @@ export function Footer() {
                 พร้อมระบบจองเวลาเรียนอัจฉริยะ 🚀
               </p>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 hidden">
                 {SOCIAL_LINKS.map((social) => (
                   <a
                     key={social.label}
